@@ -156,8 +156,12 @@ namespace XPlan.UI
 				}
 			}
 
+			List<UIVisibleInfo> sortUIList = new List<UIVisibleInfo>();
+			sortUIList.AddRange(currVisibleList);
+			sortUIList.AddRange(persistentUIList);
+
 			// 依照sort idx大小由大向小排列
-			currVisibleList.Sort((X, Y)=>
+			sortUIList.Sort((X, Y)=>
 			{
 				UIBase XUI = X.uiIns.GetComponent<UIBase>();
 				UIBase YUI = Y.uiIns.GetComponent<UIBase>();
@@ -165,9 +169,9 @@ namespace XPlan.UI
 				return XUI.SortIdx < YUI.SortIdx ?-1:1;
 			});
 
-			for(int i = 0; i < currVisibleList.Count; ++i)
+			for (int i = 0; i < sortUIList.Count; ++i)
 			{
-				UIVisibleInfo visibleInfo = currVisibleList[i];
+				UIVisibleInfo visibleInfo = sortUIList[i];
 				visibleInfo.uiIns.transform.SetSiblingIndex(i);
 			}
 
@@ -257,6 +261,35 @@ namespace XPlan.UI
 		/**************************************
 		 * UI顯示與隱藏
 		 * ************************************/
+		public void SetUIVisible<T>(bool bEnable) where T : UIBase
+		{
+			List<UIVisibleInfo> allUIList = new List<UIVisibleInfo>();
+			allUIList.AddRange(currVisibleList);
+			allUIList.AddRange(persistentUIList);
+
+			bool bIsFinded = false;
+
+			foreach (UIVisibleInfo uiInfo in allUIList)
+			{
+				List<UIBase> uiList = uiInfo.uiIns.GetComponents<UIBase>().ToList();
+
+				foreach (UIBase ui in uiList)
+				{ 
+					if(ui is T)
+					{
+						bIsFinded = true;
+						break;
+					}
+				}
+
+				if(bIsFinded)
+				{
+					uiInfo.uiIns.SetActive(bEnable);
+					break;
+				}
+			}
+		}
+
 		public void ShowAllUI(bool bEnable)
 		{
 			uiCanvasGO.SetActive(bEnable);

@@ -17,6 +17,11 @@ namespace XPlan.UI
 
 		protected override void InitSingleton()
 		{
+			if (csvAsset == null)
+			{
+				return;
+			}
+
 			string fileContent = csvAsset.text;
 
 			string[] lines = fileContent.Split('\n'); // 將文件內容分成行
