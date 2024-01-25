@@ -69,7 +69,7 @@ namespace XPlan.UI
 
 			Debug.LogWarning("字表中沒有此關鍵字 !!");
 
-			return "";
+			return keyStr;
 		}
 	}
 }
