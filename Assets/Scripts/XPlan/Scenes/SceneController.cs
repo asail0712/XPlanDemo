@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-using XPlan.Command;
+using XPlan.Utility;
 
-namespace XPlan.Utility
+namespace XPlan.Scenes
 {
 	public struct SceneInfo
 	{
