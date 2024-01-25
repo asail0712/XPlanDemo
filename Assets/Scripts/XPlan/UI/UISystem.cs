@@ -33,6 +33,53 @@ namespace XPlan.UI
 		}
 
 		/**********************************************
+		* 通用功能
+		* ********************************************/
+		static public UIParam GetUIParam(this object param)
+		{
+			UIParam p = null;
+
+			if (param is int)
+			{
+				p = new IntParam((int)param);
+			}
+			else if (param is string)
+			{
+				p = new StringParam((string)param);
+			}
+			else if (param is float)
+			{
+				p = new FloatParam((float)param);
+			}
+			else if (param is bool)
+			{
+				p = new BoolParam((bool)param);
+			}
+			else if (param is Vector2)
+			{
+				p = new Vector2Param((Vector2)param);
+			}
+			else if (param is byte[])
+			{
+				p = new ByteArrParam((byte[])param);
+			}
+			else if (param is Texture)
+			{
+				p = new TextureParam((Texture)param);
+			}
+			else if (param is Action)
+			{
+				p = new ActionParam((Action)param);
+			}
+			else if (param is UIDataContainer)
+			{
+				p = (UIDataContainer)param;
+			}
+
+			return p;
+		}
+
+		/**********************************************
 		* Call Back相關功能
 		* ********************************************/
 
@@ -206,48 +253,7 @@ namespace XPlan.UI
 				if(kvp.Value.Contains(uniqueID))
 				{
 					// 個別UI個別轉型
-					UIParam p = null;
-
-					if (value is int)
-					{
-						p = new IntParam((int)(object)value);
-					}
-					else if (value is string)
-					{
-						p = new StringParam((string)(object)value);
-					}
-					else if (value is float)
-					{
-						p = new FloatParam((float)(object)value);
-					}
-					else if (value is double)
-					{
-						p = new DoubleParam((double)(object)value);
-					}
-					else if (value is bool)
-					{
-						p = new BoolParam((bool)(object)value);
-					}
-					else if (value is Vector2)
-					{
-						p = new Vector2Param((Vector2)(object)value);
-					}
-					else if (value is byte[])
-					{
-						p = new ByteArrParam((byte[])(object)value);
-					}
-					else if (value is Texture)
-					{
-						p = new TextureParam((Texture)(object)value);
-					}
-					else if (value is Action)
-					{
-						p = new ActionParam((Action)(object)value);
-					}
-					else if (value is UIDataContainer)
-					{
-						p = (UIDataContainer)(object)value;
-					}
+					UIParam p = value.GetUIParam();
 
 					if (p == null)
 					{
@@ -288,54 +294,12 @@ namespace XPlan.UI
 			{
 				if (kvp.Value.Contains(uniqueID))
 				{
-					UIParam p		= null;
 					int len			= paramList.Length;
 					UIParam[] pList = new UIParam[len];
 
 					for(int i = 0; i < len; ++i)
 					{
-						if (paramList[i] is int)
-						{
-							p = new IntParam((int)paramList[i]);
-						}
-						else if (paramList[i] is string)
-						{
-							p = new StringParam((string)paramList[i]);
-						}
-						else if (paramList[i] is float)
-						{
-							p = new FloatParam((float)paramList[i]);
-						}
-						else if (paramList[i] is double)
-						{
-							p = new DoubleParam((double)(object)paramList[i]);
-						}
-						else if (paramList[i] is bool)
-						{
-							p = new BoolParam((bool)paramList[i]);
-						}
-						else if (paramList[i] is Vector2)
-						{
-							p = new Vector2Param((Vector2)paramList[i]);
-						}
-						else if (paramList[i] is byte[])
-						{
-							p = new ByteArrParam((byte[])paramList[i]);
-						}
-						else if (paramList[i] is Texture)
-						{
-							p = new TextureParam((Texture)paramList[i]);
-						}
-						else if (paramList[i] is Action)
-						{
-							p = new ActionParam((Action)(object)paramList[i]);
-						}
-						else if (paramList[i] is UIDataContainer)
-						{
-							p = (UIDataContainer)paramList[i];
-						}
-
-						pList[i] = p;
+						pList[i] = paramList[i].GetUIParam();
 					}
 
 					kvp.Key.NotifyUI(uniqueID, pList);

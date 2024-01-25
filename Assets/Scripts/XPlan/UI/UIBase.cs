@@ -146,40 +146,7 @@ namespace XPlan.UI
 
 		protected void DirectTrigger<T>(string uniqueID, T param, Action<T> onPress = null)
 		{
-			UIParam p = null;
-
-			if (param is int)
-			{
-				p = new IntParam((int)(object)param);
-			}
-			else if (param is string)
-			{
-				p = new StringParam((string)(object)param);
-			}
-			else if (param is float)
-			{
-				p = new FloatParam((float)(object)param);
-			}
-			else if (param is double)
-			{
-				p = new DoubleParam((double)(object)param);
-			}
-			else if (param is bool)
-			{
-				p = new BoolParam((bool)(object)param);
-			}
-			else if (param is Vector2)
-			{
-				p = new Vector2Param((Vector2)(object)param);
-			}
-			else if (param is Texture)
-			{
-				p = new TextureParam((Texture)(object)param);
-			}
-			else if (param is UIDataContainer)
-			{
-				p = (UIDataContainer)(object)param;
-			}
+			UIParam p = param.GetUIParam();
 
 			if (p == null)
 			{
