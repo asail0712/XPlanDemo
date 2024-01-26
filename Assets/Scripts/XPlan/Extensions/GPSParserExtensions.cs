@@ -7,6 +7,7 @@ namespace XPlan.Extensions
 {
     public class GnrmcData
     {
+        public bool bIgnore = true;
         public bool bActive = false;
         public DateTime dataTime;        
         public double[] latAndLng = new double[2];
@@ -25,22 +26,11 @@ namespace XPlan.Extensions
             GnrmcData result    = new GnrmcData();
             string[] fields     = gnrmcData.Split(',');
 
-            if (fields[0] == "$GNRMC")
+            if (fields[0] == "$GNRMC" && fields.Length > 2)
             {
+                result.bIgnore  = false;
                 result.bActive  = fields[2] == "A";
-
-                /*if(fields.Length >= 10)
-                { 
-                    result.dataTime = ParseTime(fields[9], fields[1]);
-                }
-                else*/ if(fields.Length >= 8)
-				{
-                    result.dataTime = ParseTime(DateTime.Now.ToString("ddMMyy"), fields[1]);
-                }
-                else
-                {
-                    Debug.Log("不正常資料!!");
-                }
+                result.dataTime = ParseTime(DateTime.Now.ToString("ddMMyy"), fields[1]);
 
                 if (!result.bActive) 
                 {
@@ -52,7 +42,6 @@ namespace XPlan.Extensions
                 result.speed        = double.Parse(fields[7]) * 1.852;      // 將節轉換為km/h
                 //result.groundTrack  = double.Parse(fields[8]);              // 北0度 東90度 南180度 西270度
 			}
-
 
             return result;
         }
