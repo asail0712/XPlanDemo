@@ -3,7 +3,7 @@ using UnityEngine;
 // 參考資料
 // https://easings.net/zh-tw
 
-namespace XPlan.Utility.Extensions
+namespace XPlan.Extensions
 {
     public static class EasingFunctionsExtensions
     {

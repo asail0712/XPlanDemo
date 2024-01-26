@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace XPlan.Utility.Extensions
+namespace XPlan.Extensions
 {
     public static class GameObjectExtensions
     {

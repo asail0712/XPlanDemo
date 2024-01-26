@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 using UnityEngine;
 
-namespace XPlan.Utility.Extensions
+namespace XPlan.Extensions
 {
     public static class Texture2DExtensions
     {

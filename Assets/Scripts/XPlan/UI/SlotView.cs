@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 using XPlan.Interface;
-using XPlan.Utility.Extensions;
+using XPlan.Extensions;
 
 namespace XPlan.UI
 {

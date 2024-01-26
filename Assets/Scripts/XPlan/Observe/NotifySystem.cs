@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using XPlan.Utility;
-using XPlan.Utility.Extensions;
+using XPlan.Extensions;
 
 namespace XPlan.Observe
 {

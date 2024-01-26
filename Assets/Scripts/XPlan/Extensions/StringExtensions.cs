@@ -2,7 +2,7 @@
 using System.Net.Mail;
 using System.Text.RegularExpressions;
 
-namespace XPlan.Utility.Extensions
+namespace XPlan.Extensions
 {
     public static class StringExtensions
     {
@@ -25,8 +25,13 @@ namespace XPlan.Utility.Extensions
             return true;
         }
 
-        public static bool IsValidEmail(this string email)
+        public static bool IsValidEmail(this string email, bool bAllowEmpty = false)
         {
+            if(email.Length == 0)
+			{
+                return bAllowEmpty;
+			}
+
             try
             {
                 var mailAddress = new MailAddress(email);
