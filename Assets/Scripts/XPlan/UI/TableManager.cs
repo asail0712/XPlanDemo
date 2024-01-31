@@ -70,12 +70,12 @@ namespace XPlan.UI
 		}
 	}
 
-	public class TableManager
+	public class TableManager<T> where T : TableItemInfo
     {
 		/**********************************
 		 * 注入資料
 		 * *******************************/
-		private List<TableItemInfo> itemInfoList;
+		private List<T> itemInfoList;
 
 		/**********************************
 		 * Unity元件
@@ -132,10 +132,12 @@ namespace XPlan.UI
 			/**********************************
 			 * grid設定
 			 * *******************************/
-			gridLayoutGroup				= anchor.AddComponent<GridLayoutGroup>();
-			gridLayoutGroup.cellSize	= new Vector2(cellSizeX, cellSizeY);
-			gridLayoutGroup.spacing		= new Vector2(10, 10);
-			gridLayoutGroup.startAxis	= bHorizontal ? GridLayoutGroup.Axis.Horizontal : GridLayoutGroup.Axis.Vertical;
+			gridLayoutGroup					= anchor.AddComponent<GridLayoutGroup>();
+			gridLayoutGroup.cellSize		= new Vector2(cellSizeX, cellSizeY);
+			gridLayoutGroup.spacing			= new Vector2(10, 10);
+			gridLayoutGroup.startAxis		= bHorizontal ? GridLayoutGroup.Axis.Horizontal : GridLayoutGroup.Axis.Vertical;
+			gridLayoutGroup.constraint		= bHorizontal ? GridLayoutGroup.Constraint.FixedColumnCount : GridLayoutGroup.Constraint.FixedColumnCount;
+			gridLayoutGroup.constraintCount = bHorizontal ? col : row;
 
 			/**********************************
 			 * 設定itemPrefab
@@ -160,7 +162,7 @@ namespace XPlan.UI
 			return true;
 		}
 
-		public void SetInfoList(List<TableItemInfo> infoList)
+		public void SetInfoList(List<T> infoList)// where T : TableItemInfo
 		{
 			/**********************************
 			 * 初始化
