@@ -104,7 +104,7 @@ namespace XPlan.Scenes
 		{
 			if (currSceneStack.Count == 0)
 			{
-				LoadScene(sceneType);
+				LoadScene(sceneType, true);
 				return true;
 			}
 
@@ -194,7 +194,7 @@ namespace XPlan.Scenes
 			changeQueue.RemoveAt(0);
 		}
 
-		protected bool LoadScene(int sceneType)
+		protected bool LoadScene(int sceneType, bool bImmediately = false)
 		{
 			Scene scene = SceneManager.GetSceneByBuildIndex(sceneType);
 
@@ -204,8 +204,19 @@ namespace XPlan.Scenes
 				return false;
 			}
 
-			changeQueue.Add(new LoadInfo(sceneType));
+			if(bImmediately)
+			{
+				Debug.Log($"載入關卡 {sceneType}");
+				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(sceneType, LoadSceneMode.Additive);
+				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, sceneType));
 
+				currSceneStack.Add(sceneType);
+			}
+			else
+			{
+				changeQueue.Add(new LoadInfo(sceneType));
+			}
+			
 			return true;
 		}
 
