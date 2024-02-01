@@ -9,8 +9,8 @@ using XPlan.Extensions;
 namespace XPlan.Observe
 {
 	public class MessageBase
-	{		
-		protected void Send()
+	{
+		public void Send()
 		{
 			MessageSender sender = new MessageSender(this);
 
