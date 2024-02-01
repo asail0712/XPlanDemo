@@ -11,7 +11,11 @@ namespace XPlan.UI
 	public class TableItem : MonoBehaviour
 	{
 		private TableItemInfo itemInfo;
+		private bool bBeChoosed = false;
 
+		/*****************************************
+		 * 設定Info
+		 * **************************************/
 		public void SetInfo(TableItemInfo info)
 		{
 			itemInfo = info;
@@ -19,16 +23,38 @@ namespace XPlan.UI
 			itemInfo.SetItem(this);
 		}
 
+		/*****************************************
+		 * 取得唯一ID
+		 * **************************************/
 		public string GetID()
 		{
 			return itemInfo.uniqueID;
 		}
 
+		/*****************************************
+		 * 選中相關資訊
+		 * **************************************/
+		public void SetChoose(bool b)
+		{
+			bBeChoosed = b;
+		}
+
+		public bool IsChoosed()
+		{
+			return bBeChoosed;
+		}
+
+		/*****************************************
+		 * 資訊刷新
+		 * **************************************/
 		public void Refresh()
 		{
 			OnRefresh(itemInfo);
 		}
 
+		/*****************************************
+		 * 功能複寫
+		 * **************************************/
 		protected void DirectTrigger<T>(string uniqueID, T param, Action<T> onPress = null)
 		{
 			UIParam p = param.GetUIParam();
@@ -67,6 +93,11 @@ namespace XPlan.UI
 		public void FlushInfo()
 		{
 			tableItem.Refresh();
+		}
+
+		public void SetChoose(bool b)
+		{
+			tableItem.SetChoose(b);
 		}
 	}
 
