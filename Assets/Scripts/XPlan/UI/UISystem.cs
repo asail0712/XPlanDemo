@@ -51,6 +51,10 @@ namespace XPlan.UI
 			{
 				p = new FloatParam((float)param);
 			}
+			else if (param is double)
+			{
+				p = new DoubleParam((double)param);
+			}
 			else if (param is bool)
 			{
 				p = new BoolParam((bool)param);
