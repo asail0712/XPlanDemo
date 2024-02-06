@@ -3,6 +3,8 @@ using System.IO;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
 
+using UnityEngine;
+
 namespace XPlan.Extensions
 {
     public static class StringExtensions
@@ -74,6 +76,32 @@ namespace XPlan.Extensions
             string fileName = Path.GetFileName(uri.LocalPath);
 
             return fileName;
+        }
+
+        public static Color HexToColor(this string hexColor)
+        {
+            if (hexColor.Length != 7 || hexColor[0] != '#')
+            {
+                throw new ArgumentException("Invalid hex color format");
+            }
+
+            // 解析 R、G、B 分量
+            float red   = Convert.ToInt32(hexColor.Substring(1, 2), 16) / 255.0f;
+            float green = Convert.ToInt32(hexColor.Substring(3, 2), 16) / 255.0f;
+            float blue  = Convert.ToInt32(hexColor.Substring(5, 2), 16) / 255.0f;
+
+            return new Color(red, green, blue, 1.0f);
+        }
+
+        public static Texture2D Base64ToTex(this string str)
+        {
+            byte[] imageData = Convert.FromBase64String(str);
+
+            // 將二進制數據轉換為 Unity 的 Texture2D
+            Texture2D beautyTexture = new Texture2D(2, 2);
+            beautyTexture.LoadImage(imageData); // 載入圖片數據
+
+            return beautyTexture;
         }
     }
 }
