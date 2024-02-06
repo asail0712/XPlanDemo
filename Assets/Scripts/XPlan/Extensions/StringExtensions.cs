@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
 
@@ -63,6 +64,16 @@ namespace XPlan.Extensions
 
             // 使用Regex.IsMatch方法進行匹配
             return Regex.IsMatch(password, pattern);
+        }
+
+        public static string GetFileNameFromUrl(this string url)
+        {
+            // 使用 Uri 來解析 URL
+            Uri uri = new Uri(url);
+            // 使用 Path.GetFileName 取得檔案名稱部分
+            string fileName = Path.GetFileName(uri.LocalPath);
+
+            return fileName;
         }
     }
 }
