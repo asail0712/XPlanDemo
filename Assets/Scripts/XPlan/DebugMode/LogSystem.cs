@@ -6,16 +6,9 @@ using UnityEngine;
 
 namespace XPlan.DebugMode
 { 
-    public enum LogLevel
-	{
-        Normal  = 0,
-        Warning,
-        Error,
-	}
-
     public static class LogSystem
     {
-        public static void Record(string logInfo, LogLevel logLevel = LogLevel.Normal, Action<string> onFinish = null)
+        public static void Record(string logInfo, LogType logLevel = LogType.Log, Action<string> onFinish = null)
 		{
             StackTrace stackTrace   = new StackTrace(true);
             StackFrame frame        = stackTrace.GetFrame(1);
@@ -27,13 +20,13 @@ namespace XPlan.DebugMode
 
 			switch (logLevel)
 			{
-                case LogLevel.Normal:
+                case LogType.Log:
                     UnityEngine.Debug.Log(fullLogInfo);
                     break;
-                case LogLevel.Warning:
+                case LogType.Warning:
                     UnityEngine.Debug.LogWarning(fullLogInfo);
                     break;
-                case LogLevel.Error:
+                case LogType.Error:
                     UnityEngine.Debug.LogError(fullLogInfo);
                     break;
             }
