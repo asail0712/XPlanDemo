@@ -158,9 +158,16 @@ namespace XPlan.Net
 
             Task.Run(async () =>
             {
-                var replyMess = Encoding.UTF8.GetBytes(mess);
-                //发送消息
-                await ws.SendAsync(new ArraySegment<byte>(replyMess), WebSocketMessageType.Text, true, CancellationToken.None);
+                // 将要发送的数据转换为字节数组
+                byte[] buffer = Encoding.UTF8.GetBytes(mess);
+
+                // 创建 WebSocket 发送数据的缓冲区
+                ArraySegment<byte> segment = new ArraySegment<byte>(buffer);
+
+                // 发送消息
+                await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+                Debug.Log($"送出訊息 {mess}!!");
             });
 
             return true;
@@ -175,12 +182,16 @@ namespace XPlan.Net
         public bool Send(byte[] bytes)
         {
             if (ws.State != WebSocketState.Open)
+            { 
                 return false;
+            }
 
             Task.Run(async () =>
             {
                 //发送消息
                 await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, CancellationToken.None);
+
+                Debug.Log($"送出訊息 {bytes}!!");
             });
 
             return true;
