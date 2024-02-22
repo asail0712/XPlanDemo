@@ -264,6 +264,12 @@ namespace XPlan.Net
                 {
                     bTriggerClose = false;
 
+                    if (callbackRoutine != null)
+                    {
+                        callbackRoutine.StopCoroutine();
+                        callbackRoutine = null;
+                    }
+
                     if (OnClose != null)
                     {
                         OnClose(this, new EventArgs());
