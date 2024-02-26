@@ -22,6 +22,8 @@ namespace XPlan.Net
         private bool bTriggerClose      = false;
         private Exception errorEx       = null;
         private Queue<string> msgQueue  = null;
+        private List<byte> bs           = null;
+        private byte[] buffer           = null;
 
         private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
         /// <summary>
@@ -55,10 +57,13 @@ namespace XPlan.Net
 
         public WebSocket(string wsUrl)
         {
-            uri = new Uri(wsUrl);
-            ws  = new ClientWebSocket();
+            // 初始化
+            uri         = new Uri(wsUrl);
+            msgQueue    = new Queue<string>();
 
-            callbackRoutine = MonoBehaviourHelper.StartCoroutine(Tick());
+            // 緩衝區
+            bs          = new List<byte>();
+            buffer      = new byte[1024 * 4];
         }
 
         /// <summary>
@@ -66,30 +71,34 @@ namespace XPlan.Net
         /// </summary>
         public void Connect()
         {
+            callbackRoutine = MonoBehaviourHelper.StartCoroutine(Tick());
+
             Task.Run(async () =>
             {
+                ws = new ClientWebSocket();
+
                 if (ws.State == WebSocketState.Connecting || ws.State == WebSocketState.Open)
                 { 
                     return;
                 }
 
-                string netErr = string.Empty;
+                // reset數值
+                string netErr   = string.Empty;
+                bIsUserClose    = false;
+                errorEx         = null;
+
+                msgQueue.Clear();
+                bs.Clear();
+                Array.Clear(buffer, 0, buffer.Length);
 
                 try
-                {
-                    //初始化链接
-                    bIsUserClose    = false;
-                    ws              = new ClientWebSocket();
-                    errorEx         = null;
-                    msgQueue        = new Queue<string>();
-
+                {                   
                     await ws.ConnectAsync(uri, CancellationToken.None);
 
+                    // 等連線完成後觸發Connect
                     bTriggerOpen = true;
 
-                    //全部消息容器
-                    List<byte> bs                   = new List<byte>();                    
-                    var buffer                      = new byte[1024 * 4]; //缓冲区                    
+                    //全部消息容器                  
                     WebSocketReceiveResult result   = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);//监听Socket信息
                     //是否关闭
                     while (!result.CloseStatus.HasValue)
@@ -264,15 +273,15 @@ namespace XPlan.Net
                 {
                     bTriggerClose = false;
 
+                    if (OnClose != null)
+                    {
+                        OnClose(this, new EventArgs());
+                    }
+
                     if (callbackRoutine != null)
                     {
                         callbackRoutine.StopCoroutine();
                         callbackRoutine = null;
-                    }
-
-                    if (OnClose != null)
-                    {
-                        OnClose(this, new EventArgs());
                     }
                 }
 
