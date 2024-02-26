@@ -119,7 +119,7 @@ namespace XPlan.UI
 		 * *******************************/
 		private int currPageIdx;
 		private int totalPage;
-		private int totalItemNum;
+		private int itemNumPerPage;
 		private int row;
 		private int col;
 		private GameObject itemPrefab;
@@ -147,7 +147,7 @@ namespace XPlan.UI
 			 * *******************************/
 			this.row		= row;
 			this.col		= col;
-			totalItemNum	= row * col;
+			itemNumPerPage	= row * col;
 			itemPrefab		= item;
 			this.anchor		= anchor;
 			pageChange		= page;
@@ -173,7 +173,7 @@ namespace XPlan.UI
 			/**********************************
 			 * 設定itemPrefab
 			 * *******************************/
-			for (int i = 0; i < totalItemNum; ++i)
+			for (int i = 0; i < itemNumPerPage; ++i)
 			{
 				GameObject itemGO = GameObject.Instantiate(itemPrefab);
 
@@ -200,7 +200,7 @@ namespace XPlan.UI
 			 * *******************************/
 			itemInfoList	= infoList;
 			currPageIdx		= 0;
-			totalPage		= (itemInfoList.Count / totalItemNum) + 1;
+			totalPage		= (itemInfoList.Count / itemNumPerPage) + 1;
 
 			/**********************************
 			 * 設定pageChange
@@ -241,9 +241,25 @@ namespace XPlan.UI
 			/**********************************
 			 * 將ItemInfo資料放進TableItem裡面
 			 * *******************************/
-			int startIdx		= totalItemNum * currPageIdx;
-			int infoCountInPage	= currPageIdx < (totalPage - 1) ? totalItemNum : (itemInfoList.Count % totalItemNum);
+			int startIdx		= itemNumPerPage * currPageIdx;
+			int infoCountInPage = 0;
 
+			if(totalPage == 1)
+			{
+				infoCountInPage = itemInfoList.Count;
+			}
+			else
+			{
+				if(currPageIdx < (totalPage - 1))
+				{
+					infoCountInPage = itemNumPerPage;
+				}
+				else
+				{
+					infoCountInPage = itemInfoList.Count % itemNumPerPage;
+				}
+			}
+			
 			for(int i = 0; i < itemList.Count; ++i)
 			{
 				bool bEnabled	= i < infoCountInPage;
