@@ -103,6 +103,16 @@ namespace XPlan.Extensions
 
             return beautyTexture;
         }
+
+        public static DateTime UTCtoLocalTime(this string utcTimeStr)
+        {
+            long timestamp                  = long.Parse(utcTimeStr);
+            DateTimeOffset dateTimeOffset   = DateTimeOffset.FromUnixTimeMilliseconds(timestamp);
+            DateTime utcTime                = dateTimeOffset.UtcDateTime;
+            DateTime localTime              = utcTime.ToLocalTime();
+
+            return localTime;
+        }
     }
 }
 
