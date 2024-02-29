@@ -200,8 +200,7 @@ namespace XPlan.UI
 			 * *******************************/
 			itemInfoList	= infoList;
 			currPageIdx		= 0;
-			totalPage		= (itemInfoList.Count / itemNumPerPage) + 1;
-
+			
 			/**********************************
 			 * 設定pageChange
 			 * *******************************/
@@ -213,7 +212,6 @@ namespace XPlan.UI
 
 					Refresh();
 				});
-				pageChange.SetTotalPageNum(totalPage);
 			}
 		}
 
@@ -227,11 +225,13 @@ namespace XPlan.UI
 			gridLayoutGroup.childAlignment = anchor;
 		}
 
-		public void Refresh(bool bRefreshAnchorSize = false)
+		public void Refresh(bool bRefreshAnchorSize = true, bool bRefreshAnchorPos = false)
 		{
 			/**********************************
 			 * 依照Page來決定設定進Item的資料
-			 * *******************************/			
+			 * *******************************/
+			totalPage = (itemInfoList.Count / itemNumPerPage) + 1;
+
 			if (currPageIdx < 0 || currPageIdx >= totalPage)
 			{
 				Debug.LogError($"{currPageIdx} 當前Page不正確");
@@ -278,6 +278,7 @@ namespace XPlan.UI
 			 * *******************************/
 			if (pageChange != null)
 			{
+				pageChange.SetTotalPageNum(totalPage);
 				pageChange.RefershPageInfo();
 			}
 
@@ -294,11 +295,13 @@ namespace XPlan.UI
 				{
 					currCol = Mathf.Min(infoCount, col);
 					currRow = Mathf.CeilToInt((float)infoCount / (float)col);
+					currRow = Mathf.Min(infoCount, row);
 				}
 				else
 				{
 					currRow = Mathf.Min(infoCount, row);
 					currCol = Mathf.CeilToInt((float)infoCount / (float)row);
+					currCol = Mathf.Min(infoCount, col);
 				}
 
 				float spaceX = gridLayoutGroup.spacing.x;
@@ -307,6 +310,20 @@ namespace XPlan.UI
 				RectTransform rectTF	= (RectTransform)anchor.transform;
 				rectTF.sizeDelta		= new Vector2(currCol * gridLayoutGroup.cellSize.x + (currCol - 1) * spaceX,
 														currRow * gridLayoutGroup.cellSize.y + (currRow - 1) * spaceY);
+			}
+
+			if(bRefreshAnchorPos)
+			{
+				RectTransform rectTF = (RectTransform)anchor.transform;
+
+				if (gridLayoutGroup.startAxis == GridLayoutGroup.Axis.Horizontal)
+				{
+					rectTF.localPosition = new Vector3(rectTF.localPosition.x, 0f, rectTF.localPosition.z);
+				}
+				else
+				{
+					rectTF.localPosition = new Vector3(0f, rectTF.localPosition.y, rectTF.localPosition.z);
+				}
 			}
 		}
 	}

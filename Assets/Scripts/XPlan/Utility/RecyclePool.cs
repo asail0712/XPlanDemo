@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,12 +7,108 @@ using XPlan.Utility;
 
 namespace Granden.kmrt
 { 
+    public class PoolInfo
+	{
+        public int refCount = 0;
+
+        private int maxNum  = 0;
+        private List<GameObject> duplicateList;
+        private GameObject backUpObj = null;
+        private GameObject poolRoot;
+
+        public PoolInfo()
+		{
+            duplicateList = new List<GameObject>();
+        }
+
+        public void InitialInfo(GameObject obj, int maxNum, GameObject poolRoot)
+		{
+            this.poolRoot   = poolRoot;
+            this.backUpObj  = obj;
+            this.maxNum     = maxNum;
+            this.refCount   = 1;
+
+            for (int i = 0; i < maxNum; ++i)
+            {
+                GameObject duplicateObj         = GameObject.Instantiate(obj);
+                duplicateObj.transform.position = new Vector3(99999f, 0f, 0f);
+
+                if (null != poolRoot)
+                {
+                    duplicateObj.transform.parent = poolRoot.transform;
+                }
+
+                duplicateList.Add(duplicateObj);
+            }
+        }
+
+        public void ReleaseInfo()
+		{
+            foreach(GameObject obj in duplicateList)
+			{
+                GameObject.Destroy(obj);
+            }
+
+            duplicateList.Clear();
+
+            maxNum      = 0;
+            refCount    = 0;
+            poolRoot    = null;
+            backUpObj   = null;
+        }
+
+        public void ResetPool()
+		{
+            foreach (GameObject obj in duplicateList)
+            {
+                GameObject.Destroy(obj);
+            }
+
+            duplicateList.Clear();
+        }
+
+        public GameObject SpawnOne(bool bEnabled)
+		{
+            if (duplicateList.Count == 0 || !bEnabled)
+            {
+                //Debug.Log($"Pool {type}型別空了 所以生成一個新的 !!");
+
+                return GameObject.Instantiate(backUpObj);
+            }
+
+            GameObject go = duplicateList[0];
+            duplicateList.RemoveAt(0);
+
+            return go;
+        }
+
+        public void DisponeOne(GameObject obj, bool bEnabled)
+		{
+            if (!bEnabled)
+            {
+                GameObject.DestroyImmediate(obj);
+
+                return;
+            }
+
+            if (null != poolRoot)
+            {
+                obj.transform.parent = poolRoot.transform;
+            }
+            else
+            {
+                obj.transform.parent = null;
+            }
+
+            duplicateList.Add(obj);
+        }
+    }
+
     public class RecyclePool<T>
     {
         static public bool bEnabled = true;
 
-        static private Dictionary<T, GameObject> backupList            = new Dictionary<T, GameObject>();
-        static private Dictionary<T, List<GameObject>> gameObjectPool  = new Dictionary<T, List<GameObject>>();
+        static private Dictionary<T, PoolInfo> poolInfoList = new Dictionary<T, PoolInfo>();
         static private GameObject poolRoot;
 
         static public void SetRoot(GameObject root)
@@ -22,26 +119,14 @@ namespace Granden.kmrt
         /**************************************************
          * 生成流程
          * ************************************************/
-        static public GameObject SpawnOne(T type)
+        static public GameObject SpawnOne(T type, Action<GameObject, GameObject> afterSpawn = null)
 		{
-            if (!gameObjectPool.ContainsKey(type))
+            if (!poolInfoList.ContainsKey(type))
             {
                 return null;
             }
 
-            List<GameObject> goList = gameObjectPool[type];
-
-            if(goList.Count == 0 || !bEnabled)
-			{
-                Debug.Log($"Pool {type}型別空了 所以生成一個新的 !!");
-
-                return GameObject.Instantiate(backupList[type]);
-            }
-
-            GameObject go = goList[0];
-            goList.RemoveAt(0);
-
-            return go;
+            return poolInfoList[type].SpawnOne(bEnabled);
         }
 
         static public List<GameObject> SpawnList(T type, int num)
@@ -56,40 +141,23 @@ namespace Granden.kmrt
             return result;
         }
 
-        static public void DisposeOne(T type, GameObject go)
+        static public void DisposeOne(T type, GameObject go, Action<GameObject> afterDispose = null)
 		{
-            if (!gameObjectPool.ContainsKey(type))
+            if (!poolInfoList.ContainsKey(type))
             {
                 return;
             }
 
-            if(!bEnabled)
-			{
-                GameObject.DestroyImmediate(go);
+            poolInfoList[type].DisponeOne(go, bEnabled);
 
-                return;
-			}
-
-            if (null != poolRoot)
-            {
-                go.transform.parent = poolRoot.transform;
-            }
-            else
-			{
-                go.transform.parent = null;
-
-            }
-
-            List<GameObject> goList = gameObjectPool[type];
-
-            goList.Add(go);
+            afterDispose?.Invoke(go);
         }
 
-        static public void DisposeList(T type, List<GameObject> goList)
+        static public void DisposeList(T type, List<GameObject> goList, Action<GameObject> afterDispose = null)
         {
             for(int i = 0; i < goList.Count; ++i)
 			{
-                DisposeOne(type, goList[i]);
+                DisposeOne(type, goList[i], afterDispose);
             }
         }
 
@@ -98,64 +166,54 @@ namespace Granden.kmrt
          * ************************************************/
         static public bool RegisterType(T type, GameObject go, int maxNum = 5)
 		{
-            if(gameObjectPool.ContainsKey(type))
+            if(poolInfoList.ContainsKey(type))
 			{
-                return false;
-			}
+                // 重複的話，ref count 加1
+                PoolInfo poolInfo = poolInfoList[type];                
+                poolInfo.refCount++;
+            }
+			else 
+            {
+                PoolInfo poolInfo = new PoolInfo();
+                poolInfo.InitialInfo(go, maxNum, poolRoot);
 
-            List<GameObject> goList = new List<GameObject>();
-
-            for (int i = 0; i < maxNum; ++i)
-			{
-                GameObject duplicateGO          = GameObject.Instantiate(go);
-                duplicateGO.transform.position  = new Vector3(99999f, 0f, 0f);
-
-                if (null != poolRoot)
-				{
-                    duplicateGO.transform.parent = poolRoot.transform;
-                }
-                
-                goList.Add(duplicateGO);
-			}
-
-            backupList.Add(type, go);
-            gameObjectPool.Add(type, goList);
+                poolInfoList.Add(type, poolInfo);
+            }            
 
             return true;
 		}
 
-        static public void UnregisterType(T type)
+        static public void UnregisterType(T type, bool bForce = false)
         {
-            if (!gameObjectPool.ContainsKey(type))
+            if (!poolInfoList.ContainsKey(type))
             {
                 return;
             }
 
-            List<GameObject> goList = gameObjectPool[type];
+            PoolInfo poolInfo = poolInfoList[type];
+            --poolInfo.refCount;
 
-            for (int i = 0; i < goList.Count; ++i)
-            {
-                GameObject.Destroy(goList[i]);
+            if (poolInfo.refCount == 0 || bForce)
+			{
+                poolInfo.ReleaseInfo();
+                poolInfoList.Remove(type);
             }
-
-            backupList.Remove(type);
-            gameObjectPool.Remove(type);
+            else
+			{
+                // 清空的目的是
+                // 避免更換場景時，pool info裡面有被釋放的物件，導致null
+                poolInfo.ResetPool();
+            }
         }
 
         static public void UnregisterAll()
         {
-            foreach(var kvp in gameObjectPool)
+            List<T> keyList = new List<T>(poolInfoList.Keys);
+
+            foreach (T key in keyList)
 			{
-                List<GameObject> goList = gameObjectPool[kvp.Key];
-
-                for (int i = 0; i < goList.Count; ++i)
-                {
-                    GameObject.Destroy(goList[i]);
-                }
+                UnregisterType(key, true);
             }
-
-            backupList.Clear();
-            gameObjectPool.Clear();
         }
     }
 }

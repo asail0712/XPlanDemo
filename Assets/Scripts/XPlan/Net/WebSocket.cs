@@ -18,14 +18,10 @@ namespace XPlan.Net
         private Uri uri             = null;
         private bool bIsUserClose   = false;//是否最后由用户手动关闭
 
-        private bool bTriggerOpen       = false;
-        private bool bTriggerClose      = false;
-        private Exception errorEx       = null;
-        private Queue<string> msgQueue  = null;
-        private List<byte> bs           = null;
-        private byte[] buffer           = null;
+        private List<byte> bs       = null;
+        private byte[] buffer       = null;
 
-        private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
+        private MonoBehaviourHelper.MonoBehavourInstance connectRoutine;
         /// <summary>
         /// WebSocket状态
         /// </summary>
@@ -59,7 +55,6 @@ namespace XPlan.Net
         {
             // 初始化
             uri         = new Uri(wsUrl);
-            msgQueue    = new Queue<string>();
 
             // 緩衝區
             bs          = new List<byte>();
@@ -71,86 +66,107 @@ namespace XPlan.Net
         /// </summary>
         public void Connect()
         {
-            callbackRoutine = MonoBehaviourHelper.StartCoroutine(Tick());
+            connectRoutine = MonoBehaviourHelper.StartCoroutine(connect_Internal());
+        }
 
-            Task.Run(async () =>
+        private IEnumerator connect_Internal()
+        { 
+            ws = new ClientWebSocket();
+
+            if (ws.State == WebSocketState.Connecting || ws.State == WebSocketState.Open)
+            { 
+                yield break;
+            }
+
+            // reset數值
+            string netErr   = string.Empty;
+            bIsUserClose    = false;
+
+            bs.Clear();
+            Array.Clear(buffer, 0, buffer.Length);
+            
+            Task connectTask = ws.ConnectAsync(uri, CancellationToken.None);
+
+            yield return new WaitUntil(() => connectTask.IsCompleted);
+
+            if(connectTask.IsFaulted)
+			{
+                OnError?.Invoke(this, new Exception(connectTask.Exception.ToString()));
+                DoingClose();
+                yield break;
+			}
+
+            OnOpen?.Invoke(this, new EventArgs());
+
+            //全部消息容器                  
+            Task<WebSocketReceiveResult> receiveTask = ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);//监听Socket信息
+
+            yield return new WaitUntil(() => receiveTask.IsCompleted);
+
+            if (receiveTask.IsFaulted)
             {
-                ws = new ClientWebSocket();
+                OnError?.Invoke(this, new Exception(receiveTask.Exception.ToString()));
+                DoingClose();
+                yield break;
+            }
 
-                if (ws.State == WebSocketState.Connecting || ws.State == WebSocketState.Open)
-                { 
-                    return;
-                }
+            WebSocketReceiveResult result = receiveTask.Result;
+            //是否关闭
+            while (!result.CloseStatus.HasValue)
+            {
+                //文本消息
+                if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    bs.AddRange(buffer.Take(result.Count));
 
-                // reset數值
-                string netErr   = string.Empty;
-                bIsUserClose    = false;
-                errorEx         = null;
-
-                msgQueue.Clear();
-                bs.Clear();
-                Array.Clear(buffer, 0, buffer.Length);
-
-                try
-                {                   
-                    await ws.ConnectAsync(uri, CancellationToken.None);
-
-                    // 等連線完成後觸發Connect
-                    bTriggerOpen = true;
-
-                    //全部消息容器                  
-                    WebSocketReceiveResult result   = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);//监听Socket信息
-                    //是否关闭
-                    while (!result.CloseStatus.HasValue)
+                    //消息是否已接收完全
+                    if (result.EndOfMessage)
                     {
-                        //文本消息
-                        if (result.MessageType == WebSocketMessageType.Text)
-                        {
-                            bs.AddRange(buffer.Take(result.Count));
+                        //发送过来的消息
+                        string userMsg = Encoding.UTF8.GetString(bs.ToArray(), 0, bs.Count);
 
-                            //消息是否已接收完全
-                            if (result.EndOfMessage)
-                            {
-                                //发送过来的消息
-                                string userMsg = Encoding.UTF8.GetString(bs.ToArray(), 0, bs.Count);
+                        OnMessage(this, userMsg);
 
-                                msgQueue.Enqueue(userMsg);
-
-                                //清空消息容器
-                                bs = new List<byte>();
-                            }
-                        }
-                        //继续监听Socket信息
-                        result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                        //清空消息容器
+                        bs = new List<byte>();
                     }
                 }
-                catch (Exception ex)
+                //继续监听Socket信息
+                receiveTask = ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);//监听Socket信息
+
+                yield return new WaitUntil(() => receiveTask.IsCompleted);
+
+                if (receiveTask.IsFaulted)
                 {
-                    netErr  = " .Net发生错误" + ex.Message;
-                    errorEx = ex;
+                    OnError?.Invoke(this, new Exception(receiveTask.Exception.ToString()));
+                    DoingClose();
+                    yield break;
                 }
-				finally
-				{
-					if (!bIsUserClose)
-					{
-						WebSocketCloseStatus status;
 
-						if (ws.CloseStatus == null)
-						{
-							status = WebSocketCloseStatus.Empty;
-						}
-						else
-						{
-							status = ws.CloseStatus.Value;
-						}
-
-						string desc = ws.CloseStatusDescription == null ? "" : ws.CloseStatusDescription;
-
-						Close(status, desc + netErr);
-					}
-				}
-			});
+                result = receiveTask.Result;
+            }
 		}
+
+        private void DoingClose()
+		{
+            if (!bIsUserClose)
+            {
+                WebSocketCloseStatus status;
+
+                if (ws.CloseStatus == null)
+                {
+                    status = WebSocketCloseStatus.Empty;
+                }
+                else
+                {
+                    status = ws.CloseStatus.Value;
+                }
+
+                string desc = ws.CloseStatusDescription == null ? "" : ws.CloseStatusDescription;
+
+                MonoBehaviourHelper.StartCoroutine(Close_Internal(status, desc));
+            }
+        }
 
         /// <summary>
         /// 使用连接发送文本消息
@@ -165,21 +181,31 @@ namespace XPlan.Net
                 return false;
             }
 
-            Task.Run(async () =>
-            {
-                // 将要发送的数据转换为字节数组
-                byte[] buffer = Encoding.UTF8.GetBytes(mess);
-
-                // 创建 WebSocket 发送数据的缓冲区
-                ArraySegment<byte> segment = new ArraySegment<byte>(buffer);
-
-                // 发送消息
-                await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
-
-                Debug.Log($"送出訊息 {mess}!!");
-            });
+            // 创建 WebSocket 发送数据的缓冲区
+            byte[] buffer = Encoding.UTF8.GetBytes(mess);
+            
+            MonoBehaviourHelper.StartCoroutine(Send_Internal(buffer));
 
             return true;
+        }
+        private IEnumerator Send_Internal(byte[] buffer)
+		{
+            // 创建 WebSocket 发送数据的缓冲区
+            ArraySegment<byte> segment = new ArraySegment<byte>(buffer);
+
+            // 发送消息
+            Task sendTask = ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+            yield return new WaitUntil(() => sendTask.IsCompleted);
+
+            if (sendTask.IsFaulted)
+            {
+                OnError?.Invoke(this, new Exception(sendTask.Exception.ToString()));
+                DoingClose();
+                yield break;
+            }
+
+            Debug.Log($"送出訊息 !!");
         }
 
         /// <summary>
@@ -191,17 +217,11 @@ namespace XPlan.Net
         public bool Send(byte[] bytes)
         {
             if (ws.State != WebSocketState.Open)
-            { 
+            {
                 return false;
             }
 
-            Task.Run(async () =>
-            {
-                //发送消息
-                await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, CancellationToken.None);
-
-                Debug.Log($"送出訊息 {bytes}!!");
-            });
+            MonoBehaviourHelper.StartCoroutine(Send_Internal(bytes));
 
             return true;
         }
@@ -212,87 +232,37 @@ namespace XPlan.Net
         public void Close()
         {
             bIsUserClose = true;
-            Close(WebSocketCloseStatus.NormalClosure, "用户主動關閉");
+            MonoBehaviourHelper.StartCoroutine(Close_Internal(WebSocketCloseStatus.NormalClosure, "用户主動關閉"));
         }
 
-        public void Close(WebSocketCloseStatus closeStatus, string statusDescription)
+        public IEnumerator Close_Internal(WebSocketCloseStatus closeStatus, string statusDescription)
         {
-            Task.Run(async () =>
-            {
-				if (bIsUserClose)
-				{
-					try
-					{
-						//关闭WebSocket（客户端发起）
-						await ws.CloseAsync(closeStatus, statusDescription, CancellationToken.None);
-					}
-					catch (Exception ex)
-					{
-                        errorEx = ex;
-                    }
-				}
-
-				ws.Abort();
-                ws.Dispose();
-
-                bTriggerClose = true;
-            });          
-        }
-
-        /****************************
-         * 實作ITickable
-         * *************************/
-        private IEnumerator Tick()
-		{
-            while(true)
+			if (bIsUserClose)
 			{
-                // 為了讓call back 都由主執行序觸發
-                yield return new WaitForEndOfFrame();
+				//关闭WebSocket（客户端发起）
+				Task closeTask = ws.CloseAsync(closeStatus, statusDescription, CancellationToken.None);
 
-                if (bTriggerOpen)
-			    {
-                    bTriggerOpen = false;
-
-                    if (OnOpen != null)
-                    {
-                        OnOpen(this, new EventArgs());
-                    }
-                }
-
-                if (errorEx != null)
+                if (closeTask.IsFaulted)
                 {
-                    if (OnError != null)
-                    {
-                        OnError(this, errorEx);
-                    }
-
-                    errorEx = null;
-                }
-
-                if (bTriggerClose)
-                {
-                    bTriggerClose = false;
-
-                    if (OnClose != null)
-                    {
-                        OnClose(this, new EventArgs());
-                    }
-
-                    if (callbackRoutine != null)
-                    {
-                        callbackRoutine.StopCoroutine();
-                        callbackRoutine = null;
-                    }
-                }
-
-                while(msgQueue != null && msgQueue.Count > 0)
-			    {
-                    if (OnMessage != null)
-                    {
-                        OnMessage(this, msgQueue.Dequeue());
-                    }
+                    OnError?.Invoke(this, new Exception(closeTask.Exception.ToString()));
+                    DoingClose();
+                    yield break;
                 }
             }
+
+			ws.Abort();
+            ws.Dispose();
+
+            if (OnClose != null)
+            {
+                OnClose(this, new EventArgs());
+            }
+
+            if (connectRoutine != null)
+            {
+                connectRoutine.StopCoroutine();
+                connectRoutine = null;
+            }  
         }
     }
 }

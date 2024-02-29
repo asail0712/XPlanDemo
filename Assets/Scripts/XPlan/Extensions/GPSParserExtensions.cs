@@ -25,28 +25,34 @@ namespace XPlan.Extensions
 
             GnrmcData result    = new GnrmcData();
             string[] fields     = gnrmcData.Split(',');
+            result.bIgnore      = fields[0] != "$GNRMC" || fields.Length <= 7;
 
-            if (fields[0] == "$GNRMC" && fields.Length > 2)
+            if (!result.bIgnore)
             {
-                result.bIgnore  = false;
-                result.bActive  = fields[2] == "A";
                 result.dataTime = ParseTime(DateTime.Now.ToString("ddMMyy"), fields[1]);
+                result.bActive  = fields[2] == "A";
 
                 if (!result.bActive) 
                 {
                     return result;
                 }
 
-                result.latAndLng[0] = ParseCoordinate(fields[3], fields[4]);
-                result.latAndLng[1] = ParseCoordinate(fields[5], fields[6]);
-                result.speed        = double.Parse(fields[7]) * 1.852;      // 將節轉換為km/h
-                //result.groundTrack  = double.Parse(fields[8]);              // 北0度 東90度 南180度 西270度
+                if(ParseCoordinate(fields[3], fields[4], out result.latAndLng[0]))
+				{
+                    if(ParseCoordinate(fields[5], fields[6], out result.latAndLng[1]))
+					{
+                        if (double.TryParse(fields[7], out result.speed))
+                        {
+                            result.speed *= 1.852f;      // 將'節'轉換為km/h
+                        }
+                    }
+                }                
 			}
 
-            return result;
+			return result;
         }
 
-        private static double ParseCoordinate(string coordinate, string direction)
+        private static bool ParseCoordinate(string coordinate, string direction, out double value)
         {
             int len = 2;
 
@@ -55,16 +61,30 @@ namespace XPlan.Extensions
                 len = 3;
 			}
 
-            // 解析緯度或經度
-            double value = double.Parse(coordinate.Substring(0, len)) + double.Parse(coordinate.Substring(len)) / 60.0;
+            double temp1 = 0;
+            double temp2 = 0;
 
-            // 考慮南緯和西經的情況
-            if (direction == "S" || direction == "W")
-            {
-                value = -value;
+            value = 0;
+            // 解析緯度或經度
+            if (double.TryParse(coordinate.Substring(0, len), out temp1))
+			{
+                if (double.TryParse(coordinate.Substring(len), out temp2))
+				{
+                    value = temp1 + temp2 / 60.0;
+
+                    // 考慮南緯和西經的情況
+                    if (direction == "S" || direction == "W")
+                    {
+                        value = -value;
+                    }
+
+                    return true;
+                }
             }
 
-            return value;
+            //double value = double.Parse(coordinate.Substring(0, len)) + double.Parse(coordinate.Substring(len)) / 60.0;
+
+            return false;
         }
 
         private static DateTime ParseTime(string date, string time, string timeZone = "Taipei Standard Time")
