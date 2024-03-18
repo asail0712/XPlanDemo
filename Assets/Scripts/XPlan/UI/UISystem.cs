@@ -6,6 +6,21 @@ using XPlan.Interface;
 
 namespace XPlan.UI
 {
+	public class UIParam
+	{
+		private object param;
+
+		public T GetValue<T>()
+		{
+			return (T)param;
+		}
+
+		public UIParam(object p)
+		{
+			param = p;
+		}
+	}
+
 	struct CallbackGroup
 	{
 		public IUIListener uiListener;
@@ -30,57 +45,6 @@ namespace XPlan.UI
 			{
 				Debug.Log($"{logContent} {uniqueID}");
 			}			
-		}
-
-		/**********************************************
-		* 通用功能
-		* ********************************************/
-		static public UIParam GetUIParam(this object param)
-		{
-			UIParam p = null;
-
-			if (param is int)
-			{
-				p = new IntParam((int)param);
-			}
-			else if (param is string)
-			{
-				p = new StringParam((string)param);
-			}
-			else if (param is float)
-			{
-				p = new FloatParam((float)param);
-			}
-			else if (param is double)
-			{
-				p = new DoubleParam((double)param);
-			}
-			else if (param is bool)
-			{
-				p = new BoolParam((bool)param);
-			}
-			else if (param is Vector2)
-			{
-				p = new Vector2Param((Vector2)param);
-			}
-			else if (param is byte[])
-			{
-				p = new ByteArrParam((byte[])param);
-			}
-			else if (param is Texture)
-			{
-				p = new TextureParam((Texture)param);
-			}
-			else if (param is Action)
-			{
-				p = new ActionParam((Action)param);
-			}
-			else if (param is UIDataContainer)
-			{
-				p = (UIDataContainer)param;
-			}
-
-			return p;
 		}
 
 		/**********************************************
@@ -156,15 +120,18 @@ namespace XPlan.UI
 			});
 		}
 
-		static public void TriggerCallback<T>(string uniqueID, UIParam param, Action<T> onPress)
+		static public void TriggerCallback<T>(string uniqueID, T param, Action<T> onPress)
 		{
+			// 阻擋任何UI操作，用於手機App當網路還沒回應完成的時候
 			if (CheckToPause())
 			{
 				return;
 			}
 
+			UIParam uiParam = new UIParam(param);
+
 			// onPress主要是讓 UI呼叫的，所以不管Handler是否有註冊都要執行
-			onPress?.Invoke(param.GetValue<T>());
+			onPress?.Invoke(uiParam.GetValue<T>());
 
 			if (!callbackDict.ContainsKey(uniqueID))
 			{
@@ -178,7 +145,7 @@ namespace XPlan.UI
 				CheckLog(uniqueID, "執行UI監聽");
 
 				// onPostPress 是當而完成click要做的
-				group.callback?.Invoke(param);
+				group.callback?.Invoke(uiParam);
 			});
 		}
 
@@ -257,13 +224,7 @@ namespace XPlan.UI
 				if(kvp.Value.Contains(uniqueID))
 				{
 					// 個別UI個別轉型
-					UIParam p = value.GetUIParam();
-
-					if (p == null)
-					{
-						Debug.LogError("UISystem not support this type !!");
-						return;
-					}
+					UIParam p = new UIParam(value);
 
 					// 因為uiCallingDict為成員變數
 					// Notify出去後，有可能會修改到uiCallingDict
@@ -287,7 +248,7 @@ namespace XPlan.UI
 			{
 				if (kvp.Value.Contains(uniqueID))
 				{					
-					kvp.Key.NotifyUI(uniqueID, new UIParam());
+					kvp.Key.NotifyUI(uniqueID, new UIParam(null));
 				}
 			}
 		}
@@ -303,7 +264,7 @@ namespace XPlan.UI
 
 					for(int i = 0; i < len; ++i)
 					{
-						pList[i] = paramList[i].GetUIParam();
+						pList[i] = new UIParam(paramList[i]);
 					}
 
 					kvp.Key.NotifyUI(uniqueID, pList);

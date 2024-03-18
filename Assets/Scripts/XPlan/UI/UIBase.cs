@@ -96,9 +96,7 @@ namespace XPlan.UI
 		{
 			toggle.onValueChanged.AddListener((bOn)=> 
 			{
-				BoolParam p = new BoolParam(bOn);
-
-				UISystem.TriggerCallback<bool>(uniqueID, p, onPress);				
+				UISystem.TriggerCallback<bool>(uniqueID, bOn, onPress);				
 			});
 		}
 
@@ -114,9 +112,7 @@ namespace XPlan.UI
 						return;
 					}
 
-					IntParam p = new IntParam(X.labelIdx);
-
-					UISystem.TriggerCallback<int>(uniqueID, p, onPress);
+					UISystem.TriggerCallback<int>(uniqueID, X.labelIdx, onPress);
 				});
 			});
 		}
@@ -129,32 +125,20 @@ namespace XPlan.UI
 			{
 				onPress?.Invoke(val);
 
-				BoolParam p = new BoolParam(true);
-
-				UISystem.TriggerCallback<bool>(uniqueID, p, null);
+				UISystem.TriggerCallback<bool>(uniqueID, true, null);
 			};
 
 			pointTrigger.OnPointUp += (val) =>
 			{
 				onPull?.Invoke(val);
 
-				BoolParam p = new BoolParam(false);
-
-				UISystem.TriggerCallback<bool>(uniqueID, p, null);
+				UISystem.TriggerCallback<bool>(uniqueID, false, null);
 			};
 		}
 
 		protected void DirectTrigger<T>(string uniqueID, T param, Action<T> onPress = null)
 		{
-			UIParam p = param.GetUIParam();
-
-			if (p == null)
-			{
-				Debug.LogError("UISystem not support this type !!");
-				return;
-			}
-
-			UISystem.TriggerCallback<T>(uniqueID, p, onPress);
+			UISystem.TriggerCallback<T>(uniqueID, param, onPress);
 		}
 
 		protected void DirectTrigger(string uniqueID, Action onPress = null)

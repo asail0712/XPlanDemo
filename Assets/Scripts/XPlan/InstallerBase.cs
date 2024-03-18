@@ -28,12 +28,7 @@ namespace XPlan
 		{
 			handlerManager = new HandlerManager();
 
-			OnInitial();
-		}
-
-		protected virtual void OnInitial()
-		{
-			// for override
+			OnPreInitial();
 		}
 
 		// Start is called before the first frame update
@@ -45,6 +40,18 @@ namespace XPlan
 			PostInitial();
 		}
 
+		private void PostInitial()
+		{
+			handlerManager.PostInitial();
+
+			OnPostInitial();
+		}
+
+		protected virtual void OnPreInitial()
+		{
+			// for override
+		}
+
 		protected virtual void OnInitialGameObject()
 		{
 			// for override
@@ -54,9 +61,9 @@ namespace XPlan
 			// for override
 		}
 
-		private void PostInitial()
+		protected virtual void OnPostInitial()
 		{
-			handlerManager.PostInitial();
+			// for override
 		}
 
 		/**********************************************

@@ -57,15 +57,7 @@ namespace XPlan.UI
 		 * **************************************/
 		protected void DirectTrigger<T>(string uniqueID, T param, Action<T> onPress = null)
 		{
-			UIParam p = param.GetUIParam();
-
-			if (p == null)
-			{
-				Debug.LogError("UISystem not support this type !!");
-				return;
-			}
-
-			UISystem.TriggerCallback<T>(uniqueID, p, onPress);
+			UISystem.TriggerCallback<T>(uniqueID, param, onPress);
 		}
 
 		protected void DirectTrigger(string uniqueID, Action onPress = null)

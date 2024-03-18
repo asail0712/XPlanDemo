@@ -7,11 +7,6 @@ namespace XPlan
 {
 	public class HandlerBase : IUIListener
 	{
-		protected void DirectCallUI(string uniqueID, UIDataContainer data)
-		{
-			UISystem.DirectCall<UIDataContainer>(uniqueID, data);
-		}
-
 		protected void DirectCallUI<T>(string uniqueID, T value)
 		{
 			UISystem.DirectCall<T>(uniqueID, value);
