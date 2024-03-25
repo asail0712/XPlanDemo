@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -358,6 +359,20 @@ namespace XPlan.Scenes
 		/************************************
 		* 其他
 		* **********************************/
+		public bool IsInScene<T>(T sceneType) where T : struct, IConvertible
+		{
+			// 將型態轉換成整數會是多少
+			int sceneInt = sceneType.ToInt32(CultureInfo.InvariantCulture);
+
+			if (sceneInt >= 0)
+			{
+				return sceneInt == GetCurrSceneIdx();
+			}
+
+			return false;
+		}
+
+		
 		private int GetLevel(int sceneType)
 		{
 			int idx = sceneInfoList.FindIndex((X)=> 
