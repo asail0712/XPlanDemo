@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 using XPlan.Command;
+using XPlan.Extensions;
 using XPlan.Utility;
 
 namespace XPlan.Scenes
@@ -420,7 +421,17 @@ namespace XPlan.Scenes
 
 		public int GetCurrSceneIdx()
 		{
-			return currSceneStack[currSceneStack.Count - 1];
+			int currScene = currSceneStack.Count - 1;
+
+			if(currSceneStack.IsValidIndex<int>(currScene))
+			{
+				return currSceneStack[currScene];
+			}
+			else
+			{
+				Debug.LogWarning("Level Error");
+				return -1;
+			}			
 		}
 	}
 }
