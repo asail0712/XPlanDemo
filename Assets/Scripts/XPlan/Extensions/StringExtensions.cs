@@ -70,10 +70,19 @@ namespace XPlan.Extensions
 
         public static string GetFileNameFromUrl(this string url)
         {
+            string fileName = url;
+
             // 使用 Uri 來解析 URL
-            Uri uri = new Uri(url);
-            // 使用 Path.GetFileName 取得檔案名稱部分
-            string fileName = Path.GetFileName(uri.LocalPath);
+            try
+            { 
+                Uri uri     = new Uri(url);
+                // 使用 Path.GetFileName 取得檔案名稱部分
+                fileName    = Path.GetFileName(uri.LocalPath);
+            }
+            catch(Exception e)
+			{
+                Debug.LogWarning(e.ToString());
+			}
 
             return fileName;
         }
