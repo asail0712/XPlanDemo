@@ -37,6 +37,14 @@ namespace XPlan.Extensions
 
 			return photoByte;
 		}
+
+		static public string TexToBase64(this Texture2D texture)
+		{
+			byte[] jpgByte		= texture.EncodeToJPG();
+			string base64Str	= Convert.ToBase64String(jpgByte);
+
+			return base64Str;
+		}
 	}
 }
 
