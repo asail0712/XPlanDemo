@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using XPlan.DebugMode;
 using XPlan.Utility;
 using XPlan.Extensions;
 
@@ -20,37 +21,60 @@ namespace XPlan.Observe
 
 	public class MessageReceiver
 	{
-		private MessageBase msg;
+		private MessageSender msgSender;
 
-		public MessageReceiver(MessageBase msg)
+		public MessageReceiver(MessageSender msgSender)
 		{
-			this.msg = msg;
+			this.msgSender = msgSender;
 		}
 
 		public bool CorrespondType(Type type)
 		{
-			return msg.GetType() == type;
+			return msgSender.GetType() == type;
+		}
+
+		public bool CorrespondType<T>()
+		{
+			return msgSender.msg is T;
 		}
 
 		public T GetMessage<T>() where T : MessageBase
 		{
-			return (T)msg;
+#if DEBUG
+			string className	= msgSender.stackInfo.GetClassName();
+			string methodName	= msgSender.stackInfo.GetMethodName();
+			string lineNumber	= msgSender.stackInfo.GetLineNumber();
+			string fullLogInfo	= $"Notify({msgSender.msg.GetType()}) from [ {className}::{methodName}() ], line {lineNumber} ";
+			Debug.Log(fullLogInfo);
+#endif //DEBUG
+
+			return (T)(msgSender.msg);
 		}
 	}
 
-
 	public class MessageSender
 	{
-		private MessageBase msg;
+		public MessageBase msg;
+#if DEBUG
+		public StackInfo stackInfo;
+#endif //DEBUG
 
 		public MessageSender(MessageBase msg)
 		{
-			this.msg	= msg;
+			this.msg		= msg;
+#if DEBUG
+			this.stackInfo	= new StackInfo(4);
+#endif //DEBUG
 		}
 
 		public void SendMessage()
 		{
-			NotifySystem.Instance.SendMsg(msg);
+			NotifySystem.Instance.SendMsg(this);
+		}
+
+		public new Type GetType()
+		{
+			return msg.GetType();
 		}
 	}
 
@@ -96,9 +120,9 @@ namespace XPlan.Observe
 			receiveList.Remove(receiver);
 		}
 
-		public void SendMsg(MessageBase msg)
+		public void SendMsg(MessageSender msgSender)
 		{
-			Type type = msg.GetType();
+			Type type = msgSender.GetType();
 
 			if(!ReceiveMap.ContainsKey(type))
 			{
@@ -110,7 +134,7 @@ namespace XPlan.Observe
 
 			receiveList.ForEach((E04) => 
 			{
-				E04.ReceiveNotify(new MessageReceiver(msg));
+				E04.ReceiveNotify(new MessageReceiver(msgSender));
 			});
 		}
 	}

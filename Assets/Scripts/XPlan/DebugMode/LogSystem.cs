@@ -6,15 +6,42 @@ using UnityEngine;
 
 namespace XPlan.DebugMode
 { 
+    public class StackInfo
+	{
+        private StackTrace stackTrace;
+        private StackFrame stackFrame;
+
+        public StackInfo(int stackNum = 1)
+		{
+            stackTrace = new StackTrace(true);
+            stackFrame = stackTrace.GetFrame(stackNum);
+        }
+
+        public string GetClassName()
+		{
+            return stackFrame.GetMethod().DeclaringType.Name;
+        }
+
+        public string GetMethodName()
+        {
+            return stackFrame.GetMethod().Name;
+        }
+
+        public string GetLineNumber()
+        {
+            return stackFrame.GetFileLineNumber().ToString();
+        }
+    }
+
     public static class LogSystem
     {
         public static void Record(string logInfo, LogType logLevel = LogType.Log, Action<string> onFinish = null)
 		{
-            StackTrace stackTrace   = new StackTrace(true);
-            StackFrame frame        = stackTrace.GetFrame(1);
-            string className        = frame.GetMethod().DeclaringType.Name;
-            string methodName       = frame.GetMethod().Name;
-            string lineNumber       = frame.GetFileLineNumber().ToString();
+#if DEBUG
+            StackInfo stackTrace    = new StackInfo();
+            string className        = stackTrace.GetClassName();
+            string methodName       = stackTrace.GetMethodName();
+            string lineNumber       = stackTrace.GetLineNumber();
 
             string fullLogInfo      = $"{logInfo} at [ {className}::{methodName}() ], line {lineNumber} ";
 
@@ -32,6 +59,7 @@ namespace XPlan.DebugMode
             }
 
             onFinish?.Invoke(fullLogInfo);
+#endif //DEBUG
         }
-	}
+    }
 }
