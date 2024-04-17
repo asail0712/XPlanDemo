@@ -6,6 +6,9 @@ namespace XPlan.Component
 {
 	public class RotateByMouse : MonoBehaviour
 	{
+		[SerializeField]
+		private float moveVel = 5;
+
 		protected Vector2 lastPosition;
 
 		void Update ()
@@ -27,7 +30,7 @@ namespace XPlan.Component
 				if (t.phase == TouchPhase.Moved)
 				{
 					Vector2 delta = t.position - lastPosition;
-					transform.Rotate(Vector3.up, -0.5f * delta.x);
+					transform.Rotate(Vector3.up, (moveVel / 10f) * -delta.x);
 				}
 				lastPosition = t.position;
 			}
@@ -37,7 +40,7 @@ namespace XPlan.Component
 				if (Input.GetMouseButton(0) || Input.GetMouseButton(1))
 				{
 					var dx = Input.GetAxis("Mouse X");
-					transform.Rotate(Vector3.up, -dx * 5);
+					transform.Rotate(Vector3.up, -dx * moveVel);
 				}
 			}
 		}
