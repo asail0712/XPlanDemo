@@ -25,7 +25,7 @@ namespace XPlan.Extensions
             }
         }
 
-        public static void AttachChild(this GameObject gameObject, GameObject childGO
+        public static void AddChild(this GameObject gameObject, GameObject childGO
             , Vector3 locPos        = default(Vector3)
             , Vector3 eulerAngles   = default(Vector3))
 		{
@@ -38,6 +38,21 @@ namespace XPlan.Extensions
             childGO.transform.localPosition     = locPos;
             childGO.transform.localEulerAngles  = eulerAngles;
             childGO.transform.localScale        = Vector3.one;
+        }
+
+        public static void SetLayer(this GameObject gameObject, int layer, bool bContainChild = true)
+        {
+            gameObject.layer = layer;
+
+            if(bContainChild)
+			{
+                int count = gameObject.transform.childCount;
+
+                for(int i = 0; i < count; ++i)
+				{
+                    gameObject.transform.GetChild(i).gameObject.layer = layer;
+                }
+            }
         }
     }
 }
