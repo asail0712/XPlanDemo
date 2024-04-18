@@ -7,6 +7,6 @@ namespace XPlan.Observe
 { 
     public interface INotifyReceiver
     {
-        void ReceiveNotify(MessageReceiver msg);
+        void ReceiveNotify(MessageReceiver msgReceiver);
     }
 }
