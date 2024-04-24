@@ -78,64 +78,95 @@ namespace XPlan.Observe
 		}
 	}
 
+	public class NotifyInfo
+	{
+		public INotifyReceiver notifyReceiver;
+		public Dictionary<Type, List<Action<MessageReceiver>>> typeReceiveMap;
+
+		public NotifyInfo(INotifyReceiver notifyReceiver)
+		{
+			this.notifyReceiver = notifyReceiver;
+			this.typeReceiveMap = new Dictionary<Type, List<Action<MessageReceiver>>>();
+		}
+	}
+
+
     public class NotifySystem : CreateSingleton<NotifySystem>
     {
-		Dictionary<Type, List<INotifyReceiver>> ReceiveMap;
+		List<NotifyInfo> infoList;
 
-        protected override void InitSingleton()
+		protected override void InitSingleton()
 	    {
-			ReceiveMap = new Dictionary<Type, List<INotifyReceiver>>();
+			infoList = new List<NotifyInfo>();
 		}
 
-		public void RegisterNotify(Type type, INotifyReceiver receiver)
+		public void RegisterNotify<T>(INotifyReceiver notifyReceiver, Action<MessageReceiver> notifyAction)
 		{
-			Type msgBaseType = typeof(MessageBase);
-
-			if(!msgBaseType.IsAssignableFrom(type))
-			{
-				Debug.LogError("Message沒有這個型別 !");
-			}
-
-			List<INotifyReceiver> receiveList = ReceiveMap.FindOrAdd<Type, List<INotifyReceiver>>(type);
-
-			receiveList.Add(receiver);
-		}
-
-		public void UnregisterNotify(Type type, INotifyReceiver receiver)
-		{
-			Type msgBaseType = typeof(MessageBase);
+			Type type			= typeof(T);
+			Type msgBaseType	= typeof(MessageBase);
 
 			if (!msgBaseType.IsAssignableFrom(type))
 			{
 				Debug.LogError("Message沒有這個型別 !");
-			}
-
-			if (!ReceiveMap.ContainsKey(type))
-			{
 				return;
 			}
 
-			List<INotifyReceiver> receiveList = ReceiveMap[type];
+			NotifyInfo notifyInfo = null;
 
-			receiveList.Remove(receiver);
+			foreach (NotifyInfo currInfo in infoList)
+			{
+				if(currInfo.notifyReceiver == notifyReceiver)
+				{
+					notifyInfo = currInfo;
+					break;
+				}
+			}
+
+			if(notifyInfo == null)
+			{
+				notifyInfo = new NotifyInfo(notifyReceiver);
+				infoList.Add(notifyInfo);
+			}
+
+			List<Action<MessageReceiver>> actionList = notifyInfo.typeReceiveMap.FindOrAdd<Type, List<Action<MessageReceiver>>>(type);
+			actionList.Add(notifyAction);
+		}
+
+		public void UnregisterNotify(INotifyReceiver notifyReceiver)
+		{
+			int idx = -1;
+
+			for (int i = 0; i < infoList.Count; ++i)
+			{
+				if (infoList[i].notifyReceiver == notifyReceiver)
+				{
+					idx = i;
+					break;
+				}
+			}
+
+			if(infoList.IsValidIndex<NotifyInfo>(idx))
+			{
+				infoList.RemoveAt(idx);
+			}			
 		}
 
 		public void SendMsg(MessageSender msgSender)
 		{
 			Type type = msgSender.GetType();
 
-			if(!ReceiveMap.ContainsKey(type))
+			foreach (NotifyInfo currInfo in infoList)
 			{
-				//Debug.Log($"No Using Message => {type}!!");
-				return;
+				if(currInfo.typeReceiveMap.ContainsKey(type))
+				{
+					List<Action<MessageReceiver>> actionList = currInfo.typeReceiveMap[type];
+
+					foreach (Action<MessageReceiver> action in actionList)
+					{
+						action?.Invoke(new MessageReceiver(msgSender));
+					}
+				}
 			}
-
-			List<INotifyReceiver> receiveList = ReceiveMap[type];
-
-			receiveList.ForEach((E04) => 
-			{
-				E04.ReceiveNotify(new MessageReceiver(msgSender));
-			});
 		}
 	}
 }

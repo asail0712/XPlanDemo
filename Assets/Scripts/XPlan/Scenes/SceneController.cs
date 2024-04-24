@@ -63,13 +63,13 @@ namespace XPlan.Scenes
 
 	public class SceneController : CreateSingleton<SceneController>
 	{
-		private List<SceneInfo> sceneInfoList	= new List<SceneInfo>();
-		private List<int> currSceneStack		= new List<int>();
+		static private List<SceneInfo> sceneInfoList	= new List<SceneInfo>();
+		private List<int> currSceneStack				= new List<int>();
 
-		private List<ChangeInfo> changeQueue	= new List<ChangeInfo>();
+		private List<ChangeInfo> changeQueue			= new List<ChangeInfo>();
 
-		private Coroutine unloadRoutine			= null;
-		private Coroutine loadRoutine			= null;
+		private Coroutine unloadRoutine					= null;
+		private Coroutine loadRoutine					= null;
 
 		/************************************
 		* 初始化
@@ -251,7 +251,7 @@ namespace XPlan.Scenes
 		/************************************
 		* UI Fade in/out流程處理
 		* **********************************/
-		public void RegisterFadeCallback(int sceneType, Action FadeOutFunc, Func<bool> retFunc)
+		static public void RegisterFadeCallback(int sceneType, Action FadeOutFunc, Func<bool> retFunc)
 		{
 			int idx = sceneInfoList.FindIndex((X) =>
 			{
@@ -265,7 +265,7 @@ namespace XPlan.Scenes
 			}
 		}
 
-		public void UnregisterFadeCallback(int sceneType, Action func, Func<bool> retFunc)
+		static public void UnregisterFadeCallback(int sceneType, Action func, Func<bool> retFunc)
 		{
 			int idx = sceneInfoList.FindIndex((X) =>
 			{

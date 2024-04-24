@@ -168,9 +168,6 @@ namespace XPlan.UI
 		/********************************
 		 * 流程
 		 * *****************************/
-
-		bool bNoNewAnyThing = false;
-
 		protected Action<float> onTickEvent;
 
 		private void Update()
@@ -182,18 +179,10 @@ namespace XPlan.UI
 		{
 			OnDispose();
 
-			if(!bNoNewAnyThing)
-			{
-				SceneController.Instance.UnregisterFadeCallback(sceneType, TriggerToFadeOut, IsFadeOutFinish);
-			}
+			SceneController.UnregisterFadeCallback(sceneType, TriggerToFadeOut, IsFadeOutFinish);
 			
 			UISystem.UnlistenAllCall(this);
 			UISystem.UnregisterAllCallback(this);
-		}
-
-		private void OnApplicationQuit()
-		{
-			bNoNewAnyThing = true;
 		}
 
 		protected virtual void OnDispose()
@@ -218,7 +207,7 @@ namespace XPlan.UI
 			this.sortIdx		= idx;
 			this.sceneType		= sceneType;
 
-			SceneController.Instance.RegisterFadeCallback(sceneType, TriggerToFadeOut, IsFadeOutFinish);
+			SceneController.RegisterFadeCallback(sceneType, TriggerToFadeOut, IsFadeOutFinish);
 
 			OnInitialUI();
 		}
