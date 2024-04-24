@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,7 +15,7 @@ namespace XPlan
 		private List<MonoBehaviourHelper.MonoBehavourInstance> coroutineList;
 
 		/*************************
-		 * Coroutine¬ÛÃö
+		 * Coroutineç›¸é—œ
 		 * ***********************/
 		protected MonoBehaviourHelper.MonoBehavourInstance StartCoroutine(IEnumerator routine, bool persistent = false)
 		{
@@ -34,7 +34,7 @@ namespace XPlan
 		}
 
 		/*************************
-		 * Notify¬ÛÃö
+		 * Notifyç›¸é—œ
 		 * ***********************/
 		protected void RegisterNotify<T>(INotifyReceiver notifyReceiver, Action<T> notifyAction) where T : MessageBase
 		{
@@ -47,7 +47,7 @@ namespace XPlan
 		}
 
 		/*************************
-		 * UI¬ÛÃö
+		 * UIç›¸é—œ
 		 * ***********************/
 		protected void DirectCallUI<T>(string uniqueID, T value)
 		{
@@ -91,7 +91,7 @@ namespace XPlan
 		}
 
 		/*************************
-		 * ªì©l¤Æ»PÄÀ©ñ
+		 * åˆå§‹åŒ–èˆ‡é‡‹æ”¾
 		 * ***********************/
 		public HandlerBase()
 		{
@@ -110,10 +110,10 @@ namespace XPlan
 
 		public void Dispose(bool bAppQuit)
 		{
-			// ²M°£ui listener
+			// æ¸…é™¤ui listener
 			RemoveAllUIListener();
 
-			// ²M°£coroutine
+			// æ¸…é™¤coroutine
 			foreach(MonoBehaviourHelper.MonoBehavourInstance coroutine in coroutineList)
 			{
 				if(coroutine != null)
@@ -123,8 +123,11 @@ namespace XPlan
 			}
 			coroutineList.Clear();
 
-			// ²M°£notify
-			NotifySystem.Instance.UnregisterNotify(this);
+			if(!bAppQuit)
+			{ 
+				// æ¸…é™¤notify
+				NotifySystem.Instance.UnregisterNotify(this);
+			}
 
 			OnDispose(bAppQuit);
 		}
