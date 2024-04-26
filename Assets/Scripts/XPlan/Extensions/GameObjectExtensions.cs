@@ -27,7 +27,8 @@ namespace XPlan.Extensions
 
         public static void AddChild(this GameObject gameObject, GameObject childGO
             , Vector3 locPos        = default(Vector3)
-            , Vector3 eulerAngles   = default(Vector3))
+            , Vector3 eulerAngles   = default(Vector3)
+            , float ratio           = 1.0f)
 		{
             if(childGO == null)
 			{
@@ -37,7 +38,7 @@ namespace XPlan.Extensions
             childGO.transform.SetParent(gameObject.transform);
             childGO.transform.localPosition     = locPos;
             childGO.transform.localEulerAngles  = eulerAngles;
-            childGO.transform.localScale        = Vector3.one;
+            childGO.transform.localScale        = new Vector3(ratio, ratio, ratio);
         }
 
         public static void SetLayer(this GameObject gameObject, int layer, bool bContainChild = true)

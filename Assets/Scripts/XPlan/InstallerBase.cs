@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 // MonoBehaviour 函數的執行先後順序
 // https://home.gamer.com.tw/creationDetail.php?sn=2491667
@@ -37,11 +40,13 @@ namespace XPlan
 			OnInitialGameObject();
 			OnInitialHandler();
 
-			PostInitial();
+			StartCoroutine(PostInitial());
 		}
 
-		private void PostInitial()
+		private IEnumerator PostInitial()
 		{
+			yield return new WaitForEndOfFrame();
+
 			handlerManager.PostInitial();
 
 			OnPostInitial();
