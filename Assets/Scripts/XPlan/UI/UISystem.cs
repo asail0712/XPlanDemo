@@ -213,13 +213,13 @@ namespace XPlan.UI
 		{
 			public UIBase ui;
 			public string uniqueID;
-			public UIParam param;
+			public List<UIParam> paramList;
 
-			public NotifyUIInfo(UIBase u, string s, UIParam p)
+			public NotifyUIInfo(UIBase u, string s, List<UIParam> p)
 			{
 				ui			= u;
 				uniqueID	= s;
-				param		= p;
+				paramList	= p;
 			}
 		};
 
@@ -231,14 +231,16 @@ namespace XPlan.UI
 			{
 				if(kvp.Value.Contains(uniqueID))
 				{
+					List<UIParam> paramList = new List<UIParam>();
+
 					// 個別UI個別轉型
-					UIParam p = new UIParam(value);
+					paramList.Add(new UIParam(value));
 
 					// 因為uiCallingDict為成員變數
 					// Notify出去後，有可能會修改到uiCallingDict
 					// 所以要拆成兩個動作處理
 					//kvp.Key.NotifyUI(uniqueID, p);
-					NotifyUIInfo info = new NotifyUIInfo(kvp.Key, uniqueID, p);
+					NotifyUIInfo info = new NotifyUIInfo(kvp.Key, uniqueID, paramList);
 
 					notifyList.Add(info);
 				}
@@ -246,37 +248,54 @@ namespace XPlan.UI
 
 			foreach (NotifyUIInfo info in notifyList)
 			{
-				info.ui.NotifyUI(info.uniqueID, info.param);
+				info.ui.NotifyUI(info.uniqueID, info.paramList[0]);
 			}
 		}
 
 		static public void DirectCall(string uniqueID)
 		{
+			List<NotifyUIInfo> notifyList = new List<NotifyUIInfo>();
+
 			foreach (KeyValuePair<UIBase, List<string>> kvp in uiCallingDict)
 			{
 				if (kvp.Value.Contains(uniqueID))
-				{					
-					kvp.Key.NotifyUI(uniqueID, new UIParam(null));
+				{	
+					NotifyUIInfo info = new NotifyUIInfo(kvp.Key, uniqueID, null);
+
+					notifyList.Add(info);
 				}
+			}
+
+			foreach (NotifyUIInfo info in notifyList)
+			{
+				info.ui.NotifyUI(info.uniqueID, new UIParam(null));
 			}
 		}
 
-		static public void DirectCall(string uniqueID, params object[] paramList)
+		static public void DirectCall(string uniqueID, params object[] paramArr)
 		{
+			List<NotifyUIInfo> notifyList = new List<NotifyUIInfo>();
+
 			foreach (KeyValuePair<UIBase, List<string>> kvp in uiCallingDict)
 			{
 				if (kvp.Value.Contains(uniqueID))
 				{
-					int len			= paramList.Length;
-					UIParam[] pList = new UIParam[len];
+					List<UIParam> paramList = new List<UIParam>();
 
-					for(int i = 0; i < len; ++i)
+					for(int i = 0; i < paramArr.Length; ++i)
 					{
-						pList[i] = new UIParam(paramList[i]);
+						paramList.Add(new UIParam(paramArr[i]));
 					}
 
-					kvp.Key.NotifyUI(uniqueID, pList);
+					NotifyUIInfo info = new NotifyUIInfo(kvp.Key, uniqueID, paramList);
+
+					notifyList.Add(info);
 				}
+			}
+
+			foreach (NotifyUIInfo info in notifyList)
+			{
+				info.ui.NotifyUI(info.uniqueID, info.paramList.ToArray());
 			}
 		}
 	}
