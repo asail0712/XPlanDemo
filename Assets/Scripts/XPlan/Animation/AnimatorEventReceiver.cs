@@ -8,12 +8,17 @@ namespace XPlan.Anim
     {
 		private static readonly string FuncName_AnimStart	= "OnAnimStart";
 		private static readonly string FuncName_AnimEnd		= "OnAnimEnd";
+
 		public Action<string, float> onStart;
 		public Action<string> onFinish;
+		public Action<string, float, string> onPlaying;
+
+		[HideInInspector]
+		public Animator animator;
 
 		private void Awake()
 		{
-			Animator animator = GetComponent<Animator>();
+			animator = GetComponent<Animator>();
 
 			if(animator == null)
 			{
@@ -23,25 +28,35 @@ namespace XPlan.Anim
 			AnimationClip[] animationClips = animator.runtimeAnimatorController.animationClips;
 			foreach (AnimationClip clip in animationClips)
 			{
-				bool bNeedToAdd = true;
+				bool bNeedToAddStart	= true;
+				bool bNeedToAddFinish	= true;
 
-				foreach(AnimationEvent animEvent in clip.events)
+				foreach (AnimationEvent animEvent in clip.events)
 				{
 					// 由於AnimationEvent無法刪除，因此只能避免重複添加
-					if(animEvent.functionName == FuncName_AnimEnd)
+					if (animEvent.functionName == FuncName_AnimStart)
 					{
-						bNeedToAdd = false;
-						break;
+						bNeedToAddStart = false;
+						continue;
+					}
+
+					if (animEvent.functionName == FuncName_AnimEnd)
+					{
+						bNeedToAddFinish = false;
+						continue;
 					}
 				}
 
-				if(bNeedToAdd)
+				if (bNeedToAddStart)
 				{
 					AnimationEvent animStartEvent	= new AnimationEvent();
 					animStartEvent.functionName		= FuncName_AnimStart;   // 替換成您的回調函數名稱				
-					animStartEvent.time				= 0f;					// 在動畫結束時觸發回調函數
+					animStartEvent.time				= 0f;                   // 在動畫結束時觸發回調函數
 					clip.AddEvent(animStartEvent);
+				}
 
+				if (bNeedToAddFinish)
+				{
 					AnimationEvent animEndEvent		= new AnimationEvent();
 					animEndEvent.functionName		= FuncName_AnimEnd;     // 替換成您的回調函數名稱				
 					animEndEvent.time				= clip.length;          // 在動畫結束時觸發回調函數
@@ -58,6 +73,11 @@ namespace XPlan.Anim
 		public void OnAnimEnd(AnimationEvent animationEvent)
 	    {
 			onFinish?.Invoke(animationEvent.animatorClipInfo.clip.name);
+		}
+
+		public void OnAnimPlaying(AnimationEvent animationEvent)
+		{
+			onPlaying?.Invoke(animationEvent.animatorClipInfo.clip.name, animationEvent.time, animationEvent.stringParameter);
 		}
 
 		//private void OnDestroy()
