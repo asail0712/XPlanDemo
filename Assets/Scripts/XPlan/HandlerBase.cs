@@ -12,25 +12,64 @@ namespace XPlan
 {
 	public class HandlerBase : IUIListener, INotifyReceiver
 	{
-		private List<MonoBehaviourHelper.MonoBehavourInstance> coroutineList;
+		private Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance> coroutineDict;
+		private static int corourintSerialNum = 0;
 
 		/*************************
 		 * Coroutine相關
 		 * ***********************/
-		protected MonoBehaviourHelper.MonoBehavourInstance StartCoroutine(IEnumerator routine, bool persistent = false)
+		protected int StartCoroutine(IEnumerator routine, bool persistent = false)
 		{
+			// 清除已經停止的Coroutine
+			ClearCoroutine();
+
 			MonoBehaviourHelper.MonoBehavourInstance coroutine = MonoBehaviourHelper.StartCoroutine(routine, persistent);
 
-			coroutineList.Add(coroutine);
+			coroutineDict.Add(++corourintSerialNum, coroutine);
 
-			return coroutine;
+			return corourintSerialNum;
 		}
 
-		protected void StopCoroutine(MonoBehaviourHelper.MonoBehavourInstance coroutine)
+		protected void StopCoroutine(int serialNum)
 		{
+			if(!coroutineDict.ContainsKey(serialNum))
+			{
+				return;
+			}
+
+			MonoBehaviourHelper.MonoBehavourInstance coroutine = coroutineDict[serialNum];
+
 			coroutine.StopCoroutine();
 
-			coroutineList.Remove(coroutine);
+			coroutineDict.Remove(serialNum);
+		}
+
+		protected bool IsCoroutineRunning(int serialNum)
+		{
+			if (coroutineDict.ContainsKey(serialNum))
+			{
+				return coroutineDict[serialNum] != null;
+			}
+
+			return false;
+		}
+
+		private void ClearCoroutine()
+		{
+			List<int> serialNumList = new List<int>();
+
+			foreach (KeyValuePair<int, MonoBehaviourHelper.MonoBehavourInstance> kvp in coroutineDict)
+			{
+				if(kvp.Value == null)
+				{
+					serialNumList.Add(kvp.Key);
+				}
+			}
+
+			foreach(int serialNum in serialNumList)
+			{
+				coroutineDict.Remove(serialNum);
+			}
 		}
 
 		/*************************
@@ -95,7 +134,7 @@ namespace XPlan
 		 * ***********************/
 		public HandlerBase()
 		{
-			coroutineList = new List<MonoBehaviourHelper.MonoBehavourInstance>();
+			coroutineDict = new Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance>();
 		}
 
 		public void PostInitial()
@@ -114,14 +153,17 @@ namespace XPlan
 			RemoveAllUIListener();
 
 			// 清除coroutine
-			foreach(MonoBehaviourHelper.MonoBehavourInstance coroutine in coroutineList)
+			foreach(KeyValuePair<int, MonoBehaviourHelper.MonoBehavourInstance> kvp in coroutineDict)
 			{
-				if(coroutine != null)
+				MonoBehaviourHelper.MonoBehavourInstance coroutine = kvp.Value;
+
+				if (coroutine != null)
 				{
 					coroutine.StopCoroutine();
 				}
 			}
-			coroutineList.Clear();
+
+			coroutineDict.Clear();
 
 			if(!bAppQuit)
 			{ 

@@ -44,7 +44,7 @@ namespace XPlan.Utility
 
                 this.routine = routine;
 
-                return StartCoroutine(DestroyObjHandler(routine));
+                return StartCoroutine(WaitToDestroy(routine));
             }
 
             public void StopCoroutine(bool bNeedToDestroy = true)
@@ -57,7 +57,7 @@ namespace XPlan.Utility
                 }                
             }
 
-            private IEnumerator DestroyObjHandler(IEnumerator routine)
+            private IEnumerator WaitToDestroy(IEnumerator routine)
             {
                 yield return StartCoroutine(routine);
 
