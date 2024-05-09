@@ -17,27 +17,49 @@ namespace XPlan.UI
 		/********************************
 		* Listen Handler Call
 		* *****************************/
-		public void ListenCall(string id)
+		public void ListenCall(string id, Action<UIParam[]> paramAction)
 		{
-			UISystem.ListenCall(id, this);
-		}
-
-		public void NotifyUI(string uniqueID, params UIParam[] value)
-		{
-			// 並非由UILoader生成的UI不檢查是否working
-			if (bSpawnByLoader && 
-				UIController.IsInstance()
-				&& !UIController.Instance.IsWorkingUI(this))
+			UISystem.ListenCall(id, this, (paramList) => 
 			{
-				return;
-			}
+				if (bSpawnByLoader &&
+					UIController.IsInstance()
+					&& !UIController.Instance.IsWorkingUI(this))
+				{
+					return;
+				}
 
-			OnNotifyUI(uniqueID, value);
+				paramAction?.Invoke(paramList);
+			});
 		}
 
-		protected virtual void OnNotifyUI(string uniqueID, params UIParam[] value)
+		public void ListenCall<T>(string id, Action<T> paramAction)
 		{
-			// for override
+			UISystem.ListenCall(id, this, (paramList) =>
+			{
+				if (bSpawnByLoader &&
+					UIController.IsInstance()
+					&& !UIController.Instance.IsWorkingUI(this))
+				{
+					return;
+				}
+
+				paramAction?.Invoke(paramList[0].GetValue<T>());
+			});
+		}
+
+		public void ListenCall(string id, Action noParamAction)
+		{
+			UISystem.ListenCall(id, this, (paramList) =>
+			{
+				if (bSpawnByLoader &&
+					UIController.IsInstance()
+					&& !UIController.Instance.IsWorkingUI(this))
+				{
+					return;
+				}
+
+				noParamAction?.Invoke();
+			});
 		}
 
 		/********************************

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
+using XPlan.Extensions;
 using XPlan.Interface;
 
 namespace XPlan.UI
@@ -176,126 +178,135 @@ namespace XPlan.UI
 		/**********************************************
 		* Sync Calling相關功能
 		* ********************************************/
-		static private Dictionary<UIBase, List<string>> uiCallingDict = new Dictionary<UIBase, List<string>>();
-
-		static public void ListenCall(string id, UIBase ui)
+		public class UICallingInfo
 		{
-			if(!uiCallingDict.ContainsKey(ui))
+			public UIBase ui;
+			public Dictionary<string, List<Action<UIParam[]>>> callingeMap;
+
+			public UICallingInfo(UIBase ui)
 			{
-				uiCallingDict.Add(ui, new List<string>());
+				this.ui				= ui;
+				this.callingeMap	= new Dictionary<string, List<Action<UIParam[]>>>();
 			}
-
-			List<string> idList = uiCallingDict[ui];
-
-			if(!idList.Contains(id))
-			{
-				// 避免重複呼叫
-				uiCallingDict[ui].Add(id);
-			}			
 		}
+		static private List<UICallingInfo> callingList = new List<UICallingInfo>();
 
-		static public void UnlistenCall(string id, UIBase ui)
+		static public void ListenCall(string id, UIBase ui, Action<UIParam[]> callingAction)
 		{
-			if (!uiCallingDict.ContainsKey(ui))
+			// 尋找對應的UICallingInfo
+
+			int idx = callingList.FindIndex((E04) =>
 			{
-				return;
+				return E04.ui == ui;
+			});
+
+			UICallingInfo callingInfo = null;
+
+			if (!callingList.IsValidIndex<UICallingInfo>(idx))
+			{
+				callingInfo = new UICallingInfo(ui);
+
+				callingList.Add(callingInfo);
+			}
+			else
+			{
+				callingInfo = callingList[idx];
 			}
 
-			uiCallingDict[ui].Remove(id);
+			// 將資料放進 UICallingInfo
+
+			if (!callingInfo.callingeMap.ContainsKey(id))
+			{
+				List<Action<UIParam[]>> actionList = new List<Action<UIParam[]>>();
+				actionList.Add(callingAction);
+
+				callingInfo.callingeMap.Add(id, actionList);
+			}
+			else
+			{
+				callingInfo.callingeMap[id].Add(callingAction);
+			}	
 		}
 
 		static public void UnlistenAllCall(UIBase ui)
 		{
-			uiCallingDict.Remove(ui);
-		}
-
-		struct NotifyUIInfo
-		{
-			public UIBase ui;
-			public string uniqueID;
-			public List<UIParam> paramList;
-
-			public NotifyUIInfo(UIBase u, string s, List<UIParam> p)
+			callingList.RemoveAll((E04) => 
 			{
-				ui			= u;
-				uniqueID	= s;
-				paramList	= p;
-			}
-		};
+				return E04.ui == ui;
+			});
+		}
 
 		static public void DirectCall<T>(string uniqueID, T value)
 		{
-			List<NotifyUIInfo> notifyList = new List<NotifyUIInfo>();
+			List<Action<UIParam[]>> totalActionList = new List<Action<UIParam[]>>();
 
-			foreach (KeyValuePair<UIBase, List<string>> kvp in uiCallingDict)
+			foreach (UICallingInfo info in callingList)
 			{
-				if(kvp.Value.Contains(uniqueID))
+				foreach (KeyValuePair<string, List<Action<UIParam[]>>> kvp in info.callingeMap)
 				{
-					List<UIParam> paramList = new List<UIParam>();
-
-					// 個別UI個別轉型
-					paramList.Add(new UIParam(value));
-
-					// 因為uiCallingDict為成員變數
-					// Notify出去後，有可能會修改到uiCallingDict
-					// 所以要拆成兩個動作處理
-					//kvp.Key.NotifyUI(uniqueID, p);
-					NotifyUIInfo info = new NotifyUIInfo(kvp.Key, uniqueID, paramList);
-
-					notifyList.Add(info);
+					if(kvp.Key == uniqueID)
+					{
+						totalActionList.AddRange(kvp.Value);
+					}
 				}
 			}
 
-			foreach (NotifyUIInfo info in notifyList)
+			// 參數轉成陣列
+			List<UIParam> paramList = new List<UIParam>();
+			paramList.Add(new UIParam(value));
+
+			foreach (Action<UIParam[]> action in totalActionList)
 			{
-				info.ui.NotifyUI(info.uniqueID, info.paramList[0]);
+				action?.Invoke(paramList.ToArray());
 			}
 		}
 
 		static public void DirectCall(string uniqueID)
 		{
-			List<NotifyUIInfo> notifyList = new List<NotifyUIInfo>();
+			List<Action<UIParam[]>> totalActionList = new List<Action<UIParam[]>>();
 
-			foreach (KeyValuePair<UIBase, List<string>> kvp in uiCallingDict)
+			foreach (UICallingInfo info in callingList)
 			{
-				if (kvp.Value.Contains(uniqueID))
-				{	
-					NotifyUIInfo info = new NotifyUIInfo(kvp.Key, uniqueID, null);
-
-					notifyList.Add(info);
+				foreach (KeyValuePair<string, List<Action<UIParam[]>>> kvp in info.callingeMap)
+				{
+					if (kvp.Key == uniqueID)
+					{
+						totalActionList.AddRange(kvp.Value);
+					}
 				}
 			}
 
-			foreach (NotifyUIInfo info in notifyList)
+			foreach (Action<UIParam[]> action in totalActionList)
 			{
-				info.ui.NotifyUI(info.uniqueID, new UIParam(null));
+				action?.Invoke(new List<UIParam>().ToArray());
 			}
 		}
 
 		static public void DirectCall(string uniqueID, params object[] paramArr)
 		{
-			List<NotifyUIInfo> notifyList = new List<NotifyUIInfo>();
+			List<Action<UIParam[]>> totalActionList = new List<Action<UIParam[]>>();
 
-			foreach (KeyValuePair<UIBase, List<string>> kvp in uiCallingDict)
+			foreach (UICallingInfo info in callingList)
 			{
-				if (kvp.Value.Contains(uniqueID))
+				foreach (KeyValuePair<string, List<Action<UIParam[]>>> kvp in info.callingeMap)
 				{
-					List<UIParam> paramList = new List<UIParam>();
-
-					for(int i = 0; i < paramArr.Length; ++i)
+					if (kvp.Key == uniqueID)
 					{
-						paramList.Add(new UIParam(paramArr[i]));
+						totalActionList.AddRange(kvp.Value);
 					}
-
-					NotifyUIInfo info = new NotifyUIInfo(kvp.Key, uniqueID, paramList);
-
-					notifyList.Add(info);
 				}
 			}
 
-			foreach (NotifyUIInfo info in notifyList)
+			List<UIParam> paramList = new List<UIParam>();
+
+			for (int i = 0; i < paramArr.Length; ++i)
 			{
-				info.ui.NotifyUI(info.uniqueID, info.paramList.ToArray());
+				paramList.Add(new UIParam(paramArr[i]));
+			}
+
+			foreach (Action<UIParam[]> action in totalActionList)
+			{
+				action?.Invoke(paramList.ToArray());
 			}
 		}
 	}

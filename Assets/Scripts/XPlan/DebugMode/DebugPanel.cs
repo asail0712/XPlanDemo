@@ -32,6 +32,9 @@ namespace XPlan.DebugMode
 				Debug.LogWarning("偵錯面板設定有誤 !!");
 			}
 
+			/*******************************
+			 * 使用者操作
+			 * *****************************/
 			RegisterLabels("", labelList, (idx)=> 
 			{
 				for(int i = 0; i < contentList.Length; ++i)
@@ -45,18 +48,13 @@ namespace XPlan.DebugMode
 				uiRoot.SetActive(false);
 			});
 
-			ListenCall(ShowDebugPanel);
-		}
-
-		protected override void OnNotifyUI(string uniqueID, params UIParam[] value)
-		{
-			switch(uniqueID)
+			/*******************************
+			 * 收到命令
+			 * *****************************/
+			ListenCall(ShowDebugPanel, () => 
 			{
-				case ShowDebugPanel:
-					uiRoot.SetActive(true);
-					break;
-			}
+				uiRoot.SetActive(true);
+			});
 		}
-
 	}
 }
