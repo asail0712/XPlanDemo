@@ -3,15 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using XPlan.Utility;
-
-namespace Granden.kmrt
+namespace XPlan.Utility
 { 
     public class PoolInfo
 	{
         public int refCount = 0;
 
-        private int maxNum  = 0;
         private List<GameObject> duplicateList;
         private GameObject backUpObj = null;
         private GameObject poolRoot;
@@ -25,7 +22,6 @@ namespace Granden.kmrt
 		{
             this.poolRoot   = poolRoot;
             this.backUpObj  = obj;
-            this.maxNum     = maxNum;
             this.refCount   = 1;
 
             for (int i = 0; i < maxNum; ++i)
@@ -51,7 +47,6 @@ namespace Granden.kmrt
 
             duplicateList.Clear();
 
-            maxNum      = 0;
             refCount    = 0;
             poolRoot    = null;
             backUpObj   = null;
