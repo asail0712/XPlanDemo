@@ -78,21 +78,21 @@ namespace XPlan.Audio
 		/************************************
 		 * Play Sound
 		 * **********************************/
-		public void PlaySound(string clipName, float fadeInTime = 1f, float delayTime = 0f)
+		public void PlaySound(string clipName, float fadeInTime = 1f, float delayTime = 0f, float fadeOutTime = 1f)
 		{
 			int idx = soundBank.FindIndex((E04) =>
 			{
 				return E04.clipName == clipName;
 			});
 
-			PlaySound(idx, fadeInTime, delayTime);
+			PlaySound(idx, fadeInTime, delayTime, fadeOutTime);
 		}
 
-		public void PlaySound(int clipIdx, float fadeInTime = 1f, float delayTime = 0f)
+		public void PlaySound(int clipIdx, float fadeInTime = 1f, float delayTime = 0f, float fadeOutTime = 1)
 		{
 			if(delayTime > 0)
 			{
-				StartCoroutine(DelayToPlay(clipIdx, fadeInTime, delayTime));
+				StartCoroutine(DelayToPlay(clipIdx, fadeInTime, delayTime, fadeOutTime));
 			}
 			else
 			{
@@ -103,11 +103,11 @@ namespace XPlan.Audio
 					return;
 				}
 
-				StartCoroutine(FadeInOut(channel, fadeInTime, clipIdx));
+				StartCoroutine(FadeInOut(channel, clipIdx, fadeInTime, fadeOutTime));
 			}
 		}
 
-		private IEnumerator DelayToPlay(int clipIdx, float fadeInTime, float delayTime)
+		private IEnumerator DelayToPlay(int clipIdx, float fadeInTime, float delayTime, float fadeOutTime)
 		{
 			yield return new WaitForSeconds(delayTime);
 
@@ -118,7 +118,7 @@ namespace XPlan.Audio
 				yield break;
 			}
 
-			yield return FadeInOut(channel, fadeInTime, clipIdx);
+			yield return FadeInOut(channel, clipIdx, fadeInTime, fadeOutTime);
 		}
 
 		/************************************
@@ -143,7 +143,7 @@ namespace XPlan.Audio
 				return;
 			}
 
-			StartCoroutine(FadeInOut(channel, fadeOutTime));
+			StartCoroutine(FadeInOut(channel, -1, 0f, fadeOutTime));
 		}
 
 		/************************************
@@ -288,7 +288,7 @@ namespace XPlan.Audio
 			return channel;
 		}
 
-		private IEnumerator FadeInOut(AudioChannel channel, float fadeTime = 1f, int clipIdx = -1)
+		private IEnumerator FadeInOut(AudioChannel channel, int clipIdx = -1, float fadeInTime = 1f, float fadeOutTime = 1f)
 		{
 			// 這是在同一個Channel做 Fade in / out的處理
 
@@ -300,9 +300,9 @@ namespace XPlan.Audio
 			}
 
 			// fade out
-			if (fadeTime > 0f && audioSource.isPlaying)
+			if (fadeOutTime > 0f && audioSource.isPlaying)
 			{
-				yield return FadeOutCoroutine(audioSource, fadeTime);
+				yield return FadeOutCoroutine(audioSource, fadeOutTime);
 			}
 			else
 			{
@@ -319,9 +319,9 @@ namespace XPlan.Audio
 			audioSource.clip = GetClipByIdx(clipIdx);
 
 			// 检查是否要淡入
-			if (fadeTime > 0f)
+			if (fadeInTime > 0f)
 			{
-				yield return FadeInCoroutine(audioSource, fadeTime);
+				yield return FadeInCoroutine(audioSource, fadeInTime);
 			}
 			else
 			{
