@@ -13,6 +13,11 @@ namespace XPlan.Component
 
 		void Update ()
 		{
+			if(EventSystem.current == null)
+			{
+				return;
+			}
+
 			if (EventSystem.current.IsPointerOverGameObject () || IsPointerOverUIObject())
 			{ 
 				return;

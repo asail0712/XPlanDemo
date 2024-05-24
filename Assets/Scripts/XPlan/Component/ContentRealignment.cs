@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Granden.gwh
+namespace XPlan.Component
 {
     // 將Content居中
     public class ContentRealignment : MonoBehaviour
