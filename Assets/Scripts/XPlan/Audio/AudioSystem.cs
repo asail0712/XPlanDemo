@@ -22,6 +22,18 @@ namespace XPlan.Audio
 	}
 
 	[System.Serializable]
+	public class SoundGroup
+	{
+		// 提供使用者清晰的名稱，不提供邏輯處理
+		[SerializeField]
+		public string groupName = "";
+
+		[SerializeField]
+		public List<SoundInfo> infoList;
+	}
+
+
+	[System.Serializable]
 	public class SoundInfo
 	{
 		[SerializeField]
@@ -51,12 +63,20 @@ namespace XPlan.Audio
 	{
 		[SerializeField]
 		[Tooltip("放置所有要撥放的聲音")]
-		private List<SoundInfo> soundBank;
+		private List<SoundGroup> soundGroup;
 
 		private Dictionary<AudioChannel, AudioSource> sourceMap = new Dictionary<AudioChannel, AudioSource>();
+		private List<SoundInfo> soundBank;
 
 		protected override void InitSingleton()
 		{
+			// 初始化soundBank
+			soundBank = new List<SoundInfo>();
+			foreach (SoundGroup group in soundGroup)
+			{
+				soundBank.AddRange(group.infoList);
+			}
+
 			// 記錄所有使用到的channel
 			List<AudioChannel> channelList = new List<AudioChannel>();
 
