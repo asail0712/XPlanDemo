@@ -233,7 +233,14 @@ namespace XPlan.Audio
 				return false;
 			}
 
-			if(audioSource.clip != GetClipByIdx(clipIdx))
+			SoundInfo info = GetSoundByIdx(clipIdx);
+
+			if(info == null)
+			{
+				return false;
+			}
+
+			if (audioSource.clip != info.clip)
 			{
 				// 當前 clip不為指定的 clip
 				return false;
@@ -275,7 +282,7 @@ namespace XPlan.Audio
 			return audioSource;
 		}
 
-		private AudioClip GetClipByIdx(int clipIdx)
+		private SoundInfo GetSoundByIdx(int clipIdx)
 		{
 			if (!soundBank.IsValidIndex<SoundInfo>(clipIdx))
 			{
@@ -284,9 +291,9 @@ namespace XPlan.Audio
 				return null;
 			}
 
-			AudioClip clip = soundBank[clipIdx].clip;
+			SoundInfo info = soundBank[clipIdx];
 
-			return clip;
+			return info;
 		}
 
 		private bool IsLoopByIdx(int clipIdx)
@@ -329,11 +336,19 @@ namespace XPlan.Audio
 				yield break;
 			}
 
+			SoundInfo info = GetSoundByIdx(clipIdx);
+
+			if (info == null)
+			{
+				yield break;
+			}
+
 			// 更換撥放音樂
-			audioSource.clip = GetClipByIdx(clipIdx);
+			audioSource.clip	= info.clip;
+			float volume		= info.volume;
 
 			// fade in
-			yield return FadeInSound(audioSource, fadeInTime);
+			yield return FadeInSound(audioSource, fadeInTime, volume);
 		}
 
 		private IEnumerator FadeOutSound(AudioSource audioSource, float fadeOutTime)
@@ -362,7 +377,7 @@ namespace XPlan.Audio
 			audioSource.Stop();
 		}
 
-		private IEnumerator FadeInSound(AudioSource audioSource, float fadeInTime)
+		private IEnumerator FadeInSound(AudioSource audioSource, float fadeInTime, float volume)
 		{
 			if (fadeInTime == 0f)
 			{
@@ -374,7 +389,7 @@ namespace XPlan.Audio
 			audioSource.volume = 0f;
 			audioSource.Play();
 
-			float targetVolume	= 1f;
+			float targetVolume	= volume;
 			float startTime		= Time.time;
 
 			while (Time.time < startTime + fadeInTime)
