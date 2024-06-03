@@ -70,6 +70,11 @@ namespace XPlan.Audio
 
 		protected override void InitSingleton()
 		{
+			if(soundGroup == null)
+			{
+				return;
+			}
+
 			// 初始化soundBank
 			soundBank = new List<SoundInfo>();
 			foreach (SoundGroup group in soundGroup)
@@ -258,7 +263,7 @@ namespace XPlan.Audio
 		{
 			if (!soundBank.IsValidIndex<SoundInfo>(clipIdx))
 			{
-				Debug.LogError($"soundBank沒有這個Idx {clipIdx}");
+				Debug.LogWarning($"soundBank沒有這個Idx {clipIdx}");
 
 				return null;
 			}

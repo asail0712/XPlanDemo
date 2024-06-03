@@ -9,6 +9,11 @@ namespace XPlan.Extensions
     {
         public static bool IsValidIndex<T>(this List<T> list, int idx)
 		{
+			if(list == null)
+			{
+				return false;
+			}
+
             return idx >= 0 && idx < list.Count;
 		}
 
