@@ -51,7 +51,7 @@ namespace XPlan.Extensions
 
                 for(int i = 0; i < count; ++i)
 				{
-                    gameObject.transform.GetChild(i).gameObject.layer = layer;
+                    SetLayer(gameObject.transform.GetChild(i).gameObject, layer, bContainChild);
                 }
             }
         }
