@@ -106,22 +106,22 @@ namespace XPlan.Audio
 		 * Play Sound
 		 * 播放聲音可以透過clip name或是 clip index
 		 * **********************************/
-		public void PlaySound(string clipName, float fadeInTime = 1f, float delayTime = 0f, float fadeOutTime = 1f)
+		public void PlaySound(string clipName, float fadeInTime = 1f, float delayTime = 0f)
 		{
 			int idx = soundBank.FindIndex((E04) =>
 			{
 				return E04.clipName == clipName;
 			});
 
-			PlaySound(idx, fadeInTime, delayTime, fadeOutTime);
+			PlaySound(idx, fadeInTime, delayTime);
 		}
 
-		public void PlaySound(int clipIdx, float fadeInTime = 1f, float delayTime = 0f, float fadeOutTime = 1)
+		public void PlaySound(int clipIdx, float fadeInTime = 1f, float delayTime = 0f)
 		{
-			StartCoroutine(DelayToPlay(clipIdx, fadeInTime, delayTime, fadeOutTime));
+			StartCoroutine(DelayToPlay(clipIdx, fadeInTime, delayTime));
 		}
 
-		private IEnumerator DelayToPlay(int clipIdx, float fadeInTime, float delayTime, float fadeOutTime)
+		private IEnumerator DelayToPlay(int clipIdx, float fadeInTime, float delayTime)
 		{
 			if (delayTime > 0)
 			{
@@ -129,7 +129,7 @@ namespace XPlan.Audio
 			}
 			
 			// 參數意義分別為 撥放的audio source 撥放的曲目 fadein時間 fadeout時間
-			yield return FadeInOutSound(clipIdx, fadeInTime, fadeOutTime);
+			yield return FadeInOutSound(clipIdx, fadeInTime);
 		}
 
 		/************************************
@@ -318,7 +318,7 @@ namespace XPlan.Audio
 		/************************************
 		* 實際播放聲音的流程
 		* **********************************/
-		private IEnumerator FadeInOutSound(int clipIdx = -1, float fadeInTime = 1f, float fadeOutTime = 1f)
+		private IEnumerator FadeInOutSound(int clipIdx = -1, float fadeInTime = 1f)
 		{
 			// 在同一個Channel做 Fade in / out的處理
 
@@ -332,8 +332,8 @@ namespace XPlan.Audio
 			// 設定source是否為Loop
 			audioSource.loop = IsLoopByIdx(clipIdx);
 
-			// fade out			
-			yield return FadeOutSound(audioSource, fadeOutTime);
+			// 使用這次撥放聲音的Fade In時間除以2 當作前一個聲音的Fade Out時間			
+			yield return FadeOutSound(audioSource, fadeInTime / 2f);
 
 			// 检查是否指定了新的音频剪辑
 			if (clipIdx == -1)
@@ -353,7 +353,7 @@ namespace XPlan.Audio
 			float volume		= info.volume;
 
 			// fade in
-			yield return FadeInSound(audioSource, fadeInTime, volume);
+			yield return FadeInSound(audioSource, fadeInTime / 2f, volume);
 		}
 
 		private IEnumerator FadeOutSound(AudioSource audioSource, float fadeOutTime)
