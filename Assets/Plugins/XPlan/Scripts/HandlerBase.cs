@@ -106,7 +106,7 @@ namespace XPlan
 			}
 
 			// 调用构造函数
-			MessageBase msg = (MessageBase)ctor.Invoke(args);
+			ctor.Invoke(args);
 		}
 
 		/*************************

@@ -25,6 +25,16 @@ namespace XPlan.Extensions
             }
         }
 
+        public static void AddChild(this GameObject gameObject, GameObject childGO)
+        {
+            if (childGO == null)
+            {
+                return;
+            }
+
+            childGO.transform.SetParent(gameObject.transform);
+        }
+
         public static void AddChild(this GameObject gameObject, GameObject childGO
             , Vector3 locPos        = default(Vector3)
             , Vector3 eulerAngles   = default(Vector3)
