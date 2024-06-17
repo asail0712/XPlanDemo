@@ -19,6 +19,19 @@ namespace XPlan.Observe
 		}
 	}
 
+	public class ReceiveOption
+	{
+		// 相依性
+		public List<Type> dependOnList;
+	}
+
+	public class ActionInfo
+	{
+		public INotifyReceiver notifyReceiver;
+		public ReceiveOption receiveOption;
+		public Action<MessageReceiver> receiverAction;
+	}
+
 	public class MessageReceiver
 	{
 		private MessageSender msgSender;
@@ -72,7 +85,7 @@ namespace XPlan.Observe
 			NotifySystem.Instance.SendMsg(this);
 		}
 
-		public new Type GetType()
+		public Type GetMsgType()
 		{
 			return msg.GetType();
 		}
@@ -81,26 +94,30 @@ namespace XPlan.Observe
 	public class NotifyInfo
 	{
 		public INotifyReceiver notifyReceiver;
-		public Dictionary<Type, List<Action<MessageReceiver>>> typeReceiveMap;
+		public Dictionary<Type, ActionInfo> actionInfoMap;
 
 		public NotifyInfo(INotifyReceiver notifyReceiver)
 		{
 			this.notifyReceiver = notifyReceiver;
-			this.typeReceiveMap = new Dictionary<Type, List<Action<MessageReceiver>>>();
+			this.actionInfoMap	= new Dictionary<Type, ActionInfo>();
 		}
 	}
 
-
     public class NotifySystem : CreateSingleton<NotifySystem>
     {
-		List<NotifyInfo> infoList;
+		List<NotifyInfo> notifyInfoList;
 
 		protected override void InitSingleton()
 	    {
-			infoList = new List<NotifyInfo>();
+			notifyInfoList = new List<NotifyInfo>();
 		}
 
 		public void RegisterNotify<T>(INotifyReceiver notifyReceiver, Action<MessageReceiver> notifyAction)
+		{
+			RegisterNotify<T>(notifyReceiver, null, notifyAction);
+		}
+
+		public void RegisterNotify<T>(INotifyReceiver notifyReceiver, ReceiveOption option, Action<MessageReceiver> notifyAction)
 		{
 			Type type			= typeof(T);
 			Type msgBaseType	= typeof(MessageBase);
@@ -113,60 +130,113 @@ namespace XPlan.Observe
 
 			NotifyInfo notifyInfo = null;
 
-			foreach (NotifyInfo currInfo in infoList)
+			foreach (NotifyInfo currInfo in notifyInfoList)
 			{
-				if(currInfo.notifyReceiver == notifyReceiver)
+				if (currInfo.notifyReceiver == notifyReceiver)
 				{
 					notifyInfo = currInfo;
 					break;
 				}
 			}
 
-			if(notifyInfo == null)
+			if (notifyInfo == null)
 			{
 				notifyInfo = new NotifyInfo(notifyReceiver);
-				infoList.Add(notifyInfo);
+				notifyInfoList.Add(notifyInfo);
 			}
 
-			List<Action<MessageReceiver>> actionList = notifyInfo.typeReceiveMap.FindOrAdd<Type, List<Action<MessageReceiver>>>(type);
-			actionList.Add(notifyAction);
+			if(notifyInfo.actionInfoMap.ContainsKey(type))
+			{
+				Debug.LogError($"{notifyInfo.notifyReceiver} 重複註冊同一個message {type} 囉");
+				return;
+			}
+
+			notifyInfo.actionInfoMap.Add(type, new ActionInfo()
+			{
+				notifyReceiver	= notifyInfo.notifyReceiver,
+				receiveOption	= option,
+				receiverAction	= notifyAction,
+			});
 		}
+
 
 		public void UnregisterNotify(INotifyReceiver notifyReceiver)
 		{
 			int idx = -1;
 
-			for (int i = 0; i < infoList.Count; ++i)
+			for (int i = 0; i < notifyInfoList.Count; ++i)
 			{
-				if (infoList[i].notifyReceiver == notifyReceiver)
+				if (notifyInfoList[i].notifyReceiver == notifyReceiver)
 				{
 					idx = i;
 					break;
 				}
 			}
 
-			if(infoList.IsValidIndex<NotifyInfo>(idx))
+			if(notifyInfoList.IsValidIndex<NotifyInfo>(idx))
 			{
-				infoList.RemoveAt(idx);
+				notifyInfoList.RemoveAt(idx);
 			}			
 		}
 
 		public void SendMsg(MessageSender msgSender)
 		{
-			Type type = msgSender.GetType();
+			Type type					= msgSender.GetMsgType();
+			Queue<ActionInfo> infoQueue = new Queue<ActionInfo>();
 
-			foreach (NotifyInfo currInfo in infoList)
+			foreach (NotifyInfo currInfo in notifyInfoList)
 			{
-				if(currInfo.typeReceiveMap.ContainsKey(type))
+				if(currInfo.actionInfoMap.ContainsKey(type))
 				{
-					List<Action<MessageReceiver>> actionList = currInfo.typeReceiveMap[type];
+					ActionInfo actionInfo = currInfo.actionInfoMap[type];
 
-					foreach (Action<MessageReceiver> action in actionList)
+					// 先將符合的action記錄起來，讓option處理
+					if (actionInfo != null)
 					{
-						action?.Invoke(new MessageReceiver(msgSender));
-					}
+						infoQueue.Enqueue(actionInfo);
+					}					
 				}
 			}
+
+			// 實際執行action的地方
+			while (infoQueue.Count > 0)
+			{
+				ActionInfo actionInfo = infoQueue.Dequeue();
+
+				// 判斷是否有相依性問題
+				if(NeedToWait(actionInfo, infoQueue))
+				{
+					infoQueue.Enqueue(actionInfo);
+
+					continue;
+				}
+
+				actionInfo.receiverAction?.Invoke(new MessageReceiver(msgSender));
+			}
+		}
+
+		private bool NeedToWait(ActionInfo actionInfo, Queue<ActionInfo> infoQueue)
+		{
+			if(actionInfo.receiveOption == null)
+			{
+				// 沒有option 就不用設定Wait
+				return false;
+			}
+
+			bool bResult		= false;
+			List<Type> typeList = actionInfo.receiveOption.dependOnList;
+
+			foreach (ActionInfo info in infoQueue)
+			{
+				INotifyReceiver notifyReceiver = info.notifyReceiver;
+
+				if (typeList.Contains(notifyReceiver.GetType()))
+				{
+					return true;
+				}
+			}
+
+			return bResult;
 		}
 	}
 }

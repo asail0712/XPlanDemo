@@ -86,6 +86,16 @@ namespace XPlan
 			});
 		}
 
+		protected void RegisterNotify<T>(INotifyReceiver notifyReceiver, ReceiveOption option, Action<T> notifyAction) where T : MessageBase
+		{
+			NotifySystem.Instance.RegisterNotify<T>(notifyReceiver, option, (msgReceiver) =>
+			{
+				T msg = msgReceiver.GetMessage<T>();
+
+				notifyAction?.Invoke(msg);
+			});
+		}
+
 		protected void SendMsg<T>(params object[] args) where T : MessageBase
 		{
 			// 获取类型

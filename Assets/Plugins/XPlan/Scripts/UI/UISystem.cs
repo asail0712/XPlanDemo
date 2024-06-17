@@ -23,6 +23,13 @@ namespace XPlan.UI
 		}
 	}
 
+	public class ActionInfo
+	{
+		public UIBase ui;
+		public ListenOption listenOption;
+		public Action<UIParam[]> callingAction;
+	}
+
 	struct CallbackGroup
 	{
 		public IUIListener uiListener;
@@ -178,20 +185,21 @@ namespace XPlan.UI
 		/**********************************************
 		* Sync Calling相關功能
 		* ********************************************/
-		public class UICallingInfo
+		public class CallingInfo
 		{
 			public UIBase ui;
-			public Dictionary<string, List<Action<UIParam[]>>> callingeMap;
+			public Dictionary<string, ActionInfo> callingMap;
 
-			public UICallingInfo(UIBase ui)
+			public CallingInfo(UIBase ui)
 			{
-				this.ui				= ui;
-				this.callingeMap	= new Dictionary<string, List<Action<UIParam[]>>>();
+				this.ui			= ui;
+				this.callingMap = new Dictionary<string, ActionInfo>();
 			}
 		}
-		static private List<UICallingInfo> callingList = new List<UICallingInfo>();
 
-		static public void ListenCall(string id, UIBase ui, Action<UIParam[]> callingAction)
+		static private List<CallingInfo> callingList = new List<CallingInfo>();
+
+		static public void ListenCall(string id, UIBase ui, ListenOption option, Action<UIParam[]> callingAction)
 		{
 			// 尋找對應的UICallingInfo
 
@@ -200,11 +208,11 @@ namespace XPlan.UI
 				return E04.ui == ui;
 			});
 
-			UICallingInfo callingInfo = null;
+			CallingInfo callingInfo = null;
 
-			if (!callingList.IsValidIndex<UICallingInfo>(idx))
+			if (!callingList.IsValidIndex<CallingInfo>(idx))
 			{
-				callingInfo = new UICallingInfo(ui);
+				callingInfo = new CallingInfo(ui);
 
 				callingList.Add(callingInfo);
 			}
@@ -214,18 +222,18 @@ namespace XPlan.UI
 			}
 
 			// 將資料放進 UICallingInfo
-
-			if (!callingInfo.callingeMap.ContainsKey(id))
+			if (callingInfo.callingMap.ContainsKey(id))
 			{
-				List<Action<UIParam[]>> actionList = new List<Action<UIParam[]>>();
-				actionList.Add(callingAction);
-
-				callingInfo.callingeMap.Add(id, actionList);
+				Debug.LogError($"{ui} 重複註冊同一個 UICommand {id} 囉");
+				return;
 			}
-			else
+
+			callingInfo.callingMap.Add(id, new ActionInfo() 
 			{
-				callingInfo.callingeMap[id].Add(callingAction);
-			}	
+				ui				= ui,
+				listenOption	= option,
+				callingAction	= callingAction
+			});
 		}
 
 		static public void UnlistenAllCall(UIBase ui)
@@ -237,62 +245,42 @@ namespace XPlan.UI
 		}
 
 		static public void DirectCall<T>(string uniqueID, T value)
-		{
-			List<Action<UIParam[]>> totalActionList = new List<Action<UIParam[]>>();
-
-			foreach (UICallingInfo info in callingList)
-			{
-				foreach (KeyValuePair<string, List<Action<UIParam[]>>> kvp in info.callingeMap)
-				{
-					if(kvp.Key == uniqueID)
-					{
-						totalActionList.AddRange(kvp.Value);
-					}
-				}
-			}
-
+		{			
 			// 參數轉成陣列
 			List<UIParam> paramList = new List<UIParam>();
 			paramList.Add(new UIParam(value));
 
-			foreach (Action<UIParam[]> action in totalActionList)
-			{
-				action?.Invoke(paramList.ToArray());
-			}
+			DirectCall_Internal(uniqueID, paramList.ToArray());
 		}
 
 		static public void DirectCall(string uniqueID)
 		{
-			List<Action<UIParam[]>> totalActionList = new List<Action<UIParam[]>>();
-
-			foreach (UICallingInfo info in callingList)
-			{
-				foreach (KeyValuePair<string, List<Action<UIParam[]>>> kvp in info.callingeMap)
-				{
-					if (kvp.Key == uniqueID)
-					{
-						totalActionList.AddRange(kvp.Value);
-					}
-				}
-			}
-
-			foreach (Action<UIParam[]> action in totalActionList)
-			{
-				action?.Invoke(new List<UIParam>().ToArray());
-			}
+			DirectCall_Internal(uniqueID, new List<UIParam>().ToArray());
 		}
 
 		static public void DirectCall(string uniqueID, params object[] paramArr)
 		{
-			List<Action<UIParam[]>> totalActionList = new List<Action<UIParam[]>>();
+			List<UIParam> paramList = new List<UIParam>();
 
-			foreach (UICallingInfo info in callingList)
+			for (int i = 0; i < paramArr.Length; ++i)
 			{
-				foreach (KeyValuePair<string, List<Action<UIParam[]>>> kvp in info.callingeMap)
+				paramList.Add(new UIParam(paramArr[i]));
+			}
+
+			DirectCall_Internal(uniqueID, paramList.ToArray());
+		}
+
+		static private void DirectCall_Internal(string uniqueID, UIParam[] paramArr)
+		{
+			Queue<ActionInfo> infoQueue = new Queue<ActionInfo>();
+
+			foreach (CallingInfo info in callingList)
+			{
+				foreach (KeyValuePair<string, ActionInfo> kvp in info.callingMap)
 				{
 					if (kvp.Key == uniqueID)
 					{
-						totalActionList.AddRange(kvp.Value);
+						infoQueue.Enqueue(kvp.Value);
 					}
 				}
 			}
@@ -304,10 +292,45 @@ namespace XPlan.UI
 				paramList.Add(new UIParam(paramArr[i]));
 			}
 
-			foreach (Action<UIParam[]> action in totalActionList)
+			// 實際執行action的地方
+			while (infoQueue.Count > 0)
 			{
-				action?.Invoke(paramList.ToArray());
+				ActionInfo actionInfo = infoQueue.Dequeue();
+
+				// 判斷是否有相依性問題
+				if (NeedToWait(actionInfo, infoQueue))
+				{
+					infoQueue.Enqueue(actionInfo);
+
+					continue;
+				}
+
+				actionInfo.callingAction?.Invoke(paramArr);
 			}
+		}
+
+		static private bool NeedToWait(ActionInfo actionInfo, Queue<ActionInfo> infoQueue)
+		{
+			if (actionInfo.listenOption == null)
+			{
+				// 沒有option 就不用設定Wait
+				return false;
+			}
+
+			bool bResult = false;
+			List<Type> typeList = actionInfo.listenOption.dependOnList;
+
+			foreach (ActionInfo info in infoQueue)
+			{
+				UIBase notifyReceiver = info.ui;
+
+				if (typeList.Contains(notifyReceiver.GetType()))
+				{
+					return true;
+				}
+			}
+
+			return bResult;
 		}
 	}
 }

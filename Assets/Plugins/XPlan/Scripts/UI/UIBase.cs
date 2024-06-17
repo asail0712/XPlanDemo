@@ -1,5 +1,6 @@
 ﻿using TMPro;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,6 +10,17 @@ using XPlan.Scenes;
 
 namespace XPlan.UI
 {
+	public class ListenOption
+	{
+		// 相依性
+		public List<Type> dependOnList = new List<Type>();
+
+		public void AddDepondOn(Type type)
+		{
+			dependOnList.Add(type);
+		}
+	}
+
 	public class UIBase : MonoBehaviour, IUIListener
 	{
 		// 判斷是否由UILoader仔入
@@ -17,9 +29,9 @@ namespace XPlan.UI
 		/********************************
 		* Listen Handler Call
 		* *****************************/
-		public void ListenCall(string id, Action<UIParam[]> paramAction)
+		public void ListenCall(string id, ListenOption option, Action<UIParam[]> paramAction)
 		{
-			UISystem.ListenCall(id, this, (paramList) => 
+			UISystem.ListenCall(id, this, option, (paramList) => 
 			{
 				if (bSpawnByLoader &&
 					UIController.IsInstance()
@@ -32,9 +44,9 @@ namespace XPlan.UI
 			});
 		}
 
-		public void ListenCall<T>(string id, Action<T> paramAction)
+		public void ListenCall<T>(string id, ListenOption option, Action<T> paramAction)
 		{
-			UISystem.ListenCall(id, this, (paramList) =>
+			UISystem.ListenCall(id, this, option, (paramList) =>
 			{
 				if (bSpawnByLoader &&
 					UIController.IsInstance()
@@ -47,9 +59,9 @@ namespace XPlan.UI
 			});
 		}
 
-		public void ListenCall(string id, Action noParamAction)
+		public void ListenCall(string id, ListenOption option, Action noParamAction)
 		{
-			UISystem.ListenCall(id, this, (paramList) =>
+			UISystem.ListenCall(id, this, option, (paramList) =>
 			{
 				if (bSpawnByLoader &&
 					UIController.IsInstance()
@@ -60,6 +72,21 @@ namespace XPlan.UI
 
 				noParamAction?.Invoke();
 			});
+		}
+
+		public void ListenCall(string id, Action<UIParam[]> paramsAction)
+		{
+			ListenCall(id, null, paramsAction);
+		}
+
+		public void ListenCall<T>(string id, Action<T> paramAction)
+		{
+			ListenCall<T>(id, null, paramAction);
+		}
+
+		public void ListenCall(string id, Action noParamAction)
+		{
+			ListenCall(id, null, noParamAction);
 		}
 
 		/********************************
