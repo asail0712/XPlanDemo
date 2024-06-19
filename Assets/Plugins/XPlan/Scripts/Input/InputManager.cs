@@ -121,7 +121,14 @@ namespace XPlan.InputMode
         {
         }
 
-		void Start()
+        protected override void OnRelease(bool bAppQuit)
+        {
+            EnableInput(false);
+
+            base.OnRelease(bAppQuit);
+        }
+
+        void Start()
 		{
             EnableInput(true);
         }
