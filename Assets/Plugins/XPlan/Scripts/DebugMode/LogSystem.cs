@@ -35,14 +35,13 @@ namespace XPlan.DebugMode
 
     public static class LogSystem
     {
-        public static void Record(string logInfo, LogType logLevel = LogType.Log, Action<string> onFinish = null)
+        public static void Record(string logInfo, LogType logLevel = LogType.Log)
 		{
 #if DEBUG
             StackInfo stackTrace    = new StackInfo();
             string className        = stackTrace.GetClassName();
             string methodName       = stackTrace.GetMethodName();
             string lineNumber       = stackTrace.GetLineNumber();
-
             string fullLogInfo      = $"{logInfo} at [ {className}::{methodName}() ], line {lineNumber} ";
 
 			switch (logLevel)
@@ -57,8 +56,6 @@ namespace XPlan.DebugMode
                     UnityEngine.Debug.LogError(fullLogInfo);
                     break;
             }
-
-            onFinish?.Invoke(fullLogInfo);
 #endif //DEBUG
         }
     }
