@@ -141,6 +141,16 @@ namespace XPlan.UI
 			});
 		}
 
+		protected void RegisterDropdown(string uniqueID, Dropdown dropdown, Action<string> onPress = null)
+		{
+			dropdown.onValueChanged.AddListener((idx) =>
+			{
+				string str = dropdown.options[idx].text;
+
+				DirectTrigger<string>(uniqueID, str, onPress);
+			});
+		}
+
 		protected void RegisterToggle(string uniqueID, Toggle toggle, Action<bool> onPress = null)
 		{
 			toggle.onValueChanged.AddListener((bOn)=> 
