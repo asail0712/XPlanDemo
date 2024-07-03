@@ -44,25 +44,7 @@ namespace XPlan.UI
 
 	public static class UISystem
 	{
-		public static List<Func<bool>> pauseList = new List<Func<bool>>();
-
-		private static readonly string checkStr = "No Check";
-
-		static private void CheckLog(string uniqueID, string logContent)
-		{
-			if(string.IsNullOrEmpty(checkStr) || uniqueID == checkStr)
-			{
-				Debug.Log($"{logContent} {uniqueID}");
-			}			
-		}
-
-		/**********************************************
-		* 通用功能
-		* ********************************************/
-		static public UIParam GetUIParam(this object param)
-		{
-			return new UIParam(param);
-		}
+		static private List<Func<bool>> pauseList = new List<Func<bool>>();
 
 		/**********************************************
 		* Call Back相關功能
@@ -71,9 +53,7 @@ namespace XPlan.UI
 		static private Dictionary<string, List<CallbackGroup>> callbackDict = new Dictionary<string, List<CallbackGroup>>();
 
 		static public void RegisterCallback(string uniqueID, IUIListener handler, Action<UIParam> callback)
-		{
-			CheckLog(uniqueID, "加掛UI監聽");
-
+		{			
 			if (!callbackDict.ContainsKey(uniqueID))
 			{
 				callbackDict[uniqueID] = new List<CallbackGroup>();
@@ -82,18 +62,18 @@ namespace XPlan.UI
 			callbackDict[uniqueID].Add(new CallbackGroup(handler, callback));
 		}
 
-		static public void UnregisterCallback(string uniqueID, IUIListener l)
+		static public void UnregisterCallback(string uniqueID, IUIListener listener)
 		{
 			if (callbackDict.ContainsKey(uniqueID))
 			{
 				callbackDict[uniqueID].RemoveAll((group) => 
 				{
-					return group.uiListener == l;
+					return group.uiListener == listener;
 				});
 			}
 		}
 
-		static public void UnregisterAllCallback(IUIListener l)
+		static public void UnregisterAllCallback(IUIListener listener)
 		{
 			foreach (KeyValuePair<string, List<CallbackGroup>> kvp in callbackDict)
 			{
@@ -101,7 +81,7 @@ namespace XPlan.UI
 
 				groupList.RemoveAll((group)=> 
 				{
-					return group.uiListener == l;
+					return group.uiListener == listener;
 				});
 			}
 		}
@@ -130,8 +110,6 @@ namespace XPlan.UI
 
 			groupList.ForEach((group) =>
 			{
-				CheckLog(uniqueID, "執行UI監聽");
-
 				// onPostPress 是當而完成click要做的
 				group.callback?.Invoke(null);
 			});
@@ -139,7 +117,7 @@ namespace XPlan.UI
 
 		static public void TriggerCallback<T>(string uniqueID, T param, Action<T> onPress)
 		{
-			// 阻擋任何UI操作，用於手機App當網路還沒回應完成的時候
+			// 阻擋任何UI操作，主要用於手機App當網路還沒回應完成的時候
 			if (CheckToPause())
 			{
 				return;
@@ -159,13 +137,14 @@ namespace XPlan.UI
 
 			groupList.ForEach((group) =>
 			{
-				CheckLog(uniqueID, "執行UI監聽");
-
 				// onPostPress 是當而完成click要做的
 				group.callback?.Invoke(uiParam);
 			});
 		}
 
+		/**********************************************
+		* 暫停功能
+		* ********************************************/
 		static public bool CheckToPause()
 		{
 			bool bNeedToPause = false;
@@ -180,6 +159,16 @@ namespace XPlan.UI
 			}
 
 			return bNeedToPause;
+		}
+
+		static public void AddPauseFunc(Func<bool> func)
+		{
+			pauseList.Add(func);
+		}
+
+		static public void RemovePauseFunc(Func<bool> func)
+		{
+			pauseList.Remove(func);
 		}
 
 		/**********************************************
@@ -297,7 +286,7 @@ namespace XPlan.UI
 			{
 				ActionInfo actionInfo = infoQueue.Dequeue();
 
-				// 判斷是否有相依性問題
+				// 判斷是否有設定相依，有的話，慢點去執行
 				if (NeedToWait(actionInfo, infoQueue))
 				{
 					infoQueue.Enqueue(actionInfo);
