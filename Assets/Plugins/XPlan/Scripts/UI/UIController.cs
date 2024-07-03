@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using XPlan.DebugMode;
+using XPlan.Extensions;
 using XPlan.Utility;
 
 namespace XPlan.UI
@@ -41,10 +43,7 @@ namespace XPlan.UI
 	public class UIController : CreateSingleton<UIController>
     {
 		[SerializeField]
-		public GameObject uiCanvasGO;
-
-		[SerializeField]
-		public GameObject uiBackgroundCanvasGO;
+		public List<GameObject> uiRootList;
 
 		List<UIVisibleInfo> currVisibleList		= new List<UIVisibleInfo>();
 		List<UIVisibleInfo> persistentUIList	= new List<UIVisibleInfo>();
@@ -72,29 +71,39 @@ namespace XPlan.UI
 			// 添加新UI的處理
 			foreach (UILoadingInfo loadingInfo in loadingList)
 			{
-				GameObject uiGO = loadingInfo.uiGO;
+				GameObject uiPerfab = loadingInfo.uiPerfab;
 
-				if (uiGO == null)
+				if (uiPerfab == null)
 				{
 					Debug.LogError("Loading Info is null !");
 
 					continue;
 				}
 
-				UIBase ui			= uiGO.GetComponent<UIBase>();
-				ui.bSpawnByLoader	= true;
+				UIBase uiBase			= uiPerfab.GetComponent<UIBase>();
+				uiBase.bSpawnByLoader	= true;
 
 				int idx = currVisibleList.FindIndex((X) =>
 				{
-					return X.uiName == uiGO.name;
+					return X.uiName == uiPerfab.name;
 				});
 
 				if (idx == -1)
 				{
-					GameObject uiIns = GameObject.Instantiate(loadingInfo.uiGO, uiCanvasGO.transform);
+					// 確認加載 UI Root
+					if(!uiRootList.IsValidIndex<GameObject>(loadingInfo.rootIdx))
+					{
+						LogSystem.Record($"{loadingInfo.rootIdx} 是無效的rootIdx", LogType.Error);
+						return;
+					}
 
+					// 生成UI
+					GameObject uiIns = GameObject.Instantiate(loadingInfo.uiPerfab, uiRootList[loadingInfo.rootIdx].transform);
+
+					// 加上文字
 					UIStringTable.Instance.InitialUIText(uiIns);
 
+					// 初始化所有的 ui base
 					UIBase[] newUIList = uiIns.GetComponents<UIBase>();
 
 					foreach (UIBase newUI in newUIList)
@@ -102,7 +111,8 @@ namespace XPlan.UI
 						newUI.InitialUI(loadingInfo.sortIdx, buildIdx);
 					}
 
-					UIVisibleInfo vInfo = new UIVisibleInfo(uiIns, uiGO.name, 1);
+					// 確認是否為常駐UI
+					UIVisibleInfo vInfo = new UIVisibleInfo(uiIns, uiPerfab.name, 1);
 					if (loadingInfo.bIsPersistentUI)
 					{
 						persistentUIList.Add(vInfo);
@@ -134,7 +144,7 @@ namespace XPlan.UI
 
 					int idx = loadingList.FindIndex((X) =>
 					{
-						return X.uiGO.name == visibleInfo.uiName;
+						return X.uiPerfab.name == visibleInfo.uiName;
 					});
 
 					if (idx == -1)
@@ -184,7 +194,7 @@ namespace XPlan.UI
 
 			foreach (UILoadingInfo loadingInfo in loadingList)
 			{
-				GameObject uiGO = loadingInfo.uiGO;
+				GameObject uiGO = loadingInfo.uiPerfab;
 
 				if (uiGO == null)
 				{
@@ -242,7 +252,7 @@ namespace XPlan.UI
 
 			foreach (UILoadingInfo loadingInfo in lastUILoader.GetLoadingList())
 			{
-				UIBase[] uiList = loadingInfo.uiGO.GetComponents<UIBase>();
+				UIBase[] uiList = loadingInfo.uiPerfab.GetComponents<UIBase>();
 
 				bool bIsExist = Array.Exists(uiList, (X) => 
 				{
@@ -290,14 +300,24 @@ namespace XPlan.UI
 			}
 		}
 
-		public void ShowAllUI(bool bEnable)
+		public void SetRootVisible(bool bEnable, int rootIdx = -1)
 		{
-			uiCanvasGO.SetActive(bEnable);
+			if (!uiRootList.IsValidIndex<GameObject>(rootIdx))
+			{
+				LogSystem.Record($"{rootIdx} 為無效的root idx", LogType.Warning);
+				return;
+			}
+
+			uiRootList[rootIdx].SetActive(bEnable);
 		}
 
-		public void ShowAllBGUI(bool bEnable)
+		public void SetAllUIVisible(bool bEnable)
 		{
-			uiBackgroundCanvasGO.SetActive(bEnable);
+			// 若是index不存在
+			uiRootList.ForEach((X)=> 
+			{
+				X.SetActive(bEnable);
+			});
 		}
 	}
 }

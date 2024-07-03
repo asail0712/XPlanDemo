@@ -6,16 +6,30 @@ using UnityEngine.SceneManagement;
 namespace XPlan.UI
 {
 	[Serializable]
-	public struct UILoadingInfo
+	public class UILoadingInfo
 	{
 		[SerializeField]
-		public GameObject uiGO;
+		public GameObject uiPerfab;
+
+		[SerializeField]
+		public int rootIdx;
 
 		[SerializeField]
 		public int sortIdx;
 
 		[SerializeField]
 		public bool bIsPersistentUI;
+
+		[SerializeField]
+		public bool bVisible;
+
+		public UILoadingInfo()
+		{
+			rootIdx			= 0;
+			sortIdx			= 5;
+			bIsPersistentUI = false;
+			bVisible		= true;
+		}
 	}
 
     public class UILoader : MonoBehaviour

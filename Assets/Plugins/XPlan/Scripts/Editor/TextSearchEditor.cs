@@ -56,12 +56,12 @@ namespace XPlan.Editors
 
                         foreach (UILoadingInfo loadingInfo in loadingList)
 						{                            
-                            Text[] textComponents = loadingInfo.uiGO.GetComponentsInChildren<Text>(true);
+                            Text[] textComponents = loadingInfo.uiPerfab.GetComponentsInChildren<Text>(true);
 
                             foreach (Text textComponent in textComponents)
                             {
                                 // 這裡可以對找到的 Text 做相應的處理，例如列舉名稱、修改文字等
-                                Debug.Log("在 Prefab " + loadingInfo.uiGO.name + " 中找到文字框：" + textComponent.gameObject.name + " 裡面寫著：" + textComponent.text);
+                                Debug.Log("在 Prefab " + loadingInfo.uiPerfab.name + " 中找到文字框：" + textComponent.gameObject.name + " 裡面寫著：" + textComponent.text);
 
                                 string textContent      = textComponent.text;
                                 string gameObjectName   = textComponent.gameObject.name;
@@ -71,11 +71,11 @@ namespace XPlan.Editors
                                 sw.WriteLine(sceneName + "," + gameObjectName + "," + textContent);
                             }
 
-                            TextMeshProUGUI[] TMPTextComponents = loadingInfo.uiGO.GetComponentsInChildren<TextMeshProUGUI>(true);
+                            TextMeshProUGUI[] TMPTextComponents = loadingInfo.uiPerfab.GetComponentsInChildren<TextMeshProUGUI>(true);
                             foreach (TextMeshProUGUI TMPText in TMPTextComponents)
                             {
                                 // 這裡可以對找到的 Text 做相應的處理，例如列舉名稱、修改文字等
-                                Debug.Log("在 Prefab " + loadingInfo.uiGO.name + " 中找到文字框：" + TMPText.gameObject.name + " 裡面寫著：" + TMPText.text);
+                                Debug.Log("在 Prefab " + loadingInfo.uiPerfab.name + " 中找到文字框：" + TMPText.gameObject.name + " 裡面寫著：" + TMPText.text);
 
                                 string textContent      = TMPText.text;
                                 string gameObjectName   = TMPText.gameObject.name;

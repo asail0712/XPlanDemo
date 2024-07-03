@@ -66,8 +66,8 @@ namespace XPlan.Editors
 
                         foreach (UILoadingInfo loadingInfo in loadingList)
                         {
-                            string assetPath    = AssetDatabase.GetAssetPath(loadingInfo.uiGO);
-                            GameObject uiGO     = loadingInfo.uiGO;
+                            string assetPath    = AssetDatabase.GetAssetPath(loadingInfo.uiPerfab);
+                            GameObject uiGO     = loadingInfo.uiPerfab;
 
                             Text[] textComponents = uiGO.GetComponentsInChildren<Text>(true);
                             foreach (Text textComponent in textComponents)
