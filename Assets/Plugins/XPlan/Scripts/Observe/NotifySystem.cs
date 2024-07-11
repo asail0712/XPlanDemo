@@ -11,11 +11,11 @@ namespace XPlan.Observe
 {
 	public class MessageBase
 	{
-		public void Send()
+		public void Send(string groupID)
 		{
 			MessageSender sender = new MessageSender(this);
 
-			sender.SendMessage();
+			sender.SendMessage(groupID);
 		}
 	}
 
@@ -58,7 +58,8 @@ namespace XPlan.Observe
 			string methodName	= msgSender.stackInfo.GetMethodName();
 			string lineNumber	= msgSender.stackInfo.GetLineNumber();
 			string fullLogInfo	= $"Notify({msgSender.msg.GetType()}) from [ {className}::{methodName}() ], line {lineNumber} ";
-			Debug.Log(fullLogInfo);
+
+			LogSystem.Record(fullLogInfo);
 #endif //DEBUG
 
 			return (T)(msgSender.msg);
@@ -80,9 +81,9 @@ namespace XPlan.Observe
 #endif //DEBUG
 		}
 
-		public void SendMessage()
+		public void SendMessage(string groupID)
 		{
-			NotifySystem.Instance.SendMsg(this);
+			NotifySystem.Instance.SendMsg(this, groupID);
 		}
 
 		public Type GetMsgType()
@@ -95,11 +96,21 @@ namespace XPlan.Observe
 	{
 		public INotifyReceiver notifyReceiver;
 		public Dictionary<Type, ActionInfo> actionInfoMap;
+		public Func<string> LazyGroupID;
 
 		public NotifyInfo(INotifyReceiver notifyReceiver)
 		{
 			this.notifyReceiver = notifyReceiver;
 			this.actionInfoMap	= new Dictionary<Type, ActionInfo>();
+			this.LazyGroupID	= () => notifyReceiver.LazyGroupID?.Invoke();
+		}
+
+		public bool CheckCondition(Type type, string groupID)
+		{
+			bool bGroupMatch		= groupID == "" || groupID == this.LazyGroupID?.Invoke();
+			bool bTypeCorrespond	= actionInfoMap.ContainsKey(type);
+
+			return bGroupMatch && bTypeCorrespond;
 		}
 	}
 
@@ -179,14 +190,14 @@ namespace XPlan.Observe
 			}			
 		}
 
-		public void SendMsg(MessageSender msgSender)
+		public void SendMsg(MessageSender msgSender, string groupID)
 		{
 			Type type					= msgSender.GetMsgType();
 			Queue<ActionInfo> infoQueue = new Queue<ActionInfo>();
 
 			foreach (NotifyInfo currInfo in notifyInfoList)
 			{
-				if(currInfo.actionInfoMap.ContainsKey(type))
+				if(currInfo.CheckCondition(type, groupID))
 				{
 					ActionInfo actionInfo = currInfo.actionInfoMap[type];
 

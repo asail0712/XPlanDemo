@@ -8,5 +8,7 @@ namespace XPlan.Observe
     public interface INotifyReceiver
     {
         //void ReceiveNotify(MessageReceiver msgReceiver);
+
+        Func<string> LazyGroupID { get; set; }
     }
 }

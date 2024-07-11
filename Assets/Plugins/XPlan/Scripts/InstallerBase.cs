@@ -17,6 +17,12 @@ namespace XPlan
 		**********************************************/
 		protected void RegisterHandler(HandlerBase handler)
 		{
+			// 確認msg群發的group
+			handler.LazyGroupID = () =>
+			{ 
+				return GetType().ToString();
+			};
+
 			handlerManager.RegisterScope(handler, this);
 		}
 		protected void UnregisterHandler(HandlerBase handler)
