@@ -43,27 +43,6 @@ namespace XPlan.Component
             material.color  = color;
         }
 
-  //      public void SetRenderer(GameObject go)
-		//{
-  //          this.objectRenderer = go.GetComponent<Renderer>();
-  //          Material material   = objectRenderer.material;
-
-  //          // 设置材质的渲染模式为Transparent
-  //          material.SetFloat("_Mode", 3);
-  //          material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-  //          material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-  //          material.SetInt("_ZWrite", 0);
-  //          material.DisableKeyword("_ALPHATEST_ON");
-  //          material.EnableKeyword("_ALPHABLEND_ON");
-  //          material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-  //          material.renderQueue = 3000;
-
-  //          // 设置材质颜色的Alpha通道
-  //          Color color     = material.color;
-  //          color.a         = transparency;
-  //          material.color  = color;
-  //      }
-
         // 更新透明度
         public void UpdateTransparency(float newTransparency)
         {

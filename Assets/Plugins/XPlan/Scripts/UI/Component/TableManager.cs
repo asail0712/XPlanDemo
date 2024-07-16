@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 using XPlan.Interface;
 
-namespace XPlan.UI
+namespace XPlan.UI.Component
 {
 	public class TableItem : MonoBehaviour
 	{

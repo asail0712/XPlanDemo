@@ -9,15 +9,15 @@ namespace XPlan.DebugMode
 { 
     public class DebugManager : CreateSingleton<DebugManager>
     {
+        static private bool bIsInitial = false;
+
         [SerializeField] 
         private GameObject debugConsole;        
         
         [SerializeField, Range(0.1f, 10f)] 
         private float gameSpeedRatio = 1;
 
-        private float currGameSpeed     = 1;
-        static private bool bIsInitial  = false;
-
+        private float currGameSpeed = 1;
 
         protected override void InitSingleton()
         {

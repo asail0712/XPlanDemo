@@ -3,31 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using XPlan.DebugMode;
+
 // MonoBehaviour 函數的執行先後順序
 // https://home.gamer.com.tw/creationDetail.php?sn=2491667
 
 namespace XPlan
 {
-    public class InstallerBase : MonoBehaviour
+    public class SystemBase : MonoBehaviour
     {
-		private HandlerManager handlerManager = null;
+		[SerializeField] private bool bEnableDebug = false;
+
+		private LogicManager logicManager = null;
 
 		/**********************************************
 		* Handler管理
 		**********************************************/
-		protected void RegisterHandler(HandlerBase handler)
+		protected void RegisterHandler(LogicComponentBase logicComp)
 		{
 			// 確認msg群發的group
-			handler.LazyGroupID = () =>
+			logicComp.LazyGroupID = () =>
 			{ 
 				return GetType().ToString();
 			};
 
-			handlerManager.RegisterScope(handler, this);
+			logicManager.RegisterScope(logicComp, this);
 		}
-		protected void UnregisterHandler(HandlerBase handler)
+		protected void UnregisterHandler(LogicComponentBase logicComp)
 		{
-			handlerManager.UnregisterScope(handler, this);
+			logicManager.UnregisterScope(logicComp, this);
 		}
 
 		/**********************************************
@@ -35,7 +39,7 @@ namespace XPlan
 		**********************************************/
 		protected void Awake()
 		{
-			handlerManager = new HandlerManager();
+			logicManager = new LogicManager();
 
 			OnPreInitial();
 		}
@@ -44,6 +48,13 @@ namespace XPlan
 		void Start()
         {
 			OnInitialGameObject();
+
+			if(bEnableDebug)
+			{
+				// Debug Manager有Initial的話，表示不是單一Scene獨立測試，就把該Debug物件關閉
+				gameObject.SetActive(!DebugManager.IsInitial());
+			}
+
 			OnInitialHandler();
 
 			StartCoroutine(PostInitial());
@@ -53,7 +64,7 @@ namespace XPlan
 		{
 			yield return new WaitForEndOfFrame();
 
-			handlerManager.PostInitial();
+			logicManager.PostInitial();
 
 			OnPostInitial();
 		}
@@ -84,9 +95,9 @@ namespace XPlan
 
 		void OnDestroy()
 		{
-			if(handlerManager != null)
+			if(logicManager != null)
 			{
-				handlerManager.UnregisterScope(this, bAppQuit);
+				logicManager.UnregisterScope(this, bAppQuit);
 			}
 			
 			OnRelease(bAppQuit);
@@ -111,9 +122,9 @@ namespace XPlan
 
 			OnPreUpdate(Time.deltaTime);
 
-			if (handlerManager != null)
+			if (logicManager != null)
 			{
-				handlerManager.TickHandler(Time.deltaTime);
+				logicManager.TickLogic(Time.deltaTime);
 			}
 
 			OnPostUpdate(Time.deltaTime);

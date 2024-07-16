@@ -1,6 +1,6 @@
 using UnityEditor;
 
-using XPlan.UI;
+using XPlan.UI.Component;
 
 namespace XPlan.Editors
 {

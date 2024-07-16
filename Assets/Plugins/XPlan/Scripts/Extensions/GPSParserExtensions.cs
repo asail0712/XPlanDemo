@@ -7,12 +7,11 @@ namespace XPlan.Extensions
 {
     public class GnrmcData
     {
-        public bool bIgnore = true;
-        public bool bActive = false;
+        public bool bIgnore         = true;
+        public bool bActive         = false;
         public DateTime dataTime;        
-        public double[] latAndLng = new double[2];
+        public double[] latAndLng   = new double[2];
         public double speed;
-        //public double groundTrack;
     }
 
     public static class GPSParserExtensions

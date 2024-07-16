@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace XPlan.UI
+namespace XPlan.UI.Component
 {
 	[Serializable]
 	public class LabelButton

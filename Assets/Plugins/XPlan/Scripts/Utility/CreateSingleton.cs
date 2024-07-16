@@ -2,7 +2,7 @@
 
 namespace XPlan.Utility
 {
-    public abstract class CreateSingleton<T> : InstallerBase where T : InstallerBase
+    public abstract class CreateSingleton<T> : SystemBase where T : SystemBase
     {
         private static T instance;
         private static T initInstance;
@@ -82,7 +82,10 @@ namespace XPlan.Utility
             }
         }
 
-        protected virtual void DuplicateDetection(T duplicate) { }
+        protected virtual void DuplicateDetection(T duplicate) 
+        { 
+            // to override
+        }
 
         protected abstract void InitSingleton();
     }

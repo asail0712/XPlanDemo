@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 using XPlan.Interface;
 using XPlan.Scenes;
+using XPlan.UI.Component;
 
 namespace XPlan.UI
 {

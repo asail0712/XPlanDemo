@@ -26,33 +26,16 @@ namespace XPlan.Net
         private byte[] buffer           = null;
 
         private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
-        /// <summary>
-        /// WebSocket状态
-        /// </summary>
+        
         public WebSocketState? State { get => ws?.State; }
         public Uri Url { get => uri; }
 
-        /// <summary>
-        /// 包含一个数据的事件
-        /// </summary>
         public delegate void MessageEventHandler(object sender, string data);
         public delegate void ErrorEventHandler(object sender, Exception ex);
 
-        /// <summary>
-        /// 连接建立时触发
-        /// </summary>
         public event EventHandler OnOpen;
-        /// <summary>
-        /// 客户端接收服务端数据时触发
-        /// </summary>
         public event MessageEventHandler OnMessage;
-        /// <summary>
-        /// 通信发生错误时触发
-        /// </summary>
         public event ErrorEventHandler OnError;
-        /// <summary>
-        /// 连接关闭时触发
-        /// </summary>
         public event EventHandler OnClose;
 
         public WebSocket(string wsUrl)
@@ -66,9 +49,6 @@ namespace XPlan.Net
             buffer      = new byte[1024 * 4];
         }
 
-        /// <summary>
-        /// 打开链接
-        /// </summary>
         public void Connect()
         {
             callbackRoutine = MonoBehaviourHelper.StartCoroutine(Tick());
@@ -98,35 +78,31 @@ namespace XPlan.Net
                     // 等連線完成後觸發Connect
                     bTriggerOpen = true;
 
-                    //全部消息容器                  
                     WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);//监听Socket信息
-                    //是否关闭
+                    
                     while (!result.CloseStatus.HasValue)
                     {
-                        //文本消息
                         if (result.MessageType == WebSocketMessageType.Text)
                         {
                             bs.AddRange(buffer.Take(result.Count));
 
-                            //消息是否已接收完全
                             if (result.EndOfMessage)
                             {
-                                //发送过来的消息
+                                // 收到的消息
                                 string userMsg = Encoding.UTF8.GetString(bs.ToArray(), 0, bs.Count);
 
                                 msgQueue.Enqueue(userMsg);
 
-                                //清空消息容器
                                 bs = new List<byte>();
                             }
                         }
-                        //继续监听Socket信息
+
                         result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                     }
                 }
                 catch (Exception ex)
                 {
-                    netErr = " .Net发生错误" + ex.Message;
+                    netErr  = " .Net发生错误" + ex.Message;
                     errorEx = ex;
                 }
                 finally
@@ -152,12 +128,6 @@ namespace XPlan.Net
             });
         }
 
-        /// <summary>
-        /// 使用连接发送文本消息
-        /// </summary>
-        /// <param name="ws"></param>
-        /// <param name="mess"></param>
-        /// <returns>是否尝试了发送</returns>
         public bool Send(string mess)
         {
             if (ws.State != WebSocketState.Open)
@@ -167,13 +137,9 @@ namespace XPlan.Net
 
             Task.Run(async () =>
             {
-                // 将要发送的数据转换为字节数组
-                byte[] buffer = Encoding.UTF8.GetBytes(mess);
+                byte[] buffer               = Encoding.UTF8.GetBytes(mess);
+                ArraySegment<byte> segment  = new ArraySegment<byte>(buffer);
 
-                // 创建 WebSocket 发送数据的缓冲区
-                ArraySegment<byte> segment = new ArraySegment<byte>(buffer);
-
-                // 发送消息
                 await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
 
                 Debug.Log($"送出訊息 {mess}!!");
@@ -182,12 +148,6 @@ namespace XPlan.Net
             return true;
         }
 
-        /// <summary>
-        /// 使用连接发送字节消息
-        /// </summary>
-        /// <param name="ws"></param>
-        /// <param name="mess"></param>
-        /// <returns>是否尝试了发送</returns>
         public bool Send(byte[] bytes)
         {
             if (ws.State != WebSocketState.Open)
@@ -197,7 +157,6 @@ namespace XPlan.Net
 
             Task.Run(async () =>
             {
-                //发送消息
                 await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, CancellationToken.None);
 
                 Debug.Log($"送出訊息 {bytes}!!");
@@ -206,9 +165,6 @@ namespace XPlan.Net
             return true;
         }
 
-        /// <summary>
-        /// 关闭连接
-        /// </summary>
         public void Close()
         {
             bIsUserClose = true;
@@ -223,7 +179,7 @@ namespace XPlan.Net
                 {
                     try
                     {
-                        //关闭WebSocket（客户端发起）
+                        // 關閉WebSocket
                         await ws.CloseAsync(closeStatus, statusDescription, CancellationToken.None);
                     }
                     catch (Exception ex)
@@ -244,9 +200,11 @@ namespace XPlan.Net
          * *************************/
         private IEnumerator Tick()
         {
+            // 為了讓call back 都由主執行序觸發
+            // 所以放在tick
             while (true)
             {
-                // 為了讓call back 都由主執行序觸發
+                // 等Frame的末尾再執行
                 yield return new WaitForEndOfFrame();
 
                 if (bTriggerOpen)

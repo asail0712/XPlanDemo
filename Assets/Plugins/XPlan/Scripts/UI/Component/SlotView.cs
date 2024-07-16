@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using XPlan.Interface;
 using XPlan.Extensions;
 
-namespace XPlan.UI
+namespace XPlan.UI.Component
 {
     public enum ViewMode
 	{

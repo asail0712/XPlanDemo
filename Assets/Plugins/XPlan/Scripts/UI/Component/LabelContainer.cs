@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace XPlan.UI
+namespace XPlan.UI.Component
 {
 	[Serializable]
 	public class LabelContainer

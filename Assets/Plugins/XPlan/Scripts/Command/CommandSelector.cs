@@ -10,9 +10,9 @@ namespace XPlan.Command
 
         public CommandSelector(ICondition condition, ICommand trueConditionCommand, ICommand falseConditionCommand)
         {
-            this.condition = condition;
-            this.trueConditionCommand = trueConditionCommand;
-            this.falseConditionCommand = falseConditionCommand;
+            this.condition              = condition;
+            this.trueConditionCommand   = trueConditionCommand;
+            this.falseConditionCommand  = falseConditionCommand;
         }
 
         public void Execute()

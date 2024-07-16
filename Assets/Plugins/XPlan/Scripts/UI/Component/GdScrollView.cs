@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 using XPlan.Interface;
 
-namespace XPlan.UI
+namespace XPlan.UI.Component
 {
 	public class GdScrollView : ScrollRect
 	{

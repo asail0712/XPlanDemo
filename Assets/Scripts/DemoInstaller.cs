@@ -13,8 +13,8 @@ namespace DemoXplan
 
 	}
 
-    public class DemoInstaller : InstallerBase
-    {
+    public class DemoInstaller : SystemBase
+	{
 		protected override void OnPreInitial()
 		{
 			

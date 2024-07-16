@@ -5,7 +5,6 @@ using System.Globalization;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-using XPlan.Command;
 using XPlan.Extensions;
 using XPlan.Utility;
 
