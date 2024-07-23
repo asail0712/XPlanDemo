@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -84,9 +85,16 @@ namespace XPlan.Scenes
 		/************************************
 		 * 場景切換處理
 		 * **********************************/
-		public void StartScene(int sceneIdx)
+		public bool StartScene(int sceneIdx)
 		{
-			ChangeTo(sceneIdx);
+			return ChangeTo(sceneIdx);
+		}
+
+		public bool StartScene(string sceneName)
+		{
+			int buildIndex = GetBuildIndexByName(sceneName);
+
+			return ChangeTo(buildIndex);
 		}
 
 		public bool BackFrom()
@@ -99,6 +107,13 @@ namespace XPlan.Scenes
 			ChangeTo(currSceneStack[currSceneStack.Count - 2]);
 
 			return true;
+		}
+
+		public bool ChangeTo(string sceneName, bool bForceChange = false)
+		{
+			int buildIndex = GetBuildIndexByName(sceneName);
+
+			return ChangeTo(buildIndex, bForceChange);
 		}
 
 		public bool ChangeTo(int sceneType, bool bForceChange = false)
@@ -348,6 +363,13 @@ namespace XPlan.Scenes
 			}			
 		}
 
+		public void RegisterScene(string sceneName, int level)
+		{
+			int buildIndex = GetBuildIndexByName(sceneName);
+
+			RegisterScene(buildIndex, level);
+		}
+
 		public void  UnregisterScene(int sceneType)
 		{
 			sceneInfoList.RemoveAll((X) =>
@@ -431,6 +453,22 @@ namespace XPlan.Scenes
 				Debug.LogWarning("Level Error");
 				return -1;
 			}			
+		}
+
+		private int GetBuildIndexByName(string sceneName)
+		{
+			for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+			{
+				string path = SceneUtility.GetScenePathByBuildIndex(i);
+				string name = Path.GetFileNameWithoutExtension(path);
+
+				if (name == sceneName)
+				{
+					return i;
+				}
+			}
+
+			return -1; // 返回 -1 表示未找到该场景
 		}
 	}
 }

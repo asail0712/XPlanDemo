@@ -3,10 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using XPlan.Observe;
 using XPlan.Utility;
 
 namespace XPlan.InputMode
 {
+    public class InputActionMsg : MessageBase
+	{
+        public string inputAction;
+
+        public InputActionMsg(string inputAction, string groupID = "")
+		{
+            this.inputAction = inputAction;
+
+            Send(groupID);
+		}
+    }
+
     [Serializable]
     [Flags]
     enum InputType
@@ -37,7 +50,8 @@ namespace XPlan.InputMode
 
             // 複合鍵要使用And 所以把trigger改為 true
             bool bIsTrigger = bModifierKeys;// || keyList.Count > 0;
-
+            
+            // keyList.Count == 0 表示任一按鍵
             switch (currType)
 			{
 				case InputType.PressDown:
@@ -107,56 +121,88 @@ namespace XPlan.InputMode
 	}
 
 
-    public class InputManager : CreateSingleton<InputManager>
+    public class InputManager : SystemBase
     {
         [SerializeField]
-        List<InputInfo> inputInfoList;
+        private List<InputInfo> inputInfoList;
+
+        [SerializeField]
+        private string msgGroupName = "";
 
         public Action<string> inputAction;
 
-        private Coroutine inputCoroutine;
+        static private List<MonoBehaviourHelper.MonoBehavourInstance> inputCoStack = new List<MonoBehaviourHelper.MonoBehavourInstance>();
 
-        // Start is called before the first frame update
-        protected override void InitSingleton()
-        {
-        }
+        private bool bEnabled                                       = true;
+        private MonoBehaviourHelper.MonoBehavourInstance inputCoIns = null;
 
         protected override void OnRelease(bool bAppQuit)
         {
-            EnableInput(false);
+            if(inputCoIns != null)
+            {
+                inputCoStack.Remove(inputCoIns);
+                inputCoIns.StopCoroutine();
+                inputCoIns = null;
+            }
 
-            base.OnRelease(bAppQuit);
+			// 因為要加新的，所以將原本的input停止
+			if (inputCoStack.Count > 0)
+			{
+                MonoBehaviourHelper.MonoBehavourInstance coIns = inputCoStack[inputCoStack.Count - 1];
+                if (coIns != null)
+                {
+                    coIns.StartCoroutine();
+                }
+                else // 避免場景被釋放掉 物件為null時，要將物件移除
+                {
+                    inputCoStack.RemoveAt(inputCoStack.Count - 1);
+                }
+            }
+
+			base.OnRelease(bAppQuit);
         }
 
-        void Start()
+        protected override void OnInitialGameObject()
 		{
-            EnableInput(true);
+            // 因為要加新的，所以將原本的Input停止
+            if(inputCoStack.Count > 0)
+			{
+                MonoBehaviourHelper.MonoBehavourInstance coIns = inputCoStack[inputCoStack.Count - 1];
+                if(coIns != null)
+				{
+                    coIns.StopCoroutine(false);
+                }
+                else // 避免場景被釋放掉 物件為null時，要將物件移除
+                {
+                    inputCoStack.RemoveAt(inputCoStack.Count - 1);
+                }
+            }
+
+            // 觸發新的Input
+            if(inputCoIns == null)
+			{
+                inputCoIns = MonoBehaviourHelper.StartCoroutine(GatherInput());
+            }
+
+            inputCoStack.Add(inputCoIns);
         }
 
         public void EnableInput(bool b)
 		{
-            if(b)
-			{
-                if(inputCoroutine == null)
-				{
-                    inputCoroutine = StartCoroutine(GatherInput());
-                }
-			}
-            else
-			{
-                if (inputCoroutine != null)
-                {
-                    StopCoroutine(inputCoroutine);
-                    inputCoroutine = null;
-                }
-            }
-		}
+            bEnabled = b;
+        }
 
         private IEnumerator GatherInput()
 		{
             while(true)
 			{
                 yield return null;
+
+                // 記得要在yield return null 下面
+                if (!bEnabled)
+                {
+                    continue;
+                }
 
                 foreach (InputInfo inputInfo in inputInfoList)
                 {
@@ -167,6 +213,7 @@ namespace XPlan.InputMode
                     if (bIsTrigger)
                     {
                         inputAction?.Invoke(inputInfo.actionStr);
+                        new InputActionMsg(inputInfo.actionStr, msgGroupName);
 
                         if (inputInfo.timeToDenind > 0f)
                         { 
@@ -176,5 +223,5 @@ namespace XPlan.InputMode
                 }
             }
         }
-    }
+	}
 }

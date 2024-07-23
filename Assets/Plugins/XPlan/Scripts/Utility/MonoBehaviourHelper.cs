@@ -47,6 +47,14 @@ namespace XPlan.Utility
                 return StartCoroutine(WaitToDestroy(routine));
             }
 
+            public void StartCoroutine()
+            {
+                if(this != null) // 避免在結束時執行到
+				{
+                    StartCoroutine(routine);
+                }
+            }
+
             public void StopCoroutine(bool bNeedToDestroy = true)
             {
                 StopCoroutine(routine);
