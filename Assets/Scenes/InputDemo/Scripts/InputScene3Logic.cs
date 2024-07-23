@@ -31,7 +31,7 @@ namespace XPlan.Demo.Input
                         Debug.Log("Cant Load Other Scene");                      
                         break;
                     case "UnloadScene":
-                        Debug.Log("Unload Scene3 Scene");
+                        Debug.Log("Unload Scene3");
                         SceneManager.LoadScene("InputScene2");
                         break;
                 }

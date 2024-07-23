@@ -28,7 +28,7 @@ namespace XPlan.Demo.Input
                 switch (msg.inputAction)
                 {
                     case "LoadScene":
-                        Debug.Log("Parent Load Scene1");
+                        Debug.Log("Scene1 Load Scene2");
                         SceneManager.LoadScene("InputScene2");
                         break;
                     case "UnloadScene":

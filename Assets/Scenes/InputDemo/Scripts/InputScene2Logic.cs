@@ -28,11 +28,11 @@ namespace XPlan.Demo.Input
                 switch(msg.inputAction)
 				{
                     case "LoadScene":
-                        Debug.Log("Scene2 Load Scene3 Scene");
+                        Debug.Log("Scene2 Load Scene3");
                         SceneManager.LoadScene("InputScene3");
                         break;
                     case "UnloadScene":
-                        Debug.Log("Unload Scene2 Scene");
+                        Debug.Log("Unload Scene2");
                         SceneManager.LoadScene("InputScene1");
                         break;
                 }

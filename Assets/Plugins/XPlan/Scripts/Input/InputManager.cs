@@ -19,172 +19,42 @@ namespace XPlan.InputMode
             Send(groupID);
 		}
     }
-
-    [Serializable]
-    [Flags]
-    enum InputType
-	{
-        None        = 0,
-        PressDown   = 1 << 0,
-        PressUp     = 1 << 1,
-        Hold        = 1 << 2,
-    }
-
-    [Serializable]
-    class InputInfo
-	{
-        public string actionStr;
-        public List<KeyCode> keyList;
-        public InputType inputType;
-        public float timeToDenind;
-        public bool bModifierKeys;
-
-        public bool IsTrigger(InputType type)
-		{
-            InputType currType = (inputType & type);
-
-            if (currType == InputType.None)
-			{
-                return false;
-			}
-
-            // 複合鍵要使用And 所以把trigger改為 true
-            bool bIsTrigger = bModifierKeys;// || keyList.Count > 0;
-            
-            // keyList.Count == 0 表示任一按鍵
-            switch (currType)
-			{
-				case InputType.PressDown:
-					if (keyList.Count == 0)
-					{
-						bIsTrigger |= Input.anyKeyDown;
-					}
-					else
-					{
-						foreach (KeyCode key in keyList)
-						{
-							if (bModifierKeys)
-							{
-								bIsTrigger &= Input.GetKeyDown(key);
-							}
-							else
-							{
-								bIsTrigger |= Input.GetKeyDown(key);
-							}
-						}
-					}
-					break;
-				case InputType.PressUp:
-					if (keyList.Count == 0)
-					{
-						//bIsTrigger |= Input.anyKey;
-					}
-					else
-					{
-						foreach (KeyCode key in keyList)
-						{
-							if (bModifierKeys)
-							{
-								bIsTrigger &= Input.GetKeyUp(key);
-							}
-							else
-							{
-								bIsTrigger |= Input.GetKeyUp(key);
-							}
-						}
-					}
-					break;
-				case InputType.Hold:
-                    if (keyList.Count == 0)
-                    {
-                        bIsTrigger |= Input.anyKey;
-                    }
-                    else
-                    {
-                        foreach (KeyCode key in keyList)
-                        {
-                            if (bModifierKeys)
-                            {
-                                bIsTrigger &= Input.GetKey(key);
-                            }
-                            else
-                            {
-                                bIsTrigger |= Input.GetKey(key);
-                            }
-                        }
-                    }
-                    break;
-            }
-
-            return bIsTrigger;
-        }
-	}
-
-
-    public class InputManager : SystemBase
+    
+    public class InputManager : CreateSingleton<InputManager>
     {
-        [SerializeField]
-        private List<InputInfo> inputInfoList;
+        public Action<string, string> inputAction;
 
-        [SerializeField]
-        private string msgGroupName = "";
+        static private List<InputSetting> settingStack = new List<InputSetting>();
 
-        public Action<string> inputAction;
+        private bool bEnabled               = true;
+        private Coroutine inputCoroutine    = null;
 
-        static private List<MonoBehaviourHelper.MonoBehavourInstance> inputCoStack = new List<MonoBehaviourHelper.MonoBehavourInstance>();
-
-        private bool bEnabled                                       = true;
-        private MonoBehaviourHelper.MonoBehavourInstance inputCoIns = null;
+        protected override void InitSingleton()
+        {
+            inputCoroutine = StartCoroutine(GatherInput());
+        }
 
         protected override void OnRelease(bool bAppQuit)
         {
-            if(inputCoIns != null)
+            if(inputCoroutine != null)
             {
-                inputCoStack.Remove(inputCoIns);
-                inputCoIns.StopCoroutine();
-                inputCoIns = null;
+                StopCoroutine(inputCoroutine);
+                inputCoroutine = null;
             }
 
-			// 因為要加新的，所以將原本的input停止
-			if (inputCoStack.Count > 0)
-			{
-                MonoBehaviourHelper.MonoBehavourInstance coIns = inputCoStack[inputCoStack.Count - 1];
-                if (coIns != null)
-                {
-                    coIns.StartCoroutine();
-                }
-                else // 避免場景被釋放掉 物件為null時，要將物件移除
-                {
-                    inputCoStack.RemoveAt(inputCoStack.Count - 1);
-                }
-            }
+            settingStack.Clear();
 
-			base.OnRelease(bAppQuit);
+            base.OnRelease(bAppQuit);
         }
 
-        protected override void OnInitialGameObject()
+        public void RegisterSetting(InputSetting setting)
 		{
-            // 因為要加新的，所以將原本的Input停止
-            if(inputCoStack.Count > 0)
-			{
-                MonoBehaviourHelper.MonoBehavourInstance coIns = inputCoStack[inputCoStack.Count - 1];
-                if(coIns != null)
-				{
-                    coIns.StopCoroutine(false);
-                }
-                else // 避免場景被釋放掉 物件為null時，要將物件移除
-                {
-                    inputCoStack.RemoveAt(inputCoStack.Count - 1);
-                }
-            }
+            settingStack.Add(setting);
+        }
 
-            // 觸發新的Input
-            if(inputCoIns == null)
-			{
-                inputCoIns = MonoBehaviourHelper.StartCoroutine(GatherInput());
-            }
-
-            inputCoStack.Add(inputCoIns);
+        public void UnregisterSetting(InputSetting setting)
+        {
+            settingStack.Remove(setting);
         }
 
         public void EnableInput(bool b)
@@ -204,6 +74,14 @@ namespace XPlan.InputMode
                     continue;
                 }
 
+                if(settingStack.Count == 0)
+				{
+                    continue;
+				}
+
+                InputSetting setting            = settingStack[settingStack.Count - 1];
+                List<InputInfo> inputInfoList   = setting.inputInfoList;
+
                 foreach (InputInfo inputInfo in inputInfoList)
                 {
                     bool bIsTrigger = inputInfo.IsTrigger(InputType.PressDown) 
@@ -212,8 +90,8 @@ namespace XPlan.InputMode
 
                     if (bIsTrigger)
                     {
-                        inputAction?.Invoke(inputInfo.actionStr);
-                        new InputActionMsg(inputInfo.actionStr, msgGroupName);
+                        inputAction?.Invoke(inputInfo.actionStr, setting.msgGroupName);
+                        new InputActionMsg(inputInfo.actionStr, setting.msgGroupName);
 
                         if (inputInfo.timeToDenind > 0f)
                         { 
