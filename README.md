@@ -9,10 +9,10 @@
   
 # 3.使用說明
 - Assets/Scenes/InputDemo/InputScene1.unity
- - 說明InputManager如何支援多個場景對應多個Input設定 
+  - 說明InputManager如何支援多個場景對應多個Input設定 
 - Assets/Scenes/InputWithSceneControllerDemo/ParentScene.unity
- - 示範XPlan的SceneController如何設定載入與卸載關卡
- - 示範InputManager如何使用在有SceneController環境
+  - 示範XPlan的SceneController如何設定載入與卸載關卡
+  - 示範InputManager如何使用在有SceneController環境
  
 # 4.目標和功能
 ### 目標
