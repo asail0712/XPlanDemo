@@ -25,7 +25,7 @@ namespace XPlan.DebugMode
             currGameSpeed   = 1;
             bIsInitial      = true;
 #if DEBUG
-            RegisterHandler(new DebugHandler(debugConsole));
+            RegisterLogic(new DebugHandler(debugConsole));
 #endif //DEBUG
         }
 #if DEBUG

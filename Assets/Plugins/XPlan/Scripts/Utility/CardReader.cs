@@ -97,7 +97,7 @@ namespace XPlan.Utility
 					}
 				}
 			}
-#endif //PCSC
+#endif // PCSC
 
 			return false;
 		}

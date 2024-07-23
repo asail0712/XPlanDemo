@@ -19,7 +19,7 @@ namespace XPlan
 		/**********************************************
 		* Handler管理
 		**********************************************/
-		protected void RegisterHandler(LogicComponentBase logicComp)
+		protected void RegisterLogic(LogicComponentBase logicComp)
 		{
 			// 確認msg群發的group
 			logicComp.LazyGroupID = () =>
@@ -29,7 +29,7 @@ namespace XPlan
 
 			logicManager.RegisterScope(logicComp, this);
 		}
-		protected void UnregisterHandler(LogicComponentBase logicComp)
+		protected void UnregisterLogic(LogicComponentBase logicComp)
 		{
 			logicManager.UnregisterScope(logicComp, this);
 		}
