@@ -33,11 +33,18 @@
   - Singleton
   - RecyclePool
   - Easing Functon
+- 其他 
   - GPS資料解析
   - PCSC支援
-  - 可透過前置處理器開啟美顏API的功能
+  - QrCode生成
 # 5.其他
-無
+- 前置處理器
+  - PCSC 可開啟支援讀取Smart Card功能
+  - ZXing 可開啟轉二維條碼功能
+  - USE_OPENCV 開啟OpenCV的美顏功能
+- DLL說明
+  - PCSC、System 沒有需要讀卡可移除
+  - ZXing 沒有需要轉二維調整可移除
 
 # 6.聯繫方式
 Email: asail0712@gmail.com
