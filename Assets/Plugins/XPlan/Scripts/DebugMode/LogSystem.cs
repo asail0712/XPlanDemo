@@ -35,25 +35,28 @@ namespace XPlan.DebugMode
 
     public static class LogSystem
     {
-        public static void Record(string logInfo, LogType logLevel = LogType.Log)
+        public static void Record(string logInfo, LogType logLevel = LogType.Log, bool bShowLocal = false)
 		{
 #if DEBUG
-            StackInfo stackTrace    = new StackInfo();
-            string className        = stackTrace.GetClassName();
-            string methodName       = stackTrace.GetMethodName();
-            string lineNumber       = stackTrace.GetLineNumber();
-            string fullLogInfo      = $"{logInfo} at [ {className}::{methodName}() ], line {lineNumber} ";
+            if(bShowLocal)
+			{
+                StackInfo stackTrace    = new StackInfo(2);
+                string className        = stackTrace.GetClassName();
+                string methodName       = stackTrace.GetMethodName();
+                string lineNumber       = stackTrace.GetLineNumber();
+                logInfo                 += $" at[ { className}::{ methodName} () ], line { lineNumber} ";
+            }
 
 			switch (logLevel)
 			{
                 case LogType.Log:
-                    UnityEngine.Debug.Log(fullLogInfo);
+                    UnityEngine.Debug.Log(logInfo);
                     break;
                 case LogType.Warning:
-                    UnityEngine.Debug.LogWarning(fullLogInfo);
+                    UnityEngine.Debug.LogWarning(logInfo);
                     break;
                 case LogType.Error:
-                    UnityEngine.Debug.LogError(fullLogInfo);
+                    UnityEngine.Debug.LogError(logInfo);
                     break;
             }
 #endif //DEBUG
