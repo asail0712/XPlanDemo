@@ -5,11 +5,15 @@
 ### 系統要求
 - Unity 2021.3.6f1 或更高版本。
 ### 安裝指南
-將XPlan資料夾放進專案中的Assets/Plugins即可。
+- 將XPlan資料夾放進專案中的Assets/Plugins即可
+- 不需要使用的DLL可以刪除，請參照"其他"的說明
   
 # 3.使用說明
+- Assets/Scenes/SystemArchitectureDemo/MainScene.unity
+  - 透過建置簡易計算機的範例，說明XPlan的系統架構該如何建立。
+  - 透過建置簡易計算機的範例，說明XPlan的UI該如何建立。
 - Assets/Scenes/InputDemo/InputScene1.unity
-  - 說明InputManager如何支援多個場景對應多個Input設定 
+  - 示範InputManager如何支援多個場景對應多個Input設定 
 - Assets/Scenes/InputWithSceneControllerDemo/ParentScene.unity
   - 示範XPlan的SceneController如何設定載入與卸載關卡
   - 示範InputManager如何使用在有SceneController環境
