@@ -17,6 +17,9 @@
 - Assets/Scenes/InputWithSceneControllerDemo/ParentScene.unity
   - 示範XPlan的SceneController如何設定載入與卸載關卡
   - 示範InputManager如何使用在有SceneController環境
+- Assets/Scenes/APIDemo/APIDemoScene.unity
+  - 示範XPlan的弱連線使用方式
+  - 透過API連線到氣象局查詢特定地區的溫度
  
 # 4.目標和功能
 ### 目標
