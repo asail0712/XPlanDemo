@@ -20,6 +20,9 @@
 - Assets/Scenes/APIDemo/APIDemoScene.unity
   - 示範XPlan的弱連線使用方式
   - 透過API連線到氣象局查詢特定地區的溫度
+- Assets/Scenes/WebSocketDemoScene/WebSocketDemoScene.unity
+  - 示範XPlan的強連線功能
+  - 透過Websocket連線到公共測試Server，傳送並接收訊息
 - Assets/Scenes/UILocalizationDemo/LocalizationScene.unity
   - 示範UI在地化處理方式
   - 示範如何使用UIController、UILoader與UIStringTable
