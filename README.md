@@ -20,6 +20,8 @@
 - Assets/Scenes/APIDemo/APIDemoScene.unity
   - 示範XPlan的弱連線使用方式
   - 透過API連線到氣象局查詢特定地區的溫度
+- Assets/Scenes/UILocalizationDemo/LocalizationScene.unity
+  - 示範UI在地化處理方式，如何使用UIController、UILoader與UIStringTable
  
 # 4.目標和功能
 ### 目標
