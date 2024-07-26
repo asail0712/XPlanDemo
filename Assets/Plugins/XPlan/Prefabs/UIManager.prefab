@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5524728936780685536}
   - component: {fileID: 5524728936780685537}
+  - component: {fileID: 1280091963}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -44,5 +45,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71db8789324924b478490cb527fba265, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiCanvasGO: {fileID: 0}
-  uiBackgroundCanvasGO: {fileID: 0}
+  bEnableDebug: 0
+  uiRootList: []
+--- !u!114 &1280091963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5524728936780685538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9e1cb0ac7514ab428a192c898a0e2a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bEnableDebug: 0
+  csvAsset: {fileID: 0}
