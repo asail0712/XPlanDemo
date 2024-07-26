@@ -139,7 +139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &64729431
 Transform:
   m_ObjectHideFlags: 0
@@ -376,6 +376,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bEnableDebug: 0
+  sceneDataList:
+  - sceneName: ChildScene1
+    sceneLevel: 1
+  - sceneName: ChildScene2
+    sceneLevel: 2
+  - sceneName: ChildScene3
+    sceneLevel: 3
+  startSceneName: ChildScene1
 --- !u!4 &2054479069
 Transform:
   m_ObjectHideFlags: 0

@@ -11,6 +11,16 @@ using XPlan.Utility;
 
 namespace XPlan.Scenes
 {
+	[Serializable]
+	public class SceneData
+	{
+		[SerializeField]
+		public string sceneName;
+
+		[SerializeField]
+		public int sceneLevel;
+	}
+
 	public struct SceneInfo
 	{
 		public int sceneType;
@@ -63,6 +73,9 @@ namespace XPlan.Scenes
 
 	public class SceneController : CreateSingleton<SceneController>
 	{
+		[SerializeField] private List<SceneData> sceneDataList;
+		[SerializeField] private string startSceneName;
+
 		static private List<SceneInfo> sceneInfoList	= new List<SceneInfo>();
 		private List<int> currSceneStack				= new List<int>();
 
@@ -76,10 +89,24 @@ namespace XPlan.Scenes
 		* **********************************/
 		protected override void InitSingleton()
 		{
+			if(sceneDataList.Count == 0)
+			{
+				return;
+			}
+
+			// 註冊Scene
+			sceneDataList.ForEach((E04) => 
+			{
+				RegisterScene(E04.sceneName, E04.sceneLevel);
+			});
+
+			// 設定開始Scene
+			StartScene(startSceneName);
 		}
 
 		protected override void OnRelease(bool bAppQuit)
 		{
+			sceneDataList.Clear();
 		}
 
 		/************************************
