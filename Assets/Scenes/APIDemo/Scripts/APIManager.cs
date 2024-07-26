@@ -17,7 +17,6 @@ namespace XPlan.Demo.APIDemo
             Task.Run(async () => 
             {
                 // 調用氣象局的API
-
                 NetJSDNResult<TemperatureResponse> netResult = await HttpHelper.Http.Get(APIDefine.WeatherUrl + APIDefine.TemperatureAPI)
                 .AddHeader("Authorization", APIDefine.WeatherLicense)
                 .AddHeader("limit", "1")
