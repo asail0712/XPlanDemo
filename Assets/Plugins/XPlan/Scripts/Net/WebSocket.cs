@@ -71,6 +71,7 @@ namespace XPlan.Net
                 bs.Clear();
                 Array.Clear(buffer, 0, buffer.Length);
 
+                // 這邊有loop，因此不使用StartCoroutine避免效能受到影響
                 try
                 {
                     await ws.ConnectAsync(uri, CancellationToken.None);
