@@ -18,16 +18,16 @@ namespace XPlan.Demo.APIDemo
         {
             APIManager.RequestTemperature((bSuccess, result)=> 
             {
-                string resultStr    = "";
+                string resultStr    = "使用台灣氣象局的API，\n";
                 LogType logType     = LogType.Log;
 
                 if (bSuccess)
 				{
-                    resultStr   = $"成功取得高雄前金區的氣溫，氣溫是 {result} 度";
+                    resultStr   += $"成功取得高雄前金區的氣溫，氣溫是 {result} 度";
 				}
                 else
 				{
-                    resultStr   = $"無法成功取到高雄前金區的氣溫，原因是 {result}";
+                    resultStr   += $"無法成功取到高雄前金區的氣溫，原因是 {result}";
                     logType     = LogType.Warning;                    
                 }
 

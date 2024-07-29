@@ -1,9 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-
-using UnityEngine;
 
 using XPlan.Net;
 
@@ -14,21 +9,19 @@ namespace XPlan.Demo.APIDemo
     {
         static public void RequestTemperature(Action<bool, string> finishAction)
         {
-            Task.Run(async () => 
+            // 調用氣象局的API
+            HttpHelper.Http.Get(APIDefine.WeatherUrl + APIDefine.TemperatureAPI)
+            .AddHeader("Authorization", APIDefine.WeatherLicense)
+            .AddHeader("limit", "1")
+            .AddQuery("locationName", APIDefine.KaohsiungSection)
+            .AddQuery("elementName", "AT")
+            .SendAsyncJSDN<TemperatureResponse>((netResult) => 
             {
-                // 調用氣象局的API
-                NetJSDNResult<TemperatureResponse> netResult = await HttpHelper.Http.Get(APIDefine.WeatherUrl + APIDefine.TemperatureAPI)
-                .AddHeader("Authorization", APIDefine.WeatherLicense)
-                .AddHeader("limit", "1")
-                .AddQuery("locationName", APIDefine.KaohsiungSection)
-                .AddQuery("elementName", "AT")
-                .SendAsyncJSDN<TemperatureResponse>();
-
-                string temperatureStr   = "0";
-                bool bResult            = false;
+                string temperatureStr = "0";
+                bool bResult = false;
 
                 if (netResult.bSuccess)
-				{
+                {
                     TemperatureResponse response    = netResult.netData;
                     LocationInfo locInfo            = response.records.locations[0];
                     TimeInfo[] timeInfo             = locInfo.location[0].weatherElement[0].time;
@@ -38,7 +31,7 @@ namespace XPlan.Demo.APIDemo
                     temperatureStr  = timeInfo[timeIdx].elementValue[0].value;
                 }
                 else
-				{
+                {
                     bResult         = false;
                     temperatureStr  = netResult.errorResponse.CustomErrorMessage;
                 }

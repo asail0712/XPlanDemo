@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -7,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using UnityEngine;
+
+using XPlan.Utility;
 
 namespace XPlan.Net
 {
@@ -90,6 +93,10 @@ namespace XPlan.Net
                 else if (typeof(T) == typeof(int))
                 {
                     netData = int.Parse(responseBody);
+                }
+                else if (typeof(T) == typeof(float))
+                {
+                    netData = float.Parse(responseBody);
                 }
                 // 之後可以再擴充
             }
@@ -177,68 +184,117 @@ namespace XPlan.Net
                 return this;
             }
 
-            public async Task<NetJSDNResult<T>> SendAsyncJSDN<T>()
+            public void SendAsyncJSDN<T>(Action<NetJSDNResult<T>> finishAction)
             {
-                var uriBuilder      = new UriBuilder(request.RequestUri);
+                UriBuilder uriBuilder   = new UriBuilder(request.RequestUri);
+                List<string> query      = _queryStrings.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList();
+                uriBuilder.Query        = string.Join("&", query);
+                request.RequestUri      = uriBuilder.Uri;
 
-                List<string> query  = _queryStrings.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList();
-                uriBuilder.Query    = string.Join("&", query);
-
-                request.RequestUri  = uriBuilder.Uri;
-                // var request = new HttpRequestMessage(_method, uriBuilder.Uri);
-                if(_body != null)
-                {
-                    request.Content = _body;
-                }
-
-                NetJSDNResult<T> netResult = new NetJSDNResult<T>();
-
-                bWaitResponse = true;
-
-                if (bOfflineTest)
-                {
-                    netResult.bSuccess = true;
-                }
-				else 
-                {
-                    if(simulationLateTime > 0f)
-					{
-                        await Task.Delay((int)(simulationLateTime * 1000));
-					}
-
-					try 
-                    { 
-                        HttpResponseMessage response = await _client.SendAsync(request);
-                        netResult.WaitResult(response);
-                    }
-                    catch(Exception e)
-					{
-                        Debug.LogWarning($"Request error : {e.Message} !!");
-					}
-                }
-
-                bWaitResponse = false;
-
-                return netResult;
-            }
-
-            public async Task<NetParseResult<T>> SendAsyncParse<T>()
-            {
-                var uriBuilder      = new UriBuilder(request.RequestUri);
-
-                List<string> query  = _queryStrings.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList();
-                uriBuilder.Query    = string.Join("&", query);
-
-                request.RequestUri  = uriBuilder.Uri;
-                // var request = new HttpRequestMessage(_method, uriBuilder.Uri);
                 if (_body != null)
                 {
                     request.Content = _body;
                 }
 
-                NetParseResult<T> netResult = new NetParseResult<T>();
+                MonoBehaviourHelper.StartCoroutine(SendAsyncJSDN_Internal<T>(finishAction));
+            }
+            
+            private IEnumerator SendAsyncJSDN_Internal<T>(Action<NetJSDNResult<T>> finishAction)
+			{
+                NetJSDNResult<T> netResult  = new NetJSDNResult<T>();
+                bWaitResponse               = true;
 
-                bWaitResponse = true;
+                yield return null;
+
+                if (bOfflineTest)
+                {
+                    netResult.bSuccess = true;
+                }
+                else
+                {
+                    if (simulationLateTime > 0f)
+                    {
+                        yield return new WaitForSeconds(simulationLateTime * 1000);
+                    }
+
+                    Task<HttpResponseMessage> responseTask = _client.SendAsync(request);
+
+                    yield return new WaitUntil(() => responseTask.IsCompleted);
+
+                    HttpResponseMessage response = responseTask.Result;
+
+                    netResult.WaitResult(response);
+                }
+
+                bWaitResponse = false;
+
+                finishAction?.Invoke(netResult);
+            }
+
+            //        public async Task<NetJSDNResult<T>> SendAsyncJSDN<T>()
+            //        {
+            //            var uriBuilder      = new UriBuilder(request.RequestUri);
+
+            //            List<string> query  = _queryStrings.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList();
+            //            uriBuilder.Query    = string.Join("&", query);
+
+            //            request.RequestUri  = uriBuilder.Uri;
+            //            // var request = new HttpRequestMessage(_method, uriBuilder.Uri);
+            //            if(_body != null)
+            //            {
+            //                request.Content = _body;
+            //            }
+
+            //            NetJSDNResult<T> netResult = new NetJSDNResult<T>();
+
+            //            bWaitResponse = true;
+
+            //            if (bOfflineTest)
+            //            {
+            //                netResult.bSuccess = true;
+            //            }
+            //else 
+            //            {
+            //                if(simulationLateTime > 0f)
+            //	{
+            //                    await Task.Delay((int)(simulationLateTime * 1000));
+            //	}
+
+            //	try 
+            //                { 
+            //                    HttpResponseMessage response = await _client.SendAsync(request);
+            //                    netResult.WaitResult(response);
+            //                }
+            //                catch(Exception e)
+            //	{
+            //                    Debug.LogWarning($"Request error : {e.Message} !!");
+            //	}
+            //            }
+
+            //            bWaitResponse = false;
+
+            //            return netResult;
+            //        }
+
+            public void SendAsyncParse<T>(Action<NetParseResult<T>> finishAction)
+            {
+                UriBuilder uriBuilder = new UriBuilder(request.RequestUri);
+                List<string> query = _queryStrings.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList();
+                uriBuilder.Query = string.Join("&", query);
+                request.RequestUri = uriBuilder.Uri;
+
+                if (_body != null)
+                {
+                    request.Content = _body;
+                }
+
+                MonoBehaviourHelper.StartCoroutine(SendAsyncParse_Internal<T>(finishAction));
+            }
+
+            private IEnumerator SendAsyncParse_Internal<T>(Action<NetParseResult<T>> finishAction)
+            { 
+                NetParseResult<T> netResult = new NetParseResult<T>();
+                bWaitResponse               = true;
 
                 if (bOfflineTest)
 				{
@@ -248,24 +304,67 @@ namespace XPlan.Net
                 {
                     if (simulationLateTime > 0f)
                     {
-                        await Task.Delay((int)(simulationLateTime * 1000));
+                        yield return new WaitForSeconds(simulationLateTime * 1000);
                     }
 
-					try 
-                    { 
-                        HttpResponseMessage response = await _client.SendAsync(request);
-                        netResult.WaitResult(response);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogWarning($"Request error : {e.Message} !!");
-                    }
+                    Task<HttpResponseMessage> responseTask = _client.SendAsync(request);
+
+                    yield return new WaitUntil(() => responseTask.IsCompleted);
+
+                    HttpResponseMessage response = responseTask.Result;
+
+                    netResult.WaitResult(response);
                 }
 
                 bWaitResponse = false;
 
-                return netResult;
-            }    
+                finishAction?.Invoke(netResult);
+            }
+
+            //public async Task<NetParseResult<T>> SendAsyncParse<T>()
+            //{
+            //    var uriBuilder = new UriBuilder(request.RequestUri);
+
+            //    List<string> query = _queryStrings.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList();
+            //    uriBuilder.Query = string.Join("&", query);
+
+            //    request.RequestUri = uriBuilder.Uri;
+            //    // var request = new HttpRequestMessage(_method, uriBuilder.Uri);
+            //    if (_body != null)
+            //    {
+            //        request.Content = _body;
+            //    }
+
+            //    NetParseResult<T> netResult = new NetParseResult<T>();
+
+            //    bWaitResponse = true;
+
+            //    if (bOfflineTest)
+            //    {
+            //        netResult.bSuccess = true;
+            //    }
+            //    else
+            //    {
+            //        if (simulationLateTime > 0f)
+            //        {
+            //            await Task.Delay((int)(simulationLateTime * 1000));
+            //        }
+
+            //        try
+            //        {
+            //            HttpResponseMessage response = await _client.SendAsync(request);
+            //            netResult.WaitResult(response);
+            //        }
+            //        catch (Exception e)
+            //        {
+            //            Debug.LogWarning($"Request error : {e.Message} !!");
+            //        }
+            //    }
+
+            //    bWaitResponse = false;
+
+            //    return netResult;
+            //}
         }
 
         public static bool WaitResponse()
