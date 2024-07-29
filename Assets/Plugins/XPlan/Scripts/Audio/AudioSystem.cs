@@ -11,6 +11,7 @@ namespace XPlan.Audio
 	public enum AudioChannel 
 	{ 
 		None,
+		Channel_Background,
 		Channel_1,
 		Channel_2,
 		Channel_3,
@@ -18,7 +19,6 @@ namespace XPlan.Audio
 		Channel_5,
 		Channel_6,
 		Channel_7,
-		Channel_8,
 	}
 
 	[System.Serializable]
@@ -65,8 +65,13 @@ namespace XPlan.Audio
 		[Tooltip("放置所有要撥放的聲音")]
 		private List<SoundGroup> soundGroup;
 
-		private Dictionary<AudioChannel, AudioSource> sourceMap = new Dictionary<AudioChannel, AudioSource>();
+		[SerializeField]
+		[Tooltip("背景音樂降低音量時的大小")]
+		private float lowerBGVolume = 0.3f;
+
+		private Dictionary<AudioChannel, XAudioSource> sourceMap = new Dictionary<AudioChannel, XAudioSource>();
 		private List<SoundInfo> soundBank;
+		private float defaultBGVolume;
 
 		protected override void InitSingleton()
 		{
@@ -96,9 +101,32 @@ namespace XPlan.Audio
 			// 依照Channel的數量建立對應數量的AudioSource
 			for (int i = 0; i < channelList.Count; ++i)
 			{
-				AudioSource source = gameObject.AddComponent<AudioSource>();
+				sourceMap.Add(channelList[i], new XAudioSource(gameObject));
+			}
 
-				sourceMap.Add(channelList[i], source);
+			XAudioSource bgAudioSource = GetBGAudioSource();
+
+			if(bgAudioSource != null)
+			{
+				defaultBGVolume = bgAudioSource.volume;
+			}
+		}
+
+		private void Update()
+		{
+			// 背景音樂播放時，有其他音效的話要降低背景音樂的聲音大小
+			if(IsPlayingSoundOnBGChannel())
+			{
+				XAudioSource bgAudioSource = GetBGAudioSource();
+
+				if (GetNumOfPlayingSource() > 1)
+				{
+					bgAudioSource.volume = lowerBGVolume;
+				}
+				else
+				{
+					bgAudioSource.volume = defaultBGVolume;
+				}
 			}
 		}
 
@@ -106,22 +134,22 @@ namespace XPlan.Audio
 		 * Play Sound
 		 * 播放聲音可以透過clip name或是 clip index
 		 * **********************************/
-		public void PlaySound(string clipName, float fadeInTime = 1f, float delayTime = 0f)
+		public void PlaySound(string clipName, Action<string> finishAction = null, float fadeInTime = 1f, float delayTime = 0f)
 		{
 			int idx = soundBank.FindIndex((E04) =>
 			{
 				return E04.clipName == clipName;
 			});
 
-			PlaySound(idx, fadeInTime, delayTime);
+			PlaySound(idx, finishAction, fadeInTime, delayTime);
 		}
 
-		public void PlaySound(int clipIdx, float fadeInTime = 1f, float delayTime = 0f)
+		public void PlaySound(int clipIdx, Action<string> finishAction, float fadeInTime = 1f, float delayTime = 0f)
 		{
-			StartCoroutine(DelayToPlay(clipIdx, fadeInTime, delayTime));
+			StartCoroutine(DelayToPlay(clipIdx, finishAction, fadeInTime, delayTime));
 		}
 
-		private IEnumerator DelayToPlay(int clipIdx, float fadeInTime, float delayTime)
+		private IEnumerator DelayToPlay(int clipIdx, Action<string> finishAction, float fadeInTime, float delayTime)
 		{
 			if (delayTime > 0)
 			{
@@ -129,7 +157,7 @@ namespace XPlan.Audio
 			}
 			
 			// 參數意義分別為 撥放的audio source 撥放的曲目 fadein時間 fadeout時間
-			yield return FadeInOutSound(clipIdx, fadeInTime);
+			yield return FadeInOutSound(clipIdx, finishAction, fadeInTime);
 		}
 
 		/************************************
@@ -148,14 +176,14 @@ namespace XPlan.Audio
 
 		public void StopSound(int clipIdx, float fadeOutTime = 1f)
 		{
-			AudioSource audioSource = GetSourceByClipIndex(clipIdx);
+			XAudioSource audioSource = GetSourceByClipIndex(clipIdx);
 
 			if (audioSource == null)
 			{
 				return;
 			}
 
-			if (fadeOutTime > 0f && audioSource.isPlaying)
+			if (fadeOutTime > 0f && audioSource.IsPlaying())
 			{
 				StartCoroutine(FadeOutSound(audioSource, fadeOutTime));
 			}
@@ -181,7 +209,7 @@ namespace XPlan.Audio
 
 		public void PauseSound(int clipIdx)
 		{
-			AudioSource audioSource = GetSourceByClipIndex(clipIdx);
+			XAudioSource audioSource = GetSourceByClipIndex(clipIdx);
 
 			if(audioSource == null)
 			{
@@ -205,7 +233,7 @@ namespace XPlan.Audio
 
 		public void ResumeSound(int clipIdx)
 		{
-			AudioSource audioSource = GetSourceByClipIndex(clipIdx);
+			XAudioSource audioSource = GetSourceByClipIndex(clipIdx);
 
 			if (audioSource == null)
 			{
@@ -230,7 +258,7 @@ namespace XPlan.Audio
 
 		public bool IsPlaying(int clipIdx)
 		{
-			AudioSource audioSource = GetSourceByClipIndex(clipIdx);
+			XAudioSource audioSource = GetSourceByClipIndex(clipIdx);
 
 			if(audioSource == null)
 			{
@@ -252,14 +280,14 @@ namespace XPlan.Audio
 			}
 
 			// 判斷audioSource是否有play
-			return audioSource.isPlaying;
+			return audioSource.IsPlaying();
 		}
 
 		/************************************
 		 * Other
 		 * **********************************/
 
-		private AudioSource GetSourceByClipIndex(int clipIdx)
+		private XAudioSource GetSourceByClipIndex(int clipIdx)
 		{
 			if (!soundBank.IsValidIndex<SoundInfo>(clipIdx))
 			{
@@ -273,7 +301,7 @@ namespace XPlan.Audio
 			return GetSourceByChannel(channel);
 		}
 
-		private AudioSource GetSourceByChannel(AudioChannel channel)
+		private XAudioSource GetSourceByChannel(AudioChannel channel)
 		{
 			if (!sourceMap.ContainsKey(channel))
 			{
@@ -282,7 +310,7 @@ namespace XPlan.Audio
 				return null;
 			}
 
-			AudioSource audioSource = sourceMap[channel];
+			XAudioSource audioSource = sourceMap[channel];
 
 			return audioSource;
 		}
@@ -318,11 +346,11 @@ namespace XPlan.Audio
 		/************************************
 		* 實際播放聲音的流程
 		* **********************************/
-		private IEnumerator FadeInOutSound(int clipIdx = -1, float fadeInTime = 1f)
+		private IEnumerator FadeInOutSound(int clipIdx = -1, Action<string> finishAction = null, float fadeInTime = 1f)
 		{
 			// 在同一個Channel做 Fade in / out的處理
 
-			AudioSource audioSource = GetSourceByClipIndex(clipIdx);
+			XAudioSource audioSource = GetSourceByClipIndex(clipIdx);
 
 			if(audioSource == null)
 			{
@@ -353,12 +381,12 @@ namespace XPlan.Audio
 			float volume		= info.volume;
 
 			// fade in
-			yield return FadeInSound(audioSource, fadeInTime / 2f, volume);
+			yield return FadeInSound(audioSource, finishAction, fadeInTime / 2f, volume);
 		}
 
-		private IEnumerator FadeOutSound(AudioSource audioSource, float fadeOutTime)
+		private IEnumerator FadeOutSound(XAudioSource audioSource, float fadeOutTime)
 		{
-			if(!audioSource.isPlaying)
+			if(!audioSource.IsPlaying())
 			{
 				yield break;
 			}
@@ -382,17 +410,23 @@ namespace XPlan.Audio
 			audioSource.Stop();
 		}
 
-		private IEnumerator FadeInSound(AudioSource audioSource, float fadeInTime, float volume)
+		private IEnumerator FadeInSound(XAudioSource audioSource, Action<string> finishAction, float fadeInTime, float volume)
 		{
 			if (fadeInTime == 0f)
 			{
 				// 如果不需要淡入，则直接播放
-				audioSource.Play();
+				audioSource.Play(() =>
+				{
+					finishAction?.Invoke(audioSource.clip.name);
+				});
 				yield break;
 			}
 
 			audioSource.volume = 0f;
-			audioSource.Play();
+			audioSource.Play(() =>
+			{
+				finishAction?.Invoke(audioSource.clip.name);
+			});
 
 			float targetVolume	= volume;
 			float startTime		= Time.time;
@@ -404,6 +438,48 @@ namespace XPlan.Audio
 			}
 
 			audioSource.volume = targetVolume;
+		}
+
+		/************************************
+		* 其他
+		* **********************************/
+		private bool IsPlayingSoundOnBGChannel()
+		{
+			if (!sourceMap.ContainsKey(AudioChannel.Channel_Background))
+			{
+				return false;
+			}
+
+			XAudioSource bgAudioSource = sourceMap[AudioChannel.Channel_Background];
+
+			return bgAudioSource.IsPlaying();
+		}
+
+		private int GetNumOfPlayingSource()
+		{
+			int result = 0;
+
+			foreach(KeyValuePair<AudioChannel, XAudioSource> kvp in sourceMap)
+			{
+				if(kvp.Value.IsPlaying())
+				{
+					++result;
+				}
+			}
+
+			return result;
+		}
+
+		private XAudioSource GetBGAudioSource()
+		{
+			if (sourceMap.ContainsKey(AudioChannel.Channel_Background))
+			{
+				return sourceMap[AudioChannel.Channel_Background];
+			}
+			else
+			{
+				return null;
+			}
 		}
 	}
 }

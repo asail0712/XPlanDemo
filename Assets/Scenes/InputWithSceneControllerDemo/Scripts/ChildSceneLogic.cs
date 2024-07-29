@@ -7,7 +7,7 @@ using XPlan.Scenes;
 using XPlan.InputMode;
 using XPlan.Observe;
 
-namespace XPlan.Demo.Input
+namespace XPlan.Demo.InputMode
 { 
     public class ChildSceneLogic : MonoBehaviour, INotifyReceiver
     {
