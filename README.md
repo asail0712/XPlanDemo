@@ -62,8 +62,8 @@
   - ZXing 可開啟轉二維條碼功能
   - USE_OPENCV 開啟OpenCV的美顏功能
 - DLL說明
-  - PCSC、System 沒有需要讀卡可移除
-  - ZXing 沒有需要轉二維調整可移除
+  - PCSC、System 該DLL用於讀取Smart Card，沒有使用可移除
+  - ZXing 該DLL用於將字串轉為二維條碼，沒有使用可移除
 
 # 6.聯繫方式
 Email: asail0712@gmail.com
