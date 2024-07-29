@@ -10,8 +10,8 @@
   
 # 3.使用說明
 - Assets/Scenes/SystemArchitectureDemo/MainScene.unity
-  - 透過建置簡易計算機的範例，說明XPlan的系統架構該如何建立。
-  - 透過建置簡易計算機的範例，說明XPlan的UI該如何建立。
+  - 透過建置簡易計算機的範例，說明XPlan的系統架構該如何建立
+  - 透過建置簡易計算機的範例，說明UI該如何建立與使用
 - Assets/Scenes/InputDemo/InputScene1.unity
   - 示範InputManager如何支援多個場景對應多個Input設定 
 - Assets/Scenes/InputWithSceneControllerDemo/ParentScene.unity
@@ -23,6 +23,10 @@
 - Assets/Scenes/WebSocketDemoScene/WebSocketDemoScene.unity
   - 示範XPlan的強連線功能
   - 透過Websocket連線到公共測試Server，傳送並接收訊息
+- Assets/Scenes/AudioDemo/AudioDemoScene.unity
+  - 示範Audio的使用方式
+  - 一個Channel同時只撥放一個聲音
+  - 標示為BG的Channel在有其他聲音撥放時，會自動變小聲
 - Assets/Scenes/UILocalizationDemo/LocalizationScene.unity
   - 示範UI在地化處理方式
   - 示範如何使用UIController、UILoader與UIStringTable
