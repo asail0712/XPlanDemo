@@ -383,6 +383,8 @@ MonoBehaviour:
     sceneLevel: 2
   - sceneName: ChildScene3
     sceneLevel: 3
+  - sceneName: ChildScene4
+    sceneLevel: 3
   startSceneName: ChildScene1
 --- !u!4 &2054479069
 Transform:

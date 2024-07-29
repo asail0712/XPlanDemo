@@ -26,4 +26,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/InputWithSceneControllerDemo/ChildScene3.unity
     guid: 42fe7d2091fc54347ab316821f5a8f80
+  - enabled: 1
+    path: Assets/Scenes/InputWithSceneControllerDemo/ChildScene4.unity
+    guid: 361cc34fce5b82b49bda6655ca1ecd40
   m_configObjects: {}

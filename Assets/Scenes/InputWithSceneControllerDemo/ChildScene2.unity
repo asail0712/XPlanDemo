@@ -164,9 +164,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 64729430}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2421060d6ccdb54da00a103cb09081f, type: 3}
+  m_Script: {fileID: 11500000, guid: c92003aca66e447439e8e5ec2107a838, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  groupID: Scene2
+  sceneName: ChildScene2
+  nextScene: ChildScene3
 --- !u!1001 &81495620
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -691,8 +694,14 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Press \"D\" to Add Scene \n\"ChildScene3\"\n\nPress \"A\" to Remove Scene
-    \n\"ChildScene2\""
+  m_Text: 'This is "ChildScene2"
+
+
+    Press "D" to Add Scene "ChildScene3"
+
+
+    Press
+    "A" to Remove Scene "ChildScene2"'
 --- !u!222 &1759269131
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 using XPlan.Scenes;
 using XPlan.InputMode;
@@ -10,13 +9,17 @@ using XPlan.Observe;
 
 namespace XPlan.Demo.Input
 { 
-    public class ChildScene2Logic : MonoBehaviour, INotifyReceiver
+    public class ChildSceneLogic : MonoBehaviour, INotifyReceiver
     {
+        [SerializeField] string groupID     = "";
+        [SerializeField] string sceneName   = "";
+        [SerializeField] string nextScene   = "";
+
         public Func<string> LazyGroupID
         {
             get
             {
-                return () => "Scene2";
+                return () => groupID;
             }
             set
             {
@@ -27,7 +30,7 @@ namespace XPlan.Demo.Input
         // Start is called before the first frame update
         void Start()
         {
-            Debug.Log("It is Child2 Scene");
+            Debug.Log("It is " + sceneName);
 
             NotifySystem.Instance.RegisterNotify<InputActionMsg>(this, (msgReceiver) =>
             {
@@ -36,11 +39,9 @@ namespace XPlan.Demo.Input
                 switch(msg.inputAction)
 				{
                     case "LoadScene":
-                        Debug.Log("Child2 Load Child3 Scene");
-                        SceneController.Instance.ChangeTo("ChildScene3");
+                        SceneController.Instance.ChangeTo(nextScene);                     
                         break;
-                    case "UnloadScene":
-                        Debug.Log("Unload Child2 Scene");
+                    case "UnloadScene":                        
                         SceneController.Instance.BackFrom();
                         break;
                 }

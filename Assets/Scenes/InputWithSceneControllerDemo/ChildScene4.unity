@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 64729431}
   - component: {fileID: 64729432}
   m_Layer: 0
-  m_Name: ChildScene3Logic
+  m_Name: ChildScene4Logic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -167,9 +167,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c92003aca66e447439e8e5ec2107a838, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groupID: Scene3
-  sceneName: ChildScene3
-  nextScene: ChildScene4
+  groupID: Scene4
+  sceneName: ChildScene4
+  nextScene: ChildScene3
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -535,7 +535,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7811484026488952808, guid: 865ef9c0a2dd5b348946e3a7fa0bd578, type: 3}
       propertyPath: msgGroupName
-      value: Scene3
+      value: Scene4
       objectReference: {fileID: 0}
     - target: {fileID: 7811484026488952808, guid: 865ef9c0a2dd5b348946e3a7fa0bd578, type: 3}
       propertyPath: inputInfoList.Array.size
@@ -694,14 +694,14 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'This is "ChildScene3"
+  m_Text: 'This is "ChildScene4"
 
 
-    Press "D" to Switch Scene "ChildScene4"
+    Press "D" to Switch Scene "ChildScene3"
 
 
     Press
-    "A" to Remove Scene "ChildScene3"'
+    "A" to Remove Scene "ChildScene4"'
 --- !u!222 &1878806156
 CanvasRenderer:
   m_ObjectHideFlags: 0
