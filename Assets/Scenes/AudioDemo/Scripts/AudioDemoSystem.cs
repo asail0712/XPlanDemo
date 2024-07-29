@@ -34,6 +34,16 @@ namespace XPlan.Demo.Audio
                 });
             }
 
+            if (Input.GetKeyUp(KeyCode.S))
+            {
+                infoList.Add("Play Sound VFX1 Indepondence!");
+
+                AudioSystem.Instance.PlaySoundIndependently("VFX1", (clipName) =>
+                {
+                    infoList.Add("Indepondence Sound VFX1 finish!");
+                });
+            }
+
             if (Input.GetKeyUp(KeyCode.D))
             {
                 infoList.Add("Play Sound VFX2!");

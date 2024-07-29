@@ -134,6 +134,32 @@ namespace XPlan.Audio
 		 * Play Sound
 		 * 播放聲音可以透過clip name或是 clip index
 		 * **********************************/
+		public void PlaySoundIndependently(string clipName, Action<string> finishAction = null, float fadeInTime = 1f)
+		{
+			int idx = soundBank.FindIndex((E04) =>
+			{
+				return E04.clipName == clipName;
+			});
+
+			XAudioSource audioSource	= new XAudioSource(gameObject);
+			SoundInfo info				= GetSoundByIdx(idx);
+
+			if (info == null)
+			{
+				return;
+			}
+
+			audioSource.clip	= info.clip;
+			float volume		= info.volume;
+
+			StartCoroutine(FadeInSound(audioSource, (clipName)=> 
+			{
+				finishAction?.Invoke(clipName);
+				audioSource.DestroySource();
+
+			}, fadeInTime, volume));
+		}
+
 		public void PlaySound(string clipName, Action<string> finishAction = null, float fadeInTime = 1f, float delayTime = 0f)
 		{
 			int idx = soundBank.FindIndex((E04) =>

@@ -60,6 +60,11 @@ namespace XPlan.Audio
             audioSource = audioRoot.AddComponent<AudioSource>();
         }
 
+        public void DestroySource()
+		{
+            GameObject.DestroyImmediate(audioSource);
+		}
+
         public void Play(Action finishAction = null)
 		{
             if(playMBIns != null)
