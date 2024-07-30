@@ -56,6 +56,11 @@ namespace XPlan.Utility
             return instance != null && isDestroy == false;
         }
 
+        public static GameObject GetGameObject()
+		{
+            return instance.gameObject;
+		}
+
         protected new void Awake()
         {
             base.Awake();
