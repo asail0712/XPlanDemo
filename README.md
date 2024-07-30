@@ -10,13 +10,14 @@
   
 # 3.使用說明
 - Assets/Scenes/SystemArchitectureDemo/MainScene.unity
-  - 透過建置簡易計算機的範例，說明XPlan的系統架構該如何建立
-  - 透過建置簡易計算機的範例，說明UI該如何建立與使用
+  - 此為簡易計算機的範例
+  - 說明XPlan的系統架構該如何建立以及類別間的溝通方式
+  - 說明UI如何建立以及使用
 - Assets/Scenes/InputDemo/InputScene1.unity
   - 示範InputManager如何支援多個場景對應多個Input設定 
 - Assets/Scenes/InputWithSceneControllerDemo/ParentScene.unity
   - 示範XPlan的SceneController如何設定載入與卸載關卡
-  - 示範InputManager如何使用在有SceneController環境
+  - 示範InputManager如何在有SceneController環境的地方使用
 - Assets/Scenes/APIDemo/APIDemoScene.unity
   - 示範XPlan的弱連線使用方式
   - 透過API連線到氣象局查詢特定地區的溫度
@@ -25,7 +26,7 @@
   - 透過Websocket連線到公共測試Server，傳送並接收訊息
 - Assets/Scenes/AudioDemo/AudioDemoScene.unity
   - 示範Audio的使用方式
-  - 一個Channel同時只撥放一個聲音
+  - 一個Channel同時只撥放一個聲音，後播放會強制結束前面撥放的聲音
   - 標示為BG的Channel在有其他聲音撥放時，會自動變小聲
 - Assets/Scenes/UILocalizationDemo/LocalizationScene.unity
   - 示範UI在地化處理方式
@@ -50,7 +51,7 @@
   - 字串處理
   - Texture處理
   - Singleton
-  - RecyclePool
+  - Recycle Pool
   - Easing Functon
 - 其他 
   - GPS資料解析
