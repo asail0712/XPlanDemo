@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using XPlan.DebugMode;
+using XPlan.Recycle;
 using XPlan.Utility;
 
 namespace XPlan.Audio
 {
-    public class XAudioSource
+    public class XAudioSource : IPoolable
     {
         private AudioSource audioSource;
         private MonoBehaviourHelper.MonoBehavourInstance playMBIns;
@@ -48,22 +49,20 @@ namespace XPlan.Audio
             }
         }
 
-        public XAudioSource(GameObject audioRoot)
-        {
-            if (audioRoot == null)
+        public void InitialSource()
+		{
+            if (audioSource != null)
             {
-                LogSystem.Record("audioRoot is null", LogType.Assert);
-
                 return;
             }
 
-            audioSource = audioRoot.AddComponent<AudioSource>();
+            GameObject audioRoot    = AudioSystem.GetGameObject();
+            audioSource             = audioRoot.AddComponent<AudioSource>();
         }
-
-        public void DestroySource()
-		{
+        public void ReleaseSource()
+        {
             GameObject.DestroyImmediate(audioSource);
-		}
+        }
 
         public void Play(Action finishAction = null)
 		{
@@ -113,6 +112,24 @@ namespace XPlan.Audio
         public void UnPause()
         {
             audioSource.UnPause();
+        }
+
+
+        /***************************************
+         * ¹ê§@IPoolable
+         * ************************************/
+
+        public void InitialPoolable()
+        {
+            InitialSource();
+        }
+
+        public void OnSpawn()
+        {
+        }
+
+        public void OnRecycle()
+        {
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using XPlan.Extensions;
+using XPlan.Recycle;
 using XPlan.Utility;
 
 namespace XPlan.Audio
@@ -61,13 +62,15 @@ namespace XPlan.Audio
 
 	public class AudioSystem : CreateSingleton<AudioSystem>
 	{
-		[SerializeField]
 		[Tooltip("放置所有要撥放的聲音")]
-		private List<SoundGroup> soundGroup;
+		[SerializeField] private List<SoundGroup> soundGroup;
 
-		[SerializeField]
+		
 		[Tooltip("背景音樂降低音量時的大小")]
-		private float lowerBGVolume = 0.3f;
+		[SerializeField] private float lowerBGVolume = 0.3f;
+
+		[Tooltip("無channel的AudioSource池子大小")]
+		[SerializeField] private int sizeOfWithoutChannelPool = 5;
 
 		private Dictionary<AudioChannel, XAudioSource> sourceMap = new Dictionary<AudioChannel, XAudioSource>();
 		private List<SoundInfo> soundBank;
@@ -101,9 +104,26 @@ namespace XPlan.Audio
 			// 依照Channel的數量建立對應數量的AudioSource
 			for (int i = 0; i < channelList.Count; ++i)
 			{
-				sourceMap.Add(channelList[i], new XAudioSource(gameObject));
+				XAudioSource audioSource = new XAudioSource();
+				audioSource.InitialSource();
+
+				sourceMap.Add(channelList[i], audioSource);
 			}
 
+			// 建立 Without Channel Pool
+			List<XAudioSource> audioList = new List<XAudioSource>();
+
+			for(int i = 0; i < sizeOfWithoutChannelPool; ++i)
+			{
+				XAudioSource audioSource = new XAudioSource();
+				audioSource.InitialSource();
+
+				audioList.Add(audioSource);
+			}
+
+			RecyclePool<XAudioSource>.RegisterType(audioList);
+
+			// 取出背景音樂的音量大小
 			XAudioSource bgAudioSource = GetBGAudioSource();
 
 			if(bgAudioSource != null)
@@ -141,7 +161,7 @@ namespace XPlan.Audio
 				return E04.clipName == clipName;
 			});
 
-			XAudioSource audioSource	= new XAudioSource(gameObject);
+			XAudioSource audioSource	= RecyclePool<XAudioSource>.SpawnOne();
 			SoundInfo info				= GetSoundByIdx(idx);
 
 			if (info == null)
@@ -155,7 +175,7 @@ namespace XPlan.Audio
 			StartCoroutine(FadeInSound(audioSource, (clipName)=> 
 			{
 				finishAction?.Invoke(clipName);
-				audioSource.DestroySource();
+				RecyclePool<XAudioSource>.Recycle(audioSource);
 
 			}, fadeInTime, volume));
 		}
