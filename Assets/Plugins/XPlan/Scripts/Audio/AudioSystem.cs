@@ -134,7 +134,7 @@ namespace XPlan.Audio
 		 * Play Sound
 		 * 播放聲音可以透過clip name或是 clip index
 		 * **********************************/
-		public void PlaySoundIndependently(string clipName, Action<string> finishAction = null, float fadeInTime = 1f)
+		public void PlayWithoutChannel(string clipName, Action<string> finishAction = null, float fadeInTime = 1f)
 		{
 			int idx = soundBank.FindIndex((E04) =>
 			{
@@ -367,6 +367,25 @@ namespace XPlan.Audio
 			bool bLoop = soundBank[clipIdx].bLoop;
 
 			return bLoop;
+		}
+
+		public AudioChannel GetChannelByClipName(string clipName)
+		{
+			int clipIdx = soundBank.FindIndex((E04) =>
+			{
+				return E04.clipName == clipName;
+			});
+
+			if (!soundBank.IsValidIndex<SoundInfo>(clipIdx))
+			{
+				Debug.LogWarning($"soundBank沒有這個Idx {clipIdx}");
+
+				return AudioChannel.None;
+			}
+
+			AudioChannel channel = soundBank[clipIdx].channel;
+
+			return channel;
 		}
 
 		/************************************

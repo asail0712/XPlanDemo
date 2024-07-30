@@ -26,7 +26,9 @@ namespace XPlan.Demo.Audio
         {
             if(Input.GetKeyUp(KeyCode.A))
 			{
-                infoList.Add("Play Sound VFX1!");
+                AudioChannel channel = AudioSystem.Instance.GetChannelByClipName("VFX1");
+
+                infoList.Add($"Play Sound VFX1 in {channel.ToString()}!");
 
                 AudioSystem.Instance.PlaySound("VFX1", (clipName) => 
                 {
@@ -36,17 +38,20 @@ namespace XPlan.Demo.Audio
 
             if (Input.GetKeyUp(KeyCode.S))
             {
-                infoList.Add("Play Sound VFX1 Indepondence!");
+                infoList.Add("Play Sound VFX1 Without Channel!");
 
-                AudioSystem.Instance.PlaySoundIndependently("VFX1", (clipName) =>
+                AudioSystem.Instance.PlayWithoutChannel("VFX1", (clipName) =>
                 {
-                    infoList.Add("Indepondence Sound VFX1 finish!");
+                    infoList.Add("Sound VFX1 finish!");
                 });
             }
 
             if (Input.GetKeyUp(KeyCode.D))
             {
-                infoList.Add("Play Sound VFX2!");
+                AudioChannel channel = AudioSystem.Instance.GetChannelByClipName("VFX2");
+
+                infoList.Add($"Play Sound VFX2 in {channel.ToString()}!");
+
                 AudioSystem.Instance.PlaySound("VFX2", (clipName) =>
                 {
                     infoList.Add("Sound VFX2 finish!");

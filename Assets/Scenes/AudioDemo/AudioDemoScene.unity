@@ -850,7 +850,7 @@ MonoBehaviour:
   m_Text: 'Press "A" to play VFX1 and Press"D" to play VFX2
 
     Press "S" to play
-    VFX1 Indepondence'
+    VFX1 Without Channel'
 --- !u!222 &1458844191
 CanvasRenderer:
   m_ObjectHideFlags: 0
