@@ -7,7 +7,7 @@ namespace XPlan.Recycle
     public interface IPoolable
     {
         void InitialPoolable();
-        //void ReleasePoolable;
+        void ReleasePoolable();
 
         void OnSpawn();
         void OnRecycle();

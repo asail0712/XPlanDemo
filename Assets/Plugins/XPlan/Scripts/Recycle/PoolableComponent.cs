@@ -10,6 +10,10 @@ namespace XPlan.Recycle
         {
         }
 
+        public void ReleasePoolable()
+        {
+        }
+
         public void OnSpawn()
         {
             gameObject.SetActive(true);

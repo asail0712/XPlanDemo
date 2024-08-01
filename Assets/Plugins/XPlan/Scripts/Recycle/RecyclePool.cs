@@ -11,17 +11,19 @@ namespace XPlan.Recycle
     {
         private Queue<T> poolableQueue;
         private PoolableComponent backupComp;
+        private int totalNum;
              
         public PoolInfo()
 		{
             poolableQueue   = new Queue<T>();
             backupComp      = null;
+            totalNum        = 0;
         }
 
         public void AddPoolable(List<T> poolList)
 		{
             // 考慮到是monobehavior，生成方式會不一樣，所以要backup
-            if(poolList.Count > 0 && typeof(T) == typeof(PoolableComponent))
+            if(poolList.Count > 0 && typeof(PoolableComponent).IsAssignableFrom(typeof(T)))
 			{
                 backupComp = poolList[0] as PoolableComponent;
             }
@@ -30,6 +32,8 @@ namespace XPlan.Recycle
             {
                 poolableQueue.Enqueue(poolList[i]);
             }
+
+            totalNum += poolList.Count;
         }
 
 		public void ResetPool()
@@ -42,8 +46,9 @@ namespace XPlan.Recycle
             T poolable  = default(T);
             Type type   = typeof(T);
 
-            // 判斷是否為GameObject做分別處理
-            if (type == typeof(PoolableComponent))
+            // 若是type繼承PoolableComponent
+            // 則判斷為GameObject做分別處理
+            if (typeof(PoolableComponent).IsAssignableFrom(type))
             {
                 if (poolableQueue.Count == 0)
                 {
@@ -55,6 +60,8 @@ namespace XPlan.Recycle
                     {
                         GameObject go   = GameObject.Instantiate(backupComp.gameObject);
                         poolable        = go.GetComponent<T>();
+
+                        ++totalNum;
                     }
                 }
                 else
@@ -70,6 +77,8 @@ namespace XPlan.Recycle
 
                     poolable = new T();
                     poolable.InitialPoolable();
+
+                    ++totalNum;
                 }
                 else
                 {
@@ -87,6 +96,16 @@ namespace XPlan.Recycle
             poolable.OnRecycle();
             
             poolableQueue.Enqueue(poolable);
+        }
+
+        public int PoolNum()
+        {
+            return poolableQueue.Count;
+        }
+
+        public int TotalNum()
+		{
+            return totalNum;
         }
     }
 
@@ -140,10 +159,40 @@ namespace XPlan.Recycle
                 Recycle(goList[i]);
             }
         }
+        /**************************************************
+         * 其他
+         * *************************************************/
+        static public int GetTotalNum()
+		{
+            Type type = typeof(T);
+
+            if (poolInfoList.ContainsKey(type))
+            {
+                PoolInfo<T> poolInfo = poolInfoList[type];
+
+                return poolInfo.TotalNum();
+            }
+
+            return 0;
+        }
+
+        static public int GetPoolNum()
+        {
+            Type type = typeof(T);
+
+            if (poolInfoList.ContainsKey(type))
+            {
+                PoolInfo<T> poolInfo = poolInfoList[type];
+
+                return poolInfo.PoolNum();
+            }
+
+            return 0;
+        }
 
         /**************************************************
          * 註冊流程        
-         * *************************************************/      
+         * *************************************************/
 
         static public bool RegisterType(List<T> compList)
         {

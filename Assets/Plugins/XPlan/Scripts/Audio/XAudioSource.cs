@@ -124,6 +124,11 @@ namespace XPlan.Audio
             InitialSource();
         }
 
+        public void ReleasePoolable()
+        {
+            ReleaseSource();
+        }
+
         public void OnSpawn()
         {
         }
