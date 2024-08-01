@@ -112,20 +112,24 @@ namespace XPlan.Utility
 		{
 			string holderName;
 
-			EncodingInfo big5EncodingInfo = Encoding.GetEncodings().FirstOrDefault(_ => _.Name == encodingType);
+#if !UNITY_EDITOR
+			// Register a Big5 coding provider
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif // !UNITY_EDITOR
 
-            if (big5EncodingInfo == null)
-            {
-                // Register a Big5 coding provider
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-				Encoding encoding	= Encoding.GetEncoding(encodingType);
-                holderName			= encoding.GetString(input);
-            }
-            else
+			EncodingInfo big5EncodingInfo	= Encoding.GetEncodings().FirstOrDefault(_ => _.Name == encodingType);
+			Encoding encoding				= null;
+
+			if (big5EncodingInfo == null)
 			{
-				holderName		= big5EncodingInfo.GetEncoding().GetString(input);
+				encoding = Encoding.GetEncoding("big5");
+			}
+			else
+			{
+				encoding = big5EncodingInfo.GetEncoding();
 			}
 
+			holderName = encoding.GetString(input);
 			holderName = holderName.TrimEnd('\0');
 
 			//NOTE: Some newer NHI cards have fill space characters to the end
