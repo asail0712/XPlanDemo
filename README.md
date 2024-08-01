@@ -28,6 +28,8 @@
   - 示範Audio的使用方式
   - 一個Channel同時只撥放一個聲音，後播放會強制結束前面撥放的聲音
   - 標示為BG的Channel在有其他聲音撥放時，會自動變小聲
+- Assets/Scenes/RecyclePoolDemo/RecyclePoolDemoScene.unity
+  - 示範RecyclePool如何使用再GameObject上
 - Assets/Scenes/UILocalizationDemo/LocalizationScene.unity
   - 示範UI在地化處理方式
   - 示範如何使用UIController、UILoader與UIStringTable
