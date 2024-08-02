@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 64729431}
   - component: {fileID: 64729432}
   m_Layer: 0
-  m_Name: MainSystem
+  m_Name: CalcularSystem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

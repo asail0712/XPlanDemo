@@ -24,7 +24,7 @@ namespace XPlan.Demo.Architecture
     {
         public MultiplicationLogic()
         {
-            RegisterNotify<MultiplicationMsg>(this, (msg) =>
+            RegisterNotify<MultiplicationMsg>((msg) =>
             {
                 int a = msg.a;
                 int b = msg.b;

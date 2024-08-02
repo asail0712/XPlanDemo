@@ -14,7 +14,7 @@ namespace XPlan.Demo.Architecture
 
 	public static class UIRequest
 	{
-		public const string InputToCalcular = "InputToCalcular";
+		public const string ToCalcular = "ToCalcular";
 	}
 
 	public static class UICommand

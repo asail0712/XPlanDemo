@@ -25,7 +25,7 @@ namespace XPlan.Demo.Architecture
     {
         public AdditionLogic()
 		{
-            RegisterNotify<AdditionMsg>(this, (msg) => 
+            RegisterNotify<AdditionMsg>((msg) => 
             {
                 int a = msg.a;
                 int b = msg.b;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
+using XPlan.DebugMode;
 using XPlan.Interface;
 using XPlan.Observe;
 using XPlan.UI;
@@ -81,8 +82,16 @@ namespace XPlan
 		/*************************
 		 * Notify相關
 		 * ***********************/
-		protected void RegisterNotify<T>(INotifyReceiver notifyReceiver, Action<T> notifyAction) where T : MessageBase
+		protected void RegisterNotify<T>(Action<T> notifyAction) where T : MessageBase
 		{
+			INotifyReceiver notifyReceiver = this as INotifyReceiver;
+
+			if(notifyReceiver == null)
+			{
+				LogSystem.Record($"{this} is not implement INotifyReceiver", LogType.Error);
+				return;
+			}
+
 			NotifySystem.Instance.RegisterNotify<T>(notifyReceiver, (msgReceiver) =>
 			{
 				T msg = msgReceiver.GetMessage<T>();
@@ -91,8 +100,16 @@ namespace XPlan
 			});
 		}
 
-		protected void RegisterNotify<T>(INotifyReceiver notifyReceiver, ReceiveOption option, Action<T> notifyAction) where T : MessageBase
+		protected void RegisterNotify<T>(ReceiveOption option, Action<T> notifyAction) where T : MessageBase
 		{
+			INotifyReceiver notifyReceiver = this as INotifyReceiver;
+
+			if (notifyReceiver == null)
+			{
+				LogSystem.Record($"{this} is not implement INotifyReceiver", LogType.Error);
+				return;
+			}
+
 			NotifySystem.Instance.RegisterNotify<T>(notifyReceiver, option, (msgReceiver) =>
 			{
 				T msg = msgReceiver.GetMessage<T>();

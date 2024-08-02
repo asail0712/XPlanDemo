@@ -25,7 +25,7 @@ namespace XPlan.Demo.Architecture
     {
         public DivisionLogic()
         {
-            RegisterNotify<DivisionMsg>(this, (msg) =>
+            RegisterNotify<DivisionMsg>((msg) =>
             {
                 float a = (float)msg.a;
                 float b = (float)msg.b;

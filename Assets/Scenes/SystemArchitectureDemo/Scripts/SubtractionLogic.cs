@@ -24,7 +24,7 @@ namespace XPlan.Demo.Architecture
     {
         public SubtractionLogic()
         {
-            RegisterNotify<SubtractionMsg>(this, (msg) =>
+            RegisterNotify<SubtractionMsg>((msg) =>
             {
                 int a = msg.a;
                 int b = msg.b;

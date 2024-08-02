@@ -39,7 +39,7 @@ namespace XPlan.Demo.Architecture
                 }
             });
 
-            RegisterButton<CalculatorInfo>(UIRequest.InputToCalcular, calculatorBtn, () => new CalculatorInfo()
+            RegisterButton<CalculatorInfo>(UIRequest.ToCalcular, calculatorBtn, () => new CalculatorInfo()
             {
                 a               = int.Parse(inputTextA.text),                
                 b               = int.Parse(inputTextB.text),
