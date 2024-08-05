@@ -154,7 +154,6 @@ namespace XPlan.Scenes
 			for (int i = currSceneStack.Count - 1; i >= 0; --i)
 			{
 				int currSceneType	= currSceneStack[i];
-
 				int currScenelevel	= GetLevel(currSceneType);
 				int newScenelevel	= GetLevel(sceneType);
 

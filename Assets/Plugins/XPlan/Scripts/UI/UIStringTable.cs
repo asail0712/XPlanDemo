@@ -69,7 +69,10 @@ namespace XPlan.UI
 		{
 			if (stringTable.ContainsKey(keyStr))
 			{
-				return stringTable[keyStr];
+				string originStr	= stringTable[keyStr];
+				string processedStr = originStr.Replace("\\n", "\n");
+
+				return processedStr;
 			}
 
 			Debug.LogWarning("字表中沒有此關鍵字 !!");

@@ -34,11 +34,8 @@ namespace XPlan.UI
 
     public class UILoader : MonoBehaviour
     {
-		[SerializeField]
-		List<UILoadingInfo> loadingList = new List<UILoadingInfo>();
-
-		[SerializeField]
-		bool bDontDestroyOtherUI		= false;
+		[SerializeField] List<UILoadingInfo> loadingList	= new List<UILoadingInfo>();
+		[SerializeField] bool bDestroyOtherUI				= false;
 
 		private bool bCancalUnload		= false;
 
@@ -70,7 +67,7 @@ namespace XPlan.UI
 
 		public bool NeedToDestroyOtherUI()
 		{
-			return !bDontDestroyOtherUI;
+			return bDestroyOtherUI;
 		}
 	}
 }
