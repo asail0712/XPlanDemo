@@ -53,11 +53,12 @@
   - Texture處理
   - Singleton
   - Recycle Pool
-  - Easing Functon
+  - Easing Functon  
 - 其他 
   - GPS資料解析
   - PCSC支援
   - QrCode生成
+  - SH256加密
 # 5.其他
 - 前置處理器
   - PCSC 可開啟支援讀取Smart Card功能
