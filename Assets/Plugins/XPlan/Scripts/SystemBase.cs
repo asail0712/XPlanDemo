@@ -12,8 +12,6 @@ namespace XPlan
 {
     public class SystemBase : MonoBehaviour
     {
-		[SerializeField] private bool bEnableDebug = false;
-
 		private LogicManager logicManager = null;
 
 		/**********************************************
@@ -48,12 +46,6 @@ namespace XPlan
 		void Start()
         {
 			OnInitialGameObject();
-
-			if(bEnableDebug)
-			{
-				// Debug Manager有Initial的話，表示不是單一Scene獨立測試，就把該Debug物件關閉
-				gameObject.SetActive(!DebugManager.IsInitial());
-			}
 
 			OnInitialHandler();
 
