@@ -126,31 +126,6 @@ namespace XPlan.Extensions
 
             return localTime;
         }
-
-#if ZXing
-        public static Texture2D EncodeQRCode(this string content, int width, int height)
-        {
-            BarcodeWriter barcodeWriter = new BarcodeWriter();
-            barcodeWriter.Format        = BarcodeFormat.QR_CODE;
-
-            // 設定生成的 QR Code 尺寸
-            EncodingOptions encodingOptions = new EncodingOptions();
-            encodingOptions.Width           = width;
-            encodingOptions.Height          = height;
-
-            barcodeWriter.Options = encodingOptions;
-
-            // 將網址內容轉換為 QR Code
-            Color32[] color32 = barcodeWriter.Write(content);
-
-            // 創建一個 Unity Texture2D 並設定像素
-            Texture2D texture = new Texture2D(width, height);
-            texture.SetPixels32(color32);
-            texture.Apply();
-
-            return texture;
-        }
-#endif // ZXing 
     }
 }
 
