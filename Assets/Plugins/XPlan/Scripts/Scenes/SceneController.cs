@@ -89,7 +89,7 @@ namespace XPlan.Scenes
 		* **********************************/
 		protected override void InitSingleton()
 		{
-			if(sceneDataList.Count == 0)
+			if(sceneDataList == null || sceneDataList.Count == 0)
 			{
 				return;
 			}
@@ -106,6 +106,11 @@ namespace XPlan.Scenes
 
 		protected override void OnRelease(bool bAppQuit)
 		{
+			if(sceneDataList == null)
+			{
+				return;
+			}
+
 			sceneDataList.Clear();
 		}
 

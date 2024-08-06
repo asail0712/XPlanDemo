@@ -9,13 +9,18 @@ namespace XPlan.DebugMode
 { 
 	public class DebugHandler : LogicComponentBase, ITickable
 	{
-		private GameObject debugConsole;
+		private GameObject debugConsole = null;
 
 		private const string ShowDebugPanel = "ShowDebugPanel";
 		private const string HideDebugPanel = "HideDebugPanel";
 
 		public DebugHandler(GameObject console)
 		{
+			if(debugConsole == null)
+			{
+				return;
+			}
+
 			debugConsole = console;
 			debugConsole.gameObject.SetActive(false);
 

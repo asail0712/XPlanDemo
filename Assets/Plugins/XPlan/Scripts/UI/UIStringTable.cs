@@ -45,27 +45,17 @@ namespace XPlan.UI
 
 			foreach (Text textComponent in textComponents)
 			{				
-				string gameObjectName = textComponent.gameObject.name;
-
-				if(stringTable.ContainsKey(gameObjectName))
-				{
-					textComponent.text = stringTable[gameObjectName];
-				}
+				textComponent.text = GetStr(textComponent.gameObject.name, false);
 			}
 
-			TextMeshProUGUI[] TMPTextComponents = uiGO.GetComponentsInChildren<TextMeshProUGUI>(true);
-			foreach (TextMeshProUGUI TMPText in TMPTextComponents)
+			TextMeshProUGUI[] tmpTextComponents = uiGO.GetComponentsInChildren<TextMeshProUGUI>(true);
+			foreach (TextMeshProUGUI tmpText in tmpTextComponents)
 			{
-				string gameObjectName = TMPText.gameObject.name;
-
-				if (stringTable.ContainsKey(gameObjectName))
-				{
-					TMPText.text = stringTable[gameObjectName];
-				}
+				tmpText.text = GetStr(tmpText.gameObject.name, false);
 			}
 		}
 
-		public string GetStr(string keyStr)
+		public string GetStr(string keyStr, bool bShowWarning = true)
 		{
 			if (stringTable.ContainsKey(keyStr))
 			{
@@ -75,8 +65,11 @@ namespace XPlan.UI
 				return processedStr;
 			}
 
-			Debug.LogWarning("字表中沒有此關鍵字 !!");
-
+			if(bShowWarning)
+			{
+				Debug.LogWarning("字表中沒有此關鍵字 !!");
+			}
+			
 			return keyStr;
 		}
 	}

@@ -124,6 +124,14 @@ namespace XPlan.UI
 			});
 		}
 
+		protected void RegisterText(string uniqueID, InputField inputTxt, Action<string> onPress = null)
+		{
+			inputTxt.onValueChanged.AddListener((str) =>
+			{
+				DirectTrigger<string>(uniqueID, str, onPress);
+			});
+		}
+
 		protected void RegisterSlider(string uniqueID, Slider slider, Action<float> onPress = null)
 		{
 			slider.onValueChanged.AddListener((value) =>
