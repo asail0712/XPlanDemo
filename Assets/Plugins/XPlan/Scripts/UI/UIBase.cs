@@ -168,11 +168,18 @@ namespace XPlan.UI
 			});
 		}
 
-		protected void RegisterLabels(string uniqueID, UILabel[] labelArr, Action<int> onPress = null)
+		protected void RegisterToggles(string uniqueID, Toggle[] toggleArr, Action<int> onPress = null)
 		{
-			Array.ForEach(labelArr, (X) => 
+			for(int i = 0; i < toggleArr.Length; ++i)
 			{
-				X.onValueChanged.AddListener((bOn) =>
+				Toggle toggle = toggleArr[i];
+
+				if(toggle == null)
+				{
+					continue;
+				}
+
+				toggle.onValueChanged.AddListener((bOn) =>
 				{
 					// 只要收取按下的那個label即可
 					if(!bOn)
@@ -180,9 +187,9 @@ namespace XPlan.UI
 						return;
 					}
 
-					UISystem.TriggerCallback<int>(uniqueID, X.labelIdx, onPress);
+					UISystem.TriggerCallback<int>(uniqueID, i, onPress);
 				});
-			});
+			}
 		}
 
 		protected void RegisterPointTrigger(string uniqueID, PointEventTriggerHandler pointTrigger,

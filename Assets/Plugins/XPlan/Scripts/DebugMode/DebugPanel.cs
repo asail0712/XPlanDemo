@@ -12,7 +12,7 @@ namespace XPlan.DebugMode
 	public class DebugPanel : UIBase
 	{
 		[SerializeField]
-		private UILabel[] labelList;
+		private Toggle[] toggleArr;
 
 		[SerializeField]
 		private GameObject[] contentList;
@@ -28,7 +28,7 @@ namespace XPlan.DebugMode
 
 		protected void Awake()
 		{
-			if(contentList.Length != labelList.Length)
+			if(contentList.Length != toggleArr.Length)
 			{
 				Debug.LogWarning("偵錯面板設定有誤 !!");
 			}
@@ -36,7 +36,7 @@ namespace XPlan.DebugMode
 			/*******************************
 			 * 使用者操作
 			 * *****************************/
-			RegisterLabels("", labelList, (idx)=> 
+			RegisterToggles("", toggleArr, (idx)=> 
 			{
 				for(int i = 0; i < contentList.Length; ++i)
 				{
