@@ -17,15 +17,15 @@ namespace XPlan.Utility
     public static class QRCodeUtility
     {
 
-        public static Texture2D EncodeQRCode(string content, int width, int height)
+        public static Texture2D EncodeQRCode(string content, int size = 256)
         {
             BarcodeWriter barcodeWriter = new BarcodeWriter();
             barcodeWriter.Format        = BarcodeFormat.QR_CODE;
 
             // 設定生成的 QR Code 尺寸
             EncodingOptions encodingOptions = new EncodingOptions();
-            encodingOptions.Width           = width;
-            encodingOptions.Height          = height;
+            encodingOptions.Width           = size;
+            encodingOptions.Height          = size;
 
             barcodeWriter.Options = encodingOptions;
 
@@ -33,7 +33,7 @@ namespace XPlan.Utility
             Color32[] color32 = barcodeWriter.Write(content);
 
             // 創建一個 Unity Texture2D 並設定像素
-            Texture2D texture = new Texture2D(width, height);
+            Texture2D texture = new Texture2D(size, size);
             texture.SetPixels32(color32);
             texture.Apply();
 
