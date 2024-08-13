@@ -53,7 +53,8 @@
   - Texture處理
   - Singleton
   - Recycle Pool
-  - Easing Functon  
+  - Easing Functon
+  - Web Camera設定
 - 其他 
   - GPS資料解析
   - PCSC支援
