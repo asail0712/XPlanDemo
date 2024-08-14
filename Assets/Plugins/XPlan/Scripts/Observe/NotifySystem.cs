@@ -11,7 +11,7 @@ namespace XPlan.Observe
 {
 	public class MessageBase
 	{
-		public void Send(string groupID)
+		public void Send(string groupID = "")
 		{
 			MessageSender sender = new MessageSender(this);
 
