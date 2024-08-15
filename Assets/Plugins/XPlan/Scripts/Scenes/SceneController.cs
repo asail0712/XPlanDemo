@@ -129,6 +129,23 @@ namespace XPlan.Scenes
 			return ChangeTo(buildIndex);
 		}
 
+		public bool BackTo(string sceneName)
+		{
+			int idx = currSceneStack.FindIndex((sceneIdx) => 
+			{
+				return sceneIdx == GetBuildIndexByName(sceneName);
+			});
+
+			if (idx == -1)
+			{
+				return false;
+			}
+
+			ChangeTo(currSceneStack[idx]);
+
+			return true;
+		}
+
 		public bool BackFrom()
 		{
 			if (currSceneStack.Count < 2)
