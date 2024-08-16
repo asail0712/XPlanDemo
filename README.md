@@ -33,6 +33,9 @@
 - Assets/Scenes/UILocalizationDemo/LocalizationScene.unity
   - 示範UI在地化處理方式
   - 示範如何使用UIController、UILoader與UIStringTable
+- Assets/Scenes/GestureDemo/GestureDemo.unity
+  - 示範手勢功能如何使用
+  - 包含Drag to Move，Drag to Rotate、Pinch to Zoom
  
 # 4.目標和功能
 ### 目標
@@ -55,6 +58,7 @@
   - Recycle Pool
   - Easing Functon
   - Web Camera設定
+  - Gesture 功能
 - 其他 
   - GPS資料解析
   - PCSC支援
