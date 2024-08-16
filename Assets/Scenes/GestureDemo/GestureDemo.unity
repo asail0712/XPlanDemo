@@ -760,6 +760,7 @@ GameObject:
   - component: {fileID: 1128525595}
   - component: {fileID: 1128525594}
   - component: {fileID: 1128525593}
+  - component: {fileID: 1128525601}
   - component: {fileID: 1128525600}
   m_Layer: 0
   m_Name: Cube
@@ -807,7 +808,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dab8cc482c3c8c479ce7551631ab54d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  zOffset: 5
 --- !u!65 &1128525596
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -905,6 +905,19 @@ MonoBehaviour:
   scaleTxt: {fileID: 948839827}
   dragToRotate: {fileID: 1128525594}
   dragToMove: {fileID: 1128525595}
+  tapToPoint: {fileID: 1128525601}
+--- !u!114 &1128525601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128525592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a9afbf2749d5964995a08c2d7d7702f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1312003669
 GameObject:
   m_ObjectHideFlags: 0

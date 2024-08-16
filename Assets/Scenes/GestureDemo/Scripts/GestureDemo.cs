@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+using XPlan.DebugMode;
 using XPlan.Gesture;
 
 namespace XPlan.Demo.Gesture
@@ -16,6 +17,7 @@ namespace XPlan.Demo.Gesture
 
         [SerializeField] private DragToRotate dragToRotate;
         [SerializeField] private DragToMove dragToMove;
+        [SerializeField] private TapToPoint tapToPoint;
 
         private bool bSwitchToMove = false;
 
@@ -36,6 +38,14 @@ namespace XPlan.Demo.Gesture
                     switchDescTxt.text = "Switch To Move";
                 }
             });
+
+            tapToPoint.finishAction += (go, hitPoint) =>
+            {
+                if(go == gameObject)
+				{
+                    DebugDraw.DrawSphere(Color.red, hitPoint, 0.1f, 12, 3f);
+                }
+            };
         }
 
 		// Update is called once per frame
