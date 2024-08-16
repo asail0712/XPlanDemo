@@ -35,7 +35,7 @@
   - 示範如何使用UIController、UILoader與UIStringTable
 - Assets/Scenes/GestureDemo/GestureDemo.unity
   - 示範手勢功能如何使用
-  - 包含Drag to Move，Drag to Rotate、Pinch to Zoom
+  - 包含Drag to Move，Drag to Rotate、Pinch to Zoom、TapToPoint
  
 # 4.目標和功能
 ### 目標
