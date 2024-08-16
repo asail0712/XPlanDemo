@@ -29,4 +29,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/InputWithSceneControllerDemo/ChildScene4.unity
     guid: 361cc34fce5b82b49bda6655ca1ecd40
+  - enabled: 1
+    path: Assets/Scenes/GestureDemo/GestureDemo.unity
+    guid: 41654f95eb2145545afb00d0c7a866c2
   m_configObjects: {}
