@@ -72,6 +72,8 @@
 - DLL說明
   - PCSC、System 該DLL用於讀取Smart Card，沒有使用可移除
   - ZXing 該DLL用於將字串轉為二維條碼，沒有使用可移除
+- Nuget
+  - 使用CardReader需要另外安裝在Nuget執行 Install-Package System.Text.Encoding.CodePages
 
 # 6.聯繫方式
 Email: asail0712@gmail.com
