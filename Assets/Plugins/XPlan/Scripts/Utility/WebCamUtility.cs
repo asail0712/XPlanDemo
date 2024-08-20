@@ -73,6 +73,9 @@ namespace XPlan.Utility
 
 			// 先調整Img大小
 			FitImageSizeToCamSize(cameraImg, webcamTexture, bHighControllWidth);
+
+			// 翻轉處理
+			RotationImg(cameraImg, webcamTexture);
 		}
 
 		static private void FitImageSizeToCamSize(RawImage cameraImg, WebCamTexture webcamTexture, bool bHighControllWidth)
@@ -85,6 +88,30 @@ namespace XPlan.Utility
 				float aspectRatio					= (float)webcamTexture.width / (float)webcamTexture.height;
 				ratioFitter.aspectRatio				= aspectRatio;
 				ratioFitter.aspectMode				= mode;
+			}
+		}
+
+		static private void RotationImg(RawImage cameraImg, WebCamTexture webCamTexture)
+		{
+			float angle			= webCamTexture.videoRotationAngle;
+			bool bNeedToMirror	= false;
+
+			// IOS與Android要鏡像翻轉的情形不同
+#if UNITY_IOS
+			bNeedToMirror = webCamTexture.name == WebCamTexture.devices[0].name;
+#else
+			bNeedToMirror = webCamTexture.name != WebCamTexture.devices[0].name;
+#endif
+
+			if (bNeedToMirror)
+			{
+				cameraImg.transform.localScale	= new Vector3(-1f, 1f, 1f);
+				cameraImg.transform.rotation	*= Quaternion.AngleAxis(angle, Vector3.forward);
+			}
+			else
+			{
+				cameraImg.transform.localScale	= new Vector3(1f, 1f, 1f);
+				cameraImg.transform.rotation	*= Quaternion.AngleAxis(angle, Vector3.back);
 			}
 		}
 	}
