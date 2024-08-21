@@ -45,13 +45,13 @@ namespace XPlan.UI
 
 			foreach (Text textComponent in textComponents)
 			{				
-				textComponent.text = GetStr(textComponent.text, false);
+				textComponent.text = GetStr(textComponent.gameObject.name, false);
 			}
 
 			TextMeshProUGUI[] tmpTextComponents = uiGO.GetComponentsInChildren<TextMeshProUGUI>(true);
 			foreach (TextMeshProUGUI tmpText in tmpTextComponents)
 			{
-				tmpText.text = GetStr(tmpText.text, false);
+				tmpText.text = GetStr(tmpText.gameObject.name, false);
 			}
 		}
 

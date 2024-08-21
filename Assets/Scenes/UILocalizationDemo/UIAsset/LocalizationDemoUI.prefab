@@ -100,7 +100,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6401848314891492243}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -129,6 +129,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc62e0e414fbe06468c0eee16772e908, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bSpawnByLoader: 0
 --- !u!1 &6401848315101418921
 GameObject:
   m_ObjectHideFlags: 0
@@ -208,7 +209,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Demo Str2
+  m_Text: Key_DemoStr2
 --- !u!1 &6401848315573146756
 GameObject:
   m_ObjectHideFlags: 0
@@ -288,7 +289,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Demo Str1
+  m_Text: Key_DemoStr1
 --- !u!1 &6401848315764233598
 GameObject:
   m_ObjectHideFlags: 0
@@ -368,4 +369,4 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Demo Str3
+  m_Text: Key_DemoStr3

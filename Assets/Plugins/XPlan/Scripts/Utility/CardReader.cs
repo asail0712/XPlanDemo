@@ -113,8 +113,10 @@ namespace XPlan.Utility
 			string holderName;
 
 #if !UNITY_EDITOR
+#if PCSC
 			// Register a Big5 coding provider
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif // PCSC
 #endif // !UNITY_EDITOR
 
 			EncodingInfo big5EncodingInfo	= Encoding.GetEncodings().FirstOrDefault(_ => _.Name == encodingType);

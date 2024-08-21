@@ -18,7 +18,7 @@ namespace XPlan.Utility
 				return null;
 			}
 
-			if(bPriorityFrontFacing)
+			if (bPriorityFrontFacing)
 			{
 				for (int i = 0; i < deviceList.Length; ++i)
 				{
@@ -80,7 +80,12 @@ namespace XPlan.Utility
 
 		static private void FitImageSizeToCamSize(RawImage cameraImg, WebCamTexture webcamTexture, bool bHighControllWidth)
 		{
-			AspectRatioFitter ratioFitter = cameraImg.gameObject.AddComponent<AspectRatioFitter>();
+			AspectRatioFitter ratioFitter = cameraImg.gameObject.GetComponent<AspectRatioFitter>();
+
+			if(ratioFitter == null)
+			{
+				ratioFitter = cameraImg.gameObject.AddComponent<AspectRatioFitter>();
+			}
 
 			if (ratioFitter != null)
 			{

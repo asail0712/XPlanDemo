@@ -51,16 +51,19 @@ namespace XPlan.Observe
 			return msgSender.msg is T;
 		}
 
-		public T GetMessage<T>() where T : MessageBase
+		public T GetMessage<T>(bool bShowLog = false) where T : MessageBase
 		{
+			if(bShowLog)
+			{ 
 #if DEBUG
-			string className	= msgSender.stackInfo.GetClassName();
-			string methodName	= msgSender.stackInfo.GetMethodName();
-			string lineNumber	= msgSender.stackInfo.GetLineNumber();
-			string fullLogInfo	= $"Notify({msgSender.msg.GetType()}) from [ {className}::{methodName}() ], line {lineNumber} ";
+				string className	= msgSender.stackInfo.GetClassName();
+				string methodName	= msgSender.stackInfo.GetMethodName();
+				string lineNumber	= msgSender.stackInfo.GetLineNumber();
+				string fullLogInfo	= $"Notify({msgSender.msg.GetType()}) from [ {className}::{methodName}() ], line {lineNumber} ";
 
-			LogSystem.Record(fullLogInfo);
+				LogSystem.Record(fullLogInfo);
 #endif //DEBUG
+			}
 
 			return (T)(msgSender.msg);
 		}
