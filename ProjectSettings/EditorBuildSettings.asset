@@ -32,4 +32,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GestureDemo/GestureDemo.unity
     guid: 41654f95eb2145545afb00d0c7a866c2
+  - enabled: 1
+    path: Assets/Scenes/SceneDebugDemo/MainDemo.unity
+    guid: c6109a6da5c24914896232e93cd78847
+  - enabled: 1
+    path: Assets/Scenes/SceneDebugDemo/ChildDemo.unity
+    guid: 0ce098ded3b4efe408d94bc9c520d011
   m_configObjects: {}
