@@ -75,13 +75,21 @@ namespace XPlan.UI
 
 				if (uiPerfab == null)
 				{
-					Debug.LogError("Loading Info is null !");
+					LogSystem.Record("Loading Info is null !", LogType.Warning);
 
 					continue;
 				}
 
-				UIBase uiBase			= uiPerfab.GetComponent<UIBase>();
-				uiBase.bSpawnByLoader	= true;
+				UIBase uiBase = uiPerfab.GetComponent<UIBase>();
+
+				if (uiBase != null)
+				{
+					uiBase.bSpawnByLoader = true;
+				}
+				else 
+				{
+					LogSystem.Record("uiBase is null !", LogType.Warning);
+				}
 
 				int idx = currVisibleList.FindIndex((X) =>
 				{

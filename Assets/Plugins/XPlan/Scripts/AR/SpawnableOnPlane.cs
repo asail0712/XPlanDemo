@@ -20,8 +20,12 @@ namespace XPlan.AR
         private List<ARRaycastHit> hitList;
         private Coroutine tickToDetectCoroutine;
 
+		private void Awake()
+		{
+            hitList = new List<ARRaycastHit>();
+        }
 
-        private void Start()
+		private void Start()
         {
             if(tickToDetectCoroutine != null)
 			{
@@ -29,8 +33,7 @@ namespace XPlan.AR
                 tickToDetectCoroutine = null;
             }
 
-            hitList                 = new List<ARRaycastHit>();
-            tickToDetectCoroutine   = StartCoroutine(TickToDetect());
+            tickToDetectCoroutine = StartCoroutine(TickToDetect());
         }
 
 		private void OnEnable()

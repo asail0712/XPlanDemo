@@ -101,6 +101,11 @@ namespace XPlan.Scenes
 			});
 
 			// 設定開始Scene
+			if (startSceneName == "")
+			{
+				startSceneName = sceneDataList[0].sceneName;
+			}
+
 			StartScene(startSceneName);
 		}
 
