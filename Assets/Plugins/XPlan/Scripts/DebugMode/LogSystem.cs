@@ -37,7 +37,6 @@ namespace XPlan.DebugMode
     {
         public static void Record(string logInfo, LogType logLevel = LogType.Log, bool bShowLocal = false)
 		{
-#if DEBUG
             if(bShowLocal)
 			{
                 StackInfo stackTrace    = new StackInfo(2);
@@ -59,7 +58,6 @@ namespace XPlan.DebugMode
                     UnityEngine.Debug.LogError(logInfo);
                     break;
             }
-#endif //DEBUG
         }
     }
 }

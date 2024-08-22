@@ -6,7 +6,7 @@ namespace XPlan.Gesture
 {
     public class DragToRotate : MonoBehaviour
     {
-        [SerializeField] private float rotationSpeed = 0.2f; // 控制旋转速度
+        [SerializeField] private float rotationSpeed = 0.05f; // 控制旋转速度
 
         private Vector2 previousTouchPosition;
 

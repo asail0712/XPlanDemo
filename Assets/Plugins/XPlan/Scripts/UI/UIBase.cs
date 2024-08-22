@@ -168,12 +168,10 @@ namespace XPlan.UI
 			});
 		}
 
-		protected void RegisterToggles(string uniqueID, Toggle[] toggleArr, Action<int> onPress = null)
+		protected void RegisterToggles(string uniqueID, Toggle[] toggleArr, bool bCancelSelf = false, Action<int> onPress = null)
 		{
-			for(int i = 0; i < toggleArr.Length; ++i)
+			foreach(Toggle toggle in toggleArr)
 			{
-				Toggle toggle = toggleArr[i];
-
 				if(toggle == null)
 				{
 					continue;
@@ -184,10 +182,20 @@ namespace XPlan.UI
 					// 只要收取按下的那個label即可
 					if(!bOn)
 					{
-						return;
+						// 重複點擊可以自我取消
+						if(bCancelSelf)
+						{
+							toggle.SetIsOnWithoutNotify(false);
+						}
+						else
+						{
+							return;
+						}
 					}
 
-					UISystem.TriggerCallback<int>(uniqueID, i, onPress);
+					int idx = Array.IndexOf(toggleArr, toggle);
+
+					UISystem.TriggerCallback<int>(uniqueID, idx, onPress);
 				});
 			}
 		}

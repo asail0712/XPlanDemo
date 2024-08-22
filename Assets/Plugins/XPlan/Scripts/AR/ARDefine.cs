@@ -82,12 +82,12 @@ namespace XPlan.AR
 
     public class ARPlaneMsg : MessageBase
     {
-        public Vector3 pos;
+        public Vector3 hitPos;
         public bool bFind;
 
-        public ARPlaneMsg(bool bFind, Vector3 pos)
+        public ARPlaneMsg(bool bFind, Vector3 hitPos)
         {
-            this.pos    = pos;
+            this.hitPos = hitPos;
             this.bFind  = bFind;
         }
     }

@@ -1,6 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+using XPlan.UI;
 
 namespace XPlan.DebugMode
 { 
@@ -14,8 +17,27 @@ namespace XPlan.DebugMode
             if (!DebugManager.IsInitial())
             {
                 DebugCheck[] debugCheckArr = FindObjectsOfType<DebugCheck>(true);
+
+                // UICintroller必須比UILoader早啟動
+                // 將有UIController的物件提前到第一個
+                Queue<DebugCheck> debugCheckQueue   = new Queue<DebugCheck>(debugCheckArr);
+                int currCount                       = 0;
+                UIController dummy                  = null;
+
+                while (currCount++ < debugCheckQueue.Count)
+				{
+                    DebugCheck debugCheck = debugCheckQueue.Peek();
+
+                    if (debugCheck.gameObject.TryGetComponent<UIController>(out dummy))
+					{
+                        break;
+					}
+
+                    debugCheckQueue.Enqueue(debugCheckQueue.Dequeue());
+                }
                 
-                foreach(DebugCheck debugCheck in debugCheckArr)
+                // 更換完順序開始啟動
+                foreach(DebugCheck debugCheck in debugCheckQueue)
 				{
                     debugCheck.gameObject.SetActive(true);
                 }

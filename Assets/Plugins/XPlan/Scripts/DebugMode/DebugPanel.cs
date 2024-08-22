@@ -36,7 +36,7 @@ namespace XPlan.DebugMode
 			/*******************************
 			 * 使用者操作
 			 * *****************************/
-			RegisterToggles("", toggleArr, (idx)=> 
+			RegisterToggles("", toggleArr, false, (idx)=> 
 			{
 				for(int i = 0; i < contentList.Length; ++i)
 				{

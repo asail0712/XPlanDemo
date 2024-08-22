@@ -39,7 +39,7 @@ namespace XPlan.UI
 
 		private bool bCancalUnload		= false;
 
-		private void Start()
+		private void Awake()
 		{			
 			UIController.Instance.LoadingUI(this);
 		}
