@@ -36,6 +36,8 @@
 - Assets/Scenes/GestureDemo/GestureDemo.unity
   - 示範手勢功能如何使用
   - 包含Drag to Move，Drag to Rotate、Pinch to Zoom、Tap to Point
+- Assets/Scenes/SceneDebugDemo/SceneDebugDemo.unity
+  - 示範專案中的每個Scene要如何設定，讓單一場景可以獨立運作
  
 # 4.目標和功能
 ### 目標
@@ -59,6 +61,7 @@
   - Easing Functon
   - Web Camera設定
   - Gesture 功能
+  - AR相關組件
 - 其他 
   - GPS資料解析
   - PCSC支援
@@ -69,6 +72,7 @@
   - PCSC 可開啟支援讀取Smart Card功能
   - ZXing 可開啟轉二維條碼功能
   - USE_OPENCV 開啟OpenCV的美顏功能
+  - AR 可開啟AR功能
 - DLL說明
   - PCSC、System 該DLL用於讀取Smart Card，沒有使用可移除
   - ZXing 該DLL用於將字串轉為二維條碼，沒有使用可移除
