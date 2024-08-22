@@ -36,6 +36,8 @@
 - Assets/Scenes/GestureDemo/GestureDemo.unity
   - 示範手勢功能如何使用
   - 包含Drag to Move，Drag to Rotate、Pinch to Zoom、Tap to Point
+- Assets/Scenes/SceneDebugDemo/SceneDebugDemo.unity
+  - 示範專案中的每個Scene要如何設定，讓單一場景可以獨立運作
  
 # 4.目標和功能
 ### 目標
