@@ -10,24 +10,45 @@ namespace XPlan.Recycle
     public class PoolInfo<T> where T: IPoolable, new()
     {
         private Queue<T> poolableQueue;
-        private PoolableComponent backupComp;
+        private GameObject prefab;
         private int totalNum;
              
         public PoolInfo()
 		{
             poolableQueue   = new Queue<T>();
-            backupComp      = null;
             totalNum        = 0;
         }
 
-        public void AddPoolable(List<T> poolList)
+        public void AddPrefab(GameObject prefab, int num)        
 		{
-            // 考慮到是monobehavior，生成方式會不一樣，所以要backup
-            if(poolList.Count > 0 && typeof(PoolableComponent).IsAssignableFrom(typeof(T)))
-			{
-                backupComp = poolList[0] as PoolableComponent;
+            if (!typeof(PoolableComponent).IsAssignableFrom(typeof(T)))
+            {
+                return;
             }
 
+            PoolableComponent dummy = null;
+
+            if (!prefab.TryGetComponent<PoolableComponent>(out dummy))
+			{
+                return;
+			}
+
+            // 考慮到是monobehavior，生成方式會不一樣
+            this.prefab     = prefab;
+            this.totalNum   = num;
+
+            for (int i = 0; i < num; ++i)
+            {
+                GameObject go   = GameObject.Instantiate(prefab);
+                T comp          = go.GetComponent<T>();
+
+                go.SetActive(false);
+                poolableQueue.Enqueue(comp);
+            }
+        }
+
+        public void AddPoolable(List<T> poolList)
+        {
             for (int i = 0; i < poolList.Count; ++i)
             {
                 poolableQueue.Enqueue(poolList[i]);
@@ -36,7 +57,7 @@ namespace XPlan.Recycle
             totalNum += poolList.Count;
         }
 
-		public void ResetPool()
+        public void ResetPool()
 		{
 			poolableQueue.Clear();
 		}
@@ -52,13 +73,13 @@ namespace XPlan.Recycle
             {
                 if (poolableQueue.Count == 0)
                 {
-                    if (backupComp.gameObject == null)
+                    if (prefab == null)
                     {
                         LogSystem.Record($"backup 物件 為空，無法生成新GameObject !!", LogType.Error);
                     }
                     else
                     {
-                        GameObject go   = GameObject.Instantiate(backupComp.gameObject);
+                        GameObject go   = GameObject.Instantiate(prefab);
                         poolable        = go.GetComponent<T>();
 
                         ++totalNum;
@@ -142,6 +163,11 @@ namespace XPlan.Recycle
 
         static public void Recycle(T something)
 		{
+            if(something == null)
+			{
+                return;
+			}
+
             Type type = typeof(T);
 
             if (!poolInfoList.ContainsKey(type))
@@ -193,15 +219,14 @@ namespace XPlan.Recycle
         /**************************************************
          * 註冊流程        
          * *************************************************/
-
-        static public bool RegisterType(List<T> compList)
+        static public bool RegisterType(GameObject prefab, int num = 5)
         {
             Type type               = typeof(T);
             PoolInfo<T> poolInfo    = null;
 
             if (poolInfoList.ContainsKey(type))
             {
-                poolInfo = poolInfoList[type];              
+                poolInfo = poolInfoList[type];
             }
             else
             {
@@ -210,8 +235,28 @@ namespace XPlan.Recycle
                 poolInfoList.Add(type, poolInfo);
             }
 
+            poolInfo.AddPrefab(prefab, num);
+
+            return true;
+        }
+
+        static public bool RegisterType(List<T> compList)
+        {
+            Type type = typeof(T);
+            PoolInfo<T> poolInfo = null;
+
+            if (poolInfoList.ContainsKey(type))
+            {
+                poolInfo = poolInfoList[type];
+                poolInfo = poolInfoList[type];
+            }
+            else
+            {
+                poolInfoList.Add(type, poolInfo);
+            }
+
             poolInfo.AddPoolable(compList);
-            
+
             return true;
         }
 

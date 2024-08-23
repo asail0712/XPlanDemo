@@ -39,7 +39,7 @@ namespace XPlan.Demo.Gesture
                 }
             });
 
-            tapToPoint.finishAction += (go, hitPoint) =>
+            tapToPoint.finishAction += (go, hitPoint, hitNormal) =>
             {
                 if(go == gameObject)
 				{

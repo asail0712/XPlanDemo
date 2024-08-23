@@ -1,4 +1,4 @@
-using System.Collections;
+嚜簑sing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,8 +12,6 @@ namespace XPlan.Demo.Recycle
         [SerializeField] private int defaultParticles   = 5;
         [SerializeField] private Vector2 sizeRange;
 
-        private List<Ball> ballList;
-
         // Start is called before the first frame update
         void Start()
         {
@@ -23,16 +21,7 @@ namespace XPlan.Demo.Recycle
 
         private void InitialPool()
         {
-            ballList = new List<Ball>();
-
-            for (int i = 0; i < defaultParticles; ++i)
-            {
-                GameObject go = Instantiate(ballPerfab);
-                ballList.Add(go.GetComponent<Ball>());
-                go.SetActive(false);
-            }
-
-            RecyclePool<Ball>.RegisterType(ballList);
+            RecyclePool<Ball>.RegisterType(ballPerfab, defaultParticles);
         }
 
         private void SpawnBall()
@@ -40,29 +29,11 @@ namespace XPlan.Demo.Recycle
             Ball ball                   = RecyclePool<Ball>.SpawnOne();
             ball.transform.position     = transform.TransformPoint(Random.insideUnitSphere * 0.5f);
             ball.transform.localScale   = Random.Range(sizeRange.x, sizeRange.y) * Vector3.one;
-           
-            if(!ballList.Contains(ball))
-			{
-                ballList.Add(ball);
-            }
         }
 
         public int GetNumInCamera()
         {
-            int sum = 0;
-
-            for (int i = 0; i < ballList.Count; ++i)
-            {
-                Renderer renderer = ballList[i].GetComponent<Renderer>();
-
-                // 有在畫面上的
-                if (renderer.isVisible && renderer.gameObject.activeSelf)
-                {
-                    ++sum;
-                }
-            }
-
-            return sum;
+            return RecyclePool<Ball>.GetTotalNum() - RecyclePool<Ball>.GetPoolNum();
         }
 
 		private void Update()
@@ -74,14 +45,8 @@ namespace XPlan.Demo.Recycle
 
             if (Input.GetKeyDown(KeyCode.D))
             {
-                for(int i = 0; i < ballList.Count; ++i)
-				{
-                    if(ballList[i].isActiveAndEnabled)
-                    { 
-                        RecyclePool<Ball>.Recycle(ballList[i]);
-                        break;
-                    }
-                }
+                Ball ball = GameObject.FindObjectOfType<Ball>();
+                RecyclePool<Ball>.Recycle(ball);
             }
         }
 	}

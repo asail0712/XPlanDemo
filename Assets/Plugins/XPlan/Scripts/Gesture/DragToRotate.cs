@@ -12,19 +12,17 @@ namespace XPlan.Gesture
 
         void Update()
         {
-            if (Input.touchCount == 1)
+            if (CheckInput())
             {
-                Touch touch = Input.GetTouch(0);
-
-                if (touch.phase == TouchPhase.Began)
+                if (InputStart())
                 {
                     // 记录初始触控位置
-                    previousTouchPosition = touch.position;
+                    previousTouchPosition = GetInputPos();
                 }
-                else if (touch.phase == TouchPhase.Moved)
+                else if (InputFinish())
                 {
                     // 计算触控位置的变化
-                    Vector2 touchDelta      = touch.position - previousTouchPosition;
+                    Vector2 touchDelta      = GetInputPos() - previousTouchPosition;
 
                     // 根据触控移动量旋转对象
                     float rotationY         = -touchDelta.x * rotationSpeed;
@@ -34,9 +32,51 @@ namespace XPlan.Gesture
                     transform.Rotate(Vector3.right, rotationX, Space.World);
 
                     // 更新之前的触控位置
-                    previousTouchPosition   = touch.position;
+                    previousTouchPosition   = GetInputPos();
                 }
             }
+        }
+
+
+        private Vector2 GetInputPos()
+        {
+#if UNITY_EDITOR
+            return Input.mousePosition;
+#else
+            Touch touch = Input.GetTouch(0);
+            // 从屏幕坐标转换为世界坐标
+            return touch.position;
+#endif
+        }
+
+
+        private bool CheckInput()
+        {
+#if UNITY_EDITOR
+            return Input.GetMouseButton(0);
+#else
+            return Input.touchCount == 1;
+#endif
+        }
+
+        private bool InputStart()
+        {
+#if UNITY_EDITOR
+            return Input.GetMouseButtonDown(0);
+#else
+            Touch touch = Input.GetTouch(0);
+            return touch.phase == TouchPhase.Began;
+#endif
+        }
+
+        private bool InputFinish()
+        {
+#if UNITY_EDITOR
+            return Input.GetMouseButton(0);
+#else
+            Touch touch = Input.GetTouch(0);
+            return touch.phase == TouchPhase.Moved;
+#endif
         }
     }
 }
