@@ -6,6 +6,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using XPlan.DebugMode;
 using XPlan.Extensions;
 using XPlan.Utility;
 
@@ -520,6 +521,8 @@ namespace XPlan.Scenes
 					return i;
 				}
 			}
+
+			LogSystem.Record($"{sceneName} 不在Build List裡面", LogType.Error);
 
 			return -1; // 返回 -1 表示未找到该场景
 		}

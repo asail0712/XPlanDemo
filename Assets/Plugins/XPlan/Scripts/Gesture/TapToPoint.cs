@@ -24,7 +24,7 @@ namespace XPlan.Gesture
 
     public class TapToPoint : MonoBehaviour
     {
-        [SerializeField] GameObject specifyHitGO;
+        [SerializeField] private GameObject specifyHitGO;
 
         public Action<GameObject, Vector3, Vector3> finishAction;
 
