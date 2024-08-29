@@ -3,33 +3,47 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using XPlan.DebugMode;
+
 namespace XPlan.Utility
 {
 	public static class WebCamUtility
 	{
 		static public WebCamTexture FindWebCamTexture(bool bPriorityFrontFacing = false)
 		{
-			WebCamDevice[] deviceList	= WebCamTexture.devices;
-			int camIdx					= deviceList.Length - 1;
+			WebCamDevice[] deviceList = WebCamTexture.devices;
+			
+			LogSystem.Record($"找到 {deviceList.Length} 個鏡頭");
 
 			// 沒有合適的camera
-			if (camIdx < 0)
+			if (deviceList.Length <= 0)
 			{
 				return null;
 			}
 
+			int camIdx = 0;
+
 			if (bPriorityFrontFacing)
 			{
-				for (int i = 0; i < deviceList.Length; ++i)
+				LogSystem.Record($"優先使用前鏡頭");
+			}
+
+			for (int i = deviceList.Length - 1; i >= 0; --i)
+			{
+				// 優先考慮自拍鏡頭
+				if (!(bPriorityFrontFacing ^ deviceList[i].isFrontFacing))
 				{
-					// 優先考慮自拍鏡頭
-					if (deviceList[i].isFrontFacing)
-					{
-						camIdx = i;
-						break;
-					}
+					camIdx = i;
+					break;
 				}
 			}
+
+			for (int i = deviceList.Length - 1; i >= 0; --i)
+			{
+				LogSystem.Record($"第 {i + 1} 個鏡頭名稱為 {deviceList[i].name},是否為前鏡頭: {deviceList[i].isFrontFacing}");
+			}
+
+			LogSystem.Record($"使用第 {camIdx + 1} 個鏡頭");
 
 			return new WebCamTexture(deviceList[camIdx].name);
 		}
