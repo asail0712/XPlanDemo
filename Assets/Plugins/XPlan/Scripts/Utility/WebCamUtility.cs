@@ -8,7 +8,7 @@ using XPlan.DebugMode;
 namespace XPlan.Utility
 {
 	public static class WebCamUtility
-	{
+	{		
 		static public WebCamTexture FindWebCamTexture(bool bPriorityFrontFacing = false)
 		{
 			WebCamDevice[] deviceList = WebCamTexture.devices;
@@ -66,6 +66,25 @@ namespace XPlan.Utility
 			MonoBehaviourHelper.StartCoroutine(WaitCameraDeviceInitial(camImg, webcamTexture, bHighControllWidth));
 		}
 
+		static public void ReleaseCameraImg(RawImage camImg)
+		{
+			if (camImg.texture == null)
+			{
+				return;
+			}
+
+			WebCamTexture webCamTexture = (WebCamTexture)camImg.texture;
+
+			if(webCamTexture == null)
+			{
+				return;
+			}
+
+			webCamTexture.Stop();
+			GameObject.Destroy(webCamTexture);
+
+			camImg.texture = null;
+		}
 
 		static private IEnumerator WaitCameraDeviceInitial(RawImage cameraImg, WebCamTexture webcamTexture, bool bHighControllWidth)
 		{
