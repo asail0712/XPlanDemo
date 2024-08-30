@@ -55,7 +55,7 @@ namespace XPlan.UI
 			}
 		}
 
-		public string GetStr(string keyStr, bool bShowWarning = true)
+		public string GetStr(string keyStr, bool bShowWarning = false)
 		{
 			if (stringTable.ContainsKey(keyStr))
 			{
