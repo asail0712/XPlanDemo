@@ -70,6 +70,8 @@ namespace XPlan.AR
         {
             while(true)
             {
+                yield return new WaitUntil(() => ARSession.state == ARSessionState.SessionTracking);
+
                 // 获取屏幕中央下方 1/3 的位置
                 Vector2 screenCenter    = new Vector2(Screen.width / 2, Screen.height / 3);
                 Vector3 hitPos          = Vector3.zero;
