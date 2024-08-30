@@ -152,6 +152,18 @@ namespace XPlan.Recycle
 
         static public void UnregisterType()
         {
+            while (poolableQueue.Count > 0)
+            {
+                T poolable = poolableQueue.Dequeue();
+
+                if(poolable is PoolableComponent)
+				{
+                    PoolableComponent poolableComp = poolable as PoolableComponent;
+
+                    poolableComp.ReleasePoolable();                    
+                }
+            }
+
             poolableQueue.Clear();
         }
     }
