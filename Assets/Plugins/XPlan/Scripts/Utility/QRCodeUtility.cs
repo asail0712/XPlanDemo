@@ -105,6 +105,8 @@ namespace XPlan.Utility
 
             while (!isQRCodeFound)
             {
+                yield return new WaitForSeconds(1f);
+
                 // 捕获摄像头帧并进行解码
                 try
                 {
@@ -122,8 +124,6 @@ namespace XPlan.Utility
                     finishAction?.Invoke("");
                     break;
                 }
-
-                yield return null;
             }
 
             Destroy(gameObject);
