@@ -53,6 +53,7 @@ namespace XPlan.Utility
 			if (camImg.texture != null)
 			{
 				camImg.enabled = false;
+
 				((WebCamTexture)camImg.texture).Stop();
 				GameObject.Destroy(camImg.texture);
 				camImg.texture = null;
@@ -136,9 +137,9 @@ namespace XPlan.Utility
 
 			// IOS與Android要鏡像翻轉的情形不同
 #if UNITY_IOS
-			bNeedToMirror = webCamTexture.name == WebCamTexture.devices[0].name;
+			bNeedToMirror = webCamTexture.deviceName == WebCamTexture.devices[0].name;
 #else
-			bNeedToMirror = webCamTexture.name != WebCamTexture.devices[0].name;
+			bNeedToMirror = webCamTexture.deviceName != WebCamTexture.devices[0].name;
 #endif
 
 			if (bNeedToMirror)
