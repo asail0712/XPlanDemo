@@ -1,4 +1,4 @@
-﻿namespace XPlan.Interface
+﻿namespace XPlan.UI
 {
     public interface IUIListener
     {

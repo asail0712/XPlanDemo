@@ -9,6 +9,11 @@ namespace XPlan.Component
     {
         private void LateUpdate()
         {
+            if(Camera.main == null)
+			{
+                return;
+			}
+
             // 使物體始終面向相機
             transform.LookAt(Camera.main.transform);
             // 使物體保持正面朝向相機
