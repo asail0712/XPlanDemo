@@ -20,7 +20,7 @@ namespace XPlan
 		/*************************
 		 * 實作 INotifyReceiver
 		 * ***********************/
-		public Func<string> LazyGroupID { get; set; }
+		public Func<string> GetLazySectorID { get; set; }
 
 		/*************************
 		 * Coroutine相關
@@ -138,7 +138,7 @@ namespace XPlan
 			}
 
 			// 生成msg並寄出
-			string groupID	= LazyGroupID?.Invoke();
+			string groupID	= GetLazySectorID?.Invoke();
 			T msg			= (T)ctor.Invoke(args);
 			msg.Send(groupID);
 		}

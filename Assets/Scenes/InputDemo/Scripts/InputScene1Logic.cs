@@ -11,7 +11,7 @@ namespace XPlan.Demo.InputMode
 {
     public class InputScene1Logic : MonoBehaviour, INotifyReceiver
     {
-        public Func<string> LazyGroupID
+        public Func<string> GetLazySectorID
         {
             get; set;
         }

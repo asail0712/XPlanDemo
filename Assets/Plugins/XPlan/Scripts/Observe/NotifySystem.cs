@@ -11,11 +11,11 @@ namespace XPlan.Observe
 {
 	public class MessageBase
 	{
-		public void Send(string groupID = "")
+		public void Send(string sectorID = "")
 		{
 			MessageSender sender = new MessageSender(this);
 
-			sender.SendMessage(groupID);
+			sender.SendMessage(sectorID);
 		}
 	}
 
@@ -84,9 +84,9 @@ namespace XPlan.Observe
 #endif //DEBUG
 		}
 
-		public void SendMessage(string groupID)
+		public void SendMessage(string sectorID)
 		{
-			NotifySystem.Instance.SendMsg(this, groupID);
+			NotifySystem.Instance.SendMsg(this, sectorID);
 		}
 
 		public Type GetMsgType()
@@ -99,23 +99,23 @@ namespace XPlan.Observe
 	{
 		public INotifyReceiver notifyReceiver;
 		public Dictionary<Type, ActionInfo> actionInfoMap;
-		public Func<string> LazyGroupID;
+		public Func<string> LazySectorID;
 
 		public NotifyInfo(INotifyReceiver notifyReceiver)
 		{
 			this.notifyReceiver = notifyReceiver;
 			this.actionInfoMap	= new Dictionary<Type, ActionInfo>();
-			this.LazyGroupID	= () => notifyReceiver.LazyGroupID?.Invoke();
+			this.LazySectorID	= () => notifyReceiver.GetLazySectorID?.Invoke();
 		}
 
-		public bool CheckCondition(Type type, string groupID)
+		public bool CheckCondition(Type type, string sectorID)
 		{
-			string lazyGroupID		= this.LazyGroupID?.Invoke();
+			string lazySectorID		= this.LazySectorID?.Invoke();
 
-			bool bGroupMatch		= groupID == "" || groupID == lazyGroupID;
+			bool bSectorMatch		= sectorID == "" || sectorID == lazySectorID;
 			bool bTypeCorrespond	= actionInfoMap.ContainsKey(type);
 
-			return bGroupMatch && bTypeCorrespond;
+			return bSectorMatch && bTypeCorrespond;
 		}
 	}
 
@@ -195,14 +195,14 @@ namespace XPlan.Observe
 			}			
 		}
 
-		public void SendMsg(MessageSender msgSender, string groupID)
+		public void SendMsg(MessageSender msgSender, string sectorID)
 		{
 			Type type					= msgSender.GetMsgType();
 			Queue<ActionInfo> infoQueue = new Queue<ActionInfo>();
 
 			foreach (NotifyInfo currInfo in notifyInfoList)
 			{
-				if(currInfo.CheckCondition(type, groupID))
+				if(currInfo.CheckCondition(type, sectorID))
 				{
 					ActionInfo actionInfo = currInfo.actionInfoMap[type];
 

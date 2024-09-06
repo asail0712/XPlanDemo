@@ -11,19 +11,19 @@ namespace XPlan.Demo.InputMode
 { 
     public class ChildSceneLogic : MonoBehaviour, INotifyReceiver
     {
-        [SerializeField] string groupID     = "";
+        [SerializeField] string sectorID    = "";
         [SerializeField] string sceneName   = "";
         [SerializeField] string nextScene   = "";
 
-        public Func<string> LazyGroupID
+        public Func<string> GetLazySectorID
         {
             get
             {
-                return () => groupID;
+                return () => sectorID;
             }
             set
             {
-                LazyGroupID = value;
+                GetLazySectorID = value;
             }
         }
 

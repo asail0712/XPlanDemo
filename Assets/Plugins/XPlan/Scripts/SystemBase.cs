@@ -20,7 +20,7 @@ namespace XPlan
 		protected void RegisterLogic(LogicComponentBase logicComp)
 		{
 			// 確認msg群發的group
-			logicComp.LazyGroupID = () =>
+			logicComp.GetLazySectorID = () =>
 			{ 
 				return GetType().ToString();
 			};

@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c92003aca66e447439e8e5ec2107a838, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groupID: Scene1
+  sectorID: Scene1
   sceneName: ChildScene1
   nextScene: ChildScene2
 --- !u!1001 &134753239

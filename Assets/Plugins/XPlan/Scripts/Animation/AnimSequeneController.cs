@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
+using XPlan.DebugMode;
 using XPlan.Extensions;
 
 namespace XPlan.Anim
@@ -10,27 +12,24 @@ namespace XPlan.Anim
     public class AnimInfo
 	{
 		public int idx;
-        public float startTime;
         public AnimationClip animclip;
         public Animator animator;        
         public GameObject animGO;
         public float duration;
-        public Action<int> finishAction;
 
         private AnimatorEventReceiver receiver;
 
-        public AnimInfo(int idx, Animator animator, float startTime)
+        public AnimInfo(int idx, Animator animator, Action<int> finishAction)
 	    {
             /***********************************
              * 初始化
              * *********************************/
-            this.idx        = idx;
-            this.startTime  = startTime;
-            this.animclip   = animator.GetClip();
-            this.animator   = animator;
-            this.animGO     = animator.transform.parent.gameObject;
-            this.duration   = animclip == null? 0f : animclip.length;
-            this.receiver   = animator.gameObject.AddComponent<AnimatorEventReceiver>();
+            this.idx            = idx;
+            this.animclip       = animator.GetClip();
+            this.animator       = animator;
+            this.animGO         = animator.transform.parent.gameObject;
+            this.duration       = animclip == null? 0f : animclip.length;
+            this.receiver       = animator.gameObject.AddComponent<AnimatorEventReceiver>();
 
             receiver.onFinish += (dummy) =>
             {
@@ -39,32 +38,57 @@ namespace XPlan.Anim
                 finishAction?.Invoke(idx);
             };
         }
+
+        public void PlayAnim(float ratio)
+		{
+            animGO.SetActive(true);
+            animator.Play(animclip.name, 0, ratio);
+            animator.speed = 1f;
+        }
+    }
+
+    [Serializable]
+    public class AnimAlternate
+    {
+        [SerializeField] public int from;
+        [SerializeField] public Animator animator;
+        [SerializeField] public string triggerID;
     }
 
     public class AnimSequeneController : MonoBehaviour
     {
         [SerializeField] private Animator[] animatorArr;
+        [SerializeField] private AnimAlternate[] animAlternateList;
 
         public Action<float> onProgressAction;
+        public Action<int> onEndAction;
 
         private List<AnimInfo> animInfoList;
-        private float totalTime;
+        private List<AnimInfo> infoAlternateList;
         private Coroutine progressCoroutine;
+
+        private Dictionary<int, string> alternateDict;
 
         /***********************************
          * 初始化
          * *********************************/
         void Awake()
         {
+            // 主線功能初始化
             animInfoList        = new List<AnimInfo>();
-            totalTime           = 0f;
+            infoAlternateList   = new List<AnimInfo>();
             progressCoroutine   = null;
+
+            // 候補功能初始化
+            alternateDict         = new Dictionary<int, string>();
 
             InitialAnimInfo();
         }
 
         private void InitialAnimInfo()
 		{
+            float totalTime = 0;
+
             for (int i = 0; i < animatorArr.Length; ++i)
             {
                 // 先開啟gameobject讓後續流程能夠讀取animator
@@ -72,18 +96,32 @@ namespace XPlan.Anim
                 animator.transform.parent.gameObject.SetActive(true);
             }
 
-            // 計算總時間長度
+            for (int i = 0; i < animAlternateList.Length; ++i)
+            {
+                // 先開啟gameobject讓後續流程能夠讀取animator
+                AnimAlternate animAlternate = animAlternateList[i];
+                animAlternate.animator.transform.parent.gameObject.SetActive(true);
+            }
+
+            // 設定default的 animInfo            
             for (int i = 0; i < animatorArr.Length; ++i)
             {
-                AnimInfo animInfo       = new AnimInfo(i, animatorArr[i], totalTime);
-                animInfo.finishAction   = OnAnimEnd;
-                totalTime               += animInfo.duration;
-                animInfoList.Add(animInfo);
+                AnimInfo animInfo   = new AnimInfo(i, animatorArr[i], OnAnimEnd);
+                totalTime           += animInfo.duration;
 
+                animInfoList.Add(animInfo);
                 animatorArr[i].transform.parent.gameObject.SetActive(false);
             }
 
-            //Debug.Log($"Total Time : {totalTime}");
+            // 設定分支的 animInfo
+            for (int i = 0; i < animAlternateList.Length; ++i)
+            {
+                int animIdx         = animAlternateList[i].from;
+                AnimInfo animInfo   = new AnimInfo(animAlternateList[i].from, animAlternateList[i].animator, OnAnimEnd);
+
+                infoAlternateList.Add(animInfo);
+                animInfo.animGO.SetActive(false);
+            }
         }
 
         private IEnumerator ProgressBoardcast()
@@ -113,14 +151,17 @@ namespace XPlan.Anim
                 return;
 			}
 
+            AnimInfo animInfo = FindAnimInfo(animIdx);
+
+            if (animInfo == null)
+            {
+                return;
+            }
+
             StopAnim();
-
             progressCoroutine = StartCoroutine(ProgressBoardcast());
-            AnimInfo animInfo = animInfoList[animIdx];
 
-            animInfo.animGO.SetActive(true);
-            animInfo.animator.Play(animInfo.animclip.name, 0, 0f);
-            animInfo.animator.speed = 1f;
+            animInfo.PlayAnim(0f);
         }
 
         public void PlayAnim(float playRatio)
@@ -134,14 +175,11 @@ namespace XPlan.Anim
             }
 
             StopAnim();
-
             progressCoroutine   = StartCoroutine(ProgressBoardcast());
-            float ratio         = playTime / animInfo.duration;
 
-            animInfo.animGO.SetActive(true);
-            animInfo.animator.Play(animInfo.animclip.name, 0, ratio);
-            animInfo.animator.speed = 1f;
+            animInfo.PlayAnim(playTime / animInfo.duration);
         }
+
 
         public void StopAnim()
         {
@@ -193,19 +231,80 @@ namespace XPlan.Anim
         }
 
         /***********************************
+        * Trigger
+        * *********************************/
+        public void AddTrigger(string triggerID)
+		{
+            int alternateFrom = FindAlternateFrom(triggerID);
+
+            if (alternateFrom == -1)
+            {
+                LogSystem.Record($"沒有 {triggerID} 這個 Trigger ID", LogType.Warning);
+
+                return;
+            }
+
+            // 更換Dictionary的資料
+            if(alternateDict.ContainsKey(alternateFrom))
+			{
+                alternateDict[alternateFrom] = triggerID;
+            }
+            else
+            { 
+                alternateDict.Add(alternateFrom, triggerID);
+            }
+        }
+
+        public void RemoveTrigger(string triggerID)
+        {
+            int branchFrom = FindAlternateFrom(triggerID);
+
+            if (branchFrom == -1)
+            {
+                LogSystem.Record($"沒有 {triggerID} 這個 Trigger ID", LogType.Warning);
+
+                return;
+            }
+
+            alternateDict.Remove(branchFrom);
+        }
+
+        public void ClearTrigger()
+        {
+            alternateDict.Clear();
+        }
+
+        private int FindAlternateFrom(string triggerID)
+		{
+            int alternateFrom = -1;
+
+            for (int i = 0; i < animAlternateList.Length; ++i)
+            {
+                AnimAlternate animAlternate = animAlternateList[i];
+                if (animAlternate.triggerID == triggerID)
+                {
+                    alternateFrom = animAlternate.from;
+                    break;
+                }
+            }
+
+            return alternateFrom;
+        }
+
+        /***********************************
         * 其他 public
         * *********************************/
         public bool IsPlaying()
         {
-            // 計算總時間長度
+            // animInfoList 判斷是否有在Play
             for (int i = 0; i < animInfoList.Count; ++i)
             {
-                if(animInfoList[i].animator.IsPlay())
+                if(FindAnimInfo(i).animator.IsPlay())
 				{
                     return true;
 				}
             }
-
+            
             return false;
         }
 
@@ -214,8 +313,8 @@ namespace XPlan.Anim
             int i = -1;
 
             for (i = 0; i < animInfoList.Count; ++i)
-            {
-                if (animInfoList[i].animGO.activeSelf)
+            {    
+                if (FindAnimInfo(i).animGO.activeSelf)
                 {
                     break;
                 }
@@ -227,10 +326,10 @@ namespace XPlan.Anim
                 return 0f;
 			}
 
-            AnimInfo animInfo       = animInfoList[i];
-            float animStartTime     = animInfo.startTime;
+            AnimInfo animInfo       = FindAnimInfo(i);
+            float animStartTime     = GetStartTime(i);
             float animCurrPlayTime  = animInfo.animator.GetPlayProgress() * animInfo.duration;
-            float currRatio         = (animStartTime + animCurrPlayTime) / totalTime;
+            float currRatio         = (animStartTime + animCurrPlayTime) / GetTotalTime();
 
             return currRatio;
         }
@@ -254,44 +353,138 @@ namespace XPlan.Anim
             animInfo.animator.speed = 0f;
         }
 
+        public float GetTotalTime()
+		{
+            float totalTime = 0f;
+
+            for(int i = 0; i < animInfoList.Count; ++i)
+			{
+                AnimInfo animInfo   = FindAnimInfo(i);
+                totalTime           += animInfo.duration;
+            }
+
+            return totalTime;
+		}
+
         /***********************************
         * 其他 private
         * *********************************/
         private AnimInfo FindAnimInfo(float playRatio, ref float animTime)
 		{
-            if(playRatio < 0f || playRatio > totalTime)
+            if(playRatio < 0f || playRatio > GetTotalTime())
 			{
                 return null;
 			}
 
-            float currTime  = totalTime * playRatio;
+            float currTime  = GetTotalTime() * playRatio;
             int i           = 0;
 
             for(i = 0; i < animInfoList.Count - 1; ++i)
 			{
-                if(animInfoList[i + 1].startTime > currTime)
+                float nextAnimStartTime = GetStartTime(i + 1);
+
+                if (nextAnimStartTime > currTime)
 				{
                     break;
 				}
 			}
 
-            animTime = currTime - animInfoList[i].startTime;
+            AnimInfo animInfo   = FindAnimInfo(i);
+            animTime            = currTime - GetStartTime(i);
 
-            return animInfoList[i];
+            return animInfo;
         }
 
         private void OnAnimEnd(int animIdx)
 		{
-            if(animatorArr.Length - 1 == animIdx)
+            onEndAction?.Invoke(animIdx);
+
+            // 撥放分支
+            AnimInfo nextAnimInfo = FindAnimInfo(animIdx + 1);
+
+            if(nextAnimInfo == null)
 			{
                 //Debug.Log($"Anim{animIdx} is Over， All Anim Over");
 
+                // 表示撥放結束
                 return;
+            }
+
+            //Debug.Log($"Anim{animIdx} is Over， Now Playing {nextIdx}");
+
+            nextAnimInfo.PlayAnim(0f);
+        }
+
+        /***********************************
+        * 分支處理
+        * *********************************/
+        private float GetStartTime(int idx)
+        {
+            float accumulationTime = 0f;
+
+            if (idx == 0)
+			{
+                return accumulationTime;
 			}
 
-            //Debug.Log($"Anim{animIdx} is Over， Now Playing {animIdx + 1}");
+            for (int i = 0; i < idx; ++i)
+            {
+                AnimInfo info = FindAnimInfo(i);
 
-            PlayAnim(animIdx + 1);
+                accumulationTime += info.duration;
+            }
+
+            return accumulationTime;
+        }
+
+        private AnimInfo FindAnimInfo(int infoIdx)
+		{           
+            if (alternateDict.ContainsKey(infoIdx))
+            {
+                // 透過trigger ID尋找候補的Anim
+                string triggerID    = alternateDict[infoIdx];
+                int alternateIdx    = Array.FindIndex<AnimAlternate>(animAlternateList, (E04) =>
+                {
+                    return E04.triggerID == triggerID;
+                });
+
+                if (alternateIdx == -1)
+                {
+                    // 分支設定有異常，所以傳回原先的Anim                    
+                    return FindAnimFromDefault(infoIdx);
+                }
+
+                AnimAlternate animAlternate = animAlternateList[alternateIdx];
+
+                // 透過Anim Branch 尋找對應的 AnimInfo
+                int branchInfoIdx = infoAlternateList.FindIndex((E04) =>
+                {
+                    return E04.animator == animAlternate.animator;
+                });
+
+                if (!infoAlternateList.IsValidIndex<AnimInfo>(branchInfoIdx))
+                {
+                    // 分支設定有異常，所以傳回原先的Anim                    
+                    return FindAnimFromDefault(infoIdx);
+                }
+
+                return infoAlternateList[branchInfoIdx];
+            }
+            else
+            {
+                // 沒有對應的候補，所以傳回原先的Anim
+                return FindAnimFromDefault(infoIdx);
+            }
+        }
+
+        private AnimInfo FindAnimFromDefault(int infoIdx)
+		{
+            if (!animInfoList.IsValidIndex<AnimInfo>(infoIdx))
+            {
+                return null;
+            }
+
+            return animInfoList[infoIdx];
         }
     }
 }
