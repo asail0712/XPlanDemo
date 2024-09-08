@@ -3,39 +3,38 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-using XPlan.Utility;
-
-namespace XPlan.UI
+namespace XPlan.Utility
 {
-    public class UIStringTable : CreateSingleton<UIStringTable>
+    public class StringTable : CreateSingleton<StringTable>
 	{
 		[SerializeField]
-		public TextAsset csvAsset;
+		public TextAsset[] csvAssetList;
 
-		//private const string csvFilePath				= "Assets/StringTable/StringTable.csv"; // 指定 CSV 檔案的保存路徑
 		private Dictionary<string, string> stringTable	= new Dictionary<string, string>();
 
 		protected override void InitSingleton()
 		{
-			if (csvAsset == null)
+			if (csvAssetList == null)
 			{
 				return;
 			}
 
-			string fileContent = csvAsset.text;
-
-			string[] lines = fileContent.Split('\n'); // 將文件內容分成行
-
-			foreach(string line in lines)
+			foreach(TextAsset csvAsset in csvAssetList)
 			{ 
-				string[] values = line.Split(',');
+				string fileContent	= csvAsset.text;
+				string[] lines		= fileContent.Split('\n'); // 將文件內容分成行
 
-				if (values.Length != 2)
-				{
-					continue;
+				foreach(string line in lines)
+				{ 
+					string[] values = line.Split(',');
+
+					if (values.Length != 2)
+					{
+						continue;
+					}
+
+					stringTable.Add(values[0], values[1]);
 				}
-
-				stringTable.Add(values[0], values[1]);
 			}
 		}
 

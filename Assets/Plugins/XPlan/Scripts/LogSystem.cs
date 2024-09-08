@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace XPlan.DebugMode
+namespace XPlan
 { 
     public class StackInfo
 	{

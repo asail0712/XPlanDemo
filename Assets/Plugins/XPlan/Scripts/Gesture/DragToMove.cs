@@ -17,7 +17,7 @@ namespace XPlan.Gesture
 		void Update()
         {
             // 检查是否有一个手指触摸屏幕
-            if (CheckInput())
+            if (CheckInput() && Camera.main)
             {
                 // 从屏幕坐标转换为世界坐标
                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(GetScreenPos());

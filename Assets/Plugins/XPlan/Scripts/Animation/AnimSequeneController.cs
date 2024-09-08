@@ -45,6 +45,24 @@ namespace XPlan.Anim
             animator.Play(animclip.name, 0, ratio);
             animator.speed = 1f;
         }
+
+        public void StopAnim()
+        {
+            animGO.SetActive(false);
+            animator.speed = 1f;
+        }
+
+        public void PauseAnim()
+        {
+            animGO.SetActive(true);
+            animator.speed = 0f;
+        }
+
+        public void ResumeAnim()
+        {
+            animGO.SetActive(true);
+            animator.speed = 1f;
+        }
     }
 
     [Serializable]
@@ -108,9 +126,9 @@ namespace XPlan.Anim
             {
                 AnimInfo animInfo   = new AnimInfo(i, animatorArr[i], OnAnimEnd);
                 totalTime           += animInfo.duration;
+                animInfo.StopAnim();
 
                 animInfoList.Add(animInfo);
-                animatorArr[i].transform.parent.gameObject.SetActive(false);
             }
 
             // 設定分支的 animInfo
@@ -120,7 +138,7 @@ namespace XPlan.Anim
                 AnimInfo animInfo   = new AnimInfo(animAlternateList[i].from, animAlternateList[i].animator, OnAnimEnd);
 
                 infoAlternateList.Add(animInfo);
-                animInfo.animGO.SetActive(false);
+                animInfo.StopAnim();
             }
         }
 
@@ -180,18 +198,15 @@ namespace XPlan.Anim
             animInfo.PlayAnim(playTime / animInfo.duration);
         }
 
+        public void PlayAnimByTime(float playTime)
+        {
+            float playRatio = playTime / GetTotalTime();
+            PlayAnim(playRatio);
+        }
 
         public void StopAnim()
         {
-            float dummy         = 0f;
-            float currRatio     = GetPlayRatio();
-            AnimInfo animInfo   = FindAnimInfo(currRatio, ref dummy);
-
-            if (animInfo == null)
-            {
-                return;
-            }
-
+            // coroutine停止
             if(progressCoroutine != null)
 			{
                 StopCoroutine(progressCoroutine);
@@ -199,7 +214,17 @@ namespace XPlan.Anim
                 progressCoroutine = null;
             }
 
-            animInfo.animGO.SetActive(false);
+            // 主線停止
+            for (int i = 0; i < animInfoList.Count; ++i)
+            {
+                animInfoList[i].StopAnim();
+            }
+
+            // 分支停止
+            for (int i = 0; i < infoAlternateList.Count; ++i)
+            {
+                infoAlternateList[i].StopAnim();
+            }
         }
 
         public void PauseAnim()
@@ -213,7 +238,7 @@ namespace XPlan.Anim
                 return;
             }
 
-            animInfo.animator.speed = 0f;
+            animInfo.PauseAnim();
         }
 
         public void ResumeAnim()
@@ -227,7 +252,11 @@ namespace XPlan.Anim
                 return;
             }
 
-            animInfo.animator.speed = 1f;
+            // 從Pause到Resume時 有機會會有不同的Trigger
+            // 因此撥放的 anim也會不一樣， 所以用StopAnim昨重製
+            StopAnim();
+
+            animInfo.ResumeAnim();
         }
 
         /***********************************
@@ -310,24 +339,34 @@ namespace XPlan.Anim
 
         public float GetPlayRatio()
 		{
-            int i = -1;
+            AnimInfo animInfo = null;
 
-            for (i = 0; i < animInfoList.Count; ++i)
+            for (int i = 0; i < animInfoList.Count; ++i)
             {    
-                if (FindAnimInfo(i).animGO.activeSelf)
+                if (animInfoList[i].animGO.activeSelf)
                 {
-                    break;
+                    animInfo = animInfoList[i];
+                }
+            }
+
+            if(animInfo == null)
+			{
+                for (int i = 0; i < infoAlternateList.Count; ++i)
+                {
+                    if (infoAlternateList[i].animGO.activeSelf)
+                    {
+                        animInfo = infoAlternateList[i];
+                    }
                 }
             }
 
             // 沒有一個GameObject有顯示，表示播完了
-            if(!animInfoList.IsValidIndex<AnimInfo>(i))
-			{
+            if (animInfo == null)
+            {
                 return 0f;
-			}
+            }
 
-            AnimInfo animInfo       = FindAnimInfo(i);
-            float animStartTime     = GetStartTime(i);
+            float animStartTime     = GetAnimStartTime(animInfo.idx);
             float animCurrPlayTime  = animInfo.animator.GetPlayProgress() * animInfo.duration;
             float currRatio         = (animStartTime + animCurrPlayTime) / GetTotalTime();
 
@@ -381,7 +420,7 @@ namespace XPlan.Anim
 
             for(i = 0; i < animInfoList.Count - 1; ++i)
 			{
-                float nextAnimStartTime = GetStartTime(i + 1);
+                float nextAnimStartTime = GetAnimStartTime(i + 1);
 
                 if (nextAnimStartTime > currTime)
 				{
@@ -390,15 +429,13 @@ namespace XPlan.Anim
 			}
 
             AnimInfo animInfo   = FindAnimInfo(i);
-            animTime            = currTime - GetStartTime(i);
+            animTime            = currTime - GetAnimStartTime(i);
 
             return animInfo;
         }
 
         private void OnAnimEnd(int animIdx)
 		{
-            onEndAction?.Invoke(animIdx);
-
             // 撥放分支
             AnimInfo nextAnimInfo = FindAnimInfo(animIdx + 1);
 
@@ -413,12 +450,14 @@ namespace XPlan.Anim
             //Debug.Log($"Anim{animIdx} is Over， Now Playing {nextIdx}");
 
             nextAnimInfo.PlayAnim(0f);
+
+            onEndAction?.Invoke(animIdx);
         }
 
         /***********************************
         * 分支處理
         * *********************************/
-        private float GetStartTime(int idx)
+        public float GetAnimStartTime(int idx)
         {
             float accumulationTime = 0f;
 

@@ -32,7 +32,7 @@ namespace XPlan.Gesture
         {
             if (CheckInput())
             {
-                if (InputStart())
+                if (InputStart() && Camera.main)
                 {
                     // 从相机发出一条射线到触摸的位置
                     Ray ray = Camera.main.ScreenPointToRay(GetInputPos());
