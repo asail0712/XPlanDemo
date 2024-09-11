@@ -11,11 +11,11 @@ namespace XPlan.Observe
 {
 	public class MessageBase
 	{
-		public void Send(string sectorID = "")
+		public void Send(string zoneID = "")
 		{
 			MessageSender sender = new MessageSender(this);
 
-			sender.SendMessage(sectorID);
+			sender.SendMessage(zoneID);
 		}
 	}
 
@@ -84,9 +84,9 @@ namespace XPlan.Observe
 #endif //DEBUG
 		}
 
-		public void SendMessage(string sectorID)
+		public void SendMessage(string zoneID)
 		{
-			NotifySystem.Instance.SendMsg(this, sectorID);
+			NotifySystem.Instance.SendMsg(this, zoneID);
 		}
 
 		public Type GetMsgType()
@@ -99,23 +99,23 @@ namespace XPlan.Observe
 	{
 		public INotifyReceiver notifyReceiver;
 		public Dictionary<Type, ActionInfo> actionInfoMap;
-		public Func<string> LazySectorID;
+		public Func<string> LazyZoneID;
 
 		public NotifyInfo(INotifyReceiver notifyReceiver)
 		{
 			this.notifyReceiver = notifyReceiver;
 			this.actionInfoMap	= new Dictionary<Type, ActionInfo>();
-			this.LazySectorID	= () => notifyReceiver.GetLazySectorID?.Invoke();
+			this.LazyZoneID	= () => notifyReceiver.GetLazyZoneID?.Invoke();
 		}
 
-		public bool CheckCondition(Type type, string sectorID)
+		public bool CheckCondition(Type type, string zoneID)
 		{
-			string lazySectorID		= this.LazySectorID?.Invoke();
+			string lazyZoneID		= this.LazyZoneID?.Invoke();
 
-			bool bSectorMatch		= sectorID == "" || sectorID == lazySectorID;
+			bool bZoneMatch		= zoneID == "" || zoneID == lazyZoneID;
 			bool bTypeCorrespond	= actionInfoMap.ContainsKey(type);
 
-			return bSectorMatch && bTypeCorrespond;
+			return bZoneMatch && bTypeCorrespond;
 		}
 	}
 
@@ -195,14 +195,14 @@ namespace XPlan.Observe
 			}			
 		}
 
-		public void SendMsg(MessageSender msgSender, string sectorID)
+		public void SendMsg(MessageSender msgSender, string zoneID)
 		{
 			Type type					= msgSender.GetMsgType();
 			Queue<ActionInfo> infoQueue = new Queue<ActionInfo>();
 
 			foreach (NotifyInfo currInfo in notifyInfoList)
 			{
-				if(currInfo.CheckCondition(type, sectorID))
+				if(currInfo.CheckCondition(type, zoneID))
 				{
 					ActionInfo actionInfo = currInfo.actionInfoMap[type];
 

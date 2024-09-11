@@ -58,10 +58,9 @@ namespace XPlan.Anim
             animator.speed = 0f;
         }
 
-        public void ResumeAnim()
+        public bool IsPlaying()
         {
-            animGO.SetActive(true);
-            animator.speed = 1f;
+            return animGO.activeSelf && animator.speed != 0f;
         }
     }
 
@@ -75,8 +74,8 @@ namespace XPlan.Anim
 
     public class AnimSequeneController : MonoBehaviour
     {
-        [SerializeField] private Animator[] animatorArr;
-        [SerializeField] private AnimAlternate[] animAlternateList;
+        [SerializeField] public Animator[] animatorArr;
+        [SerializeField] public AnimAlternate[] animAlternateList;
 
         public Action<float> onProgressAction;
         public Action<int> onEndAction;
@@ -147,11 +146,6 @@ namespace XPlan.Anim
             while(true)
 			{
                 yield return new WaitForSeconds(0.1f);
-
-                if (!IsPlaying())
-				{
-                    continue;
-				}
 
                 float currRatio = GetPlayRatio();
 
@@ -243,20 +237,9 @@ namespace XPlan.Anim
 
         public void ResumeAnim()
         {
-            float dummy         = 0f;
-            float currRatio     = GetPlayRatio();
-            AnimInfo animInfo   = FindAnimInfo(currRatio, ref dummy);
+            float playRatio = GetPlayRatio();
 
-            if (animInfo == null)
-            {
-                return;
-            }
-
-            // 從Pause到Resume時 有機會會有不同的Trigger
-            // 因此撥放的 anim也會不一樣， 所以用StopAnim昨重製
-            StopAnim();
-
-            animInfo.ResumeAnim();
+            PlayAnim(playRatio);
         }
 
         /***********************************
@@ -328,7 +311,7 @@ namespace XPlan.Anim
             // animInfoList 判斷是否有在Play
             for (int i = 0; i < animInfoList.Count; ++i)
             {
-                if(FindAnimInfo(i).animator.IsPlay())
+                if(FindAnimInfo(i).IsPlaying())
 				{
                     return true;
 				}
@@ -390,6 +373,11 @@ namespace XPlan.Anim
             animInfo.animGO.SetActive(true);
             animInfo.animator.Play(animInfo.animclip.name, 0, ratio);
             animInfo.animator.speed = 0f;
+        }
+
+        public void SetPlayTime(float playTime)
+		{
+            SetPlayRatio(playTime / GetTotalTime());
         }
 
         public float GetTotalTime()

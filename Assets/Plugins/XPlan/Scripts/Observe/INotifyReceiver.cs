@@ -9,6 +9,6 @@ namespace XPlan.Observe
     {
         //void ReceiveNotify(MessageReceiver msgReceiver);
 
-        Func<string> GetLazySectorID { get; set; }
+        Func<string> GetLazyZoneID { get; set; }
     }
 }

@@ -24,11 +24,19 @@ namespace XPlan.Gesture
 
     public class TapToPoint : MonoBehaviour
     {
-        [SerializeField] private GameObject specifyHitGO;
+        [SerializeField] public List<GameObject> hitGOList;
 
         public Action<GameObject, Vector3, Vector3> finishAction;
 
-        void Update()
+		private void Start()
+		{
+            if (hitGOList.Count == 0)
+            {
+                hitGOList.Add(gameObject);
+            }
+        }
+
+		void Update()
         {
             if (CheckInput())
             {
@@ -41,13 +49,8 @@ namespace XPlan.Gesture
                     // 检测射线是否碰到任何物体
                     if (Physics.Raycast(ray, out hitInfo))
                     {
-                        if (specifyHitGO == null)
-						{
-                            specifyHitGO = gameObject;
-                        }
-
                         // hit到指定物體上才要處理後續
-                        if (specifyHitGO != hitInfo.collider.gameObject)
+                        if (!hitGOList.Contains(hitInfo.collider.gameObject))
                         {
                             return;
                         }

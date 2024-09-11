@@ -6,12 +6,15 @@ namespace XPlan.Gesture
 {
     public class DragToMove : MonoBehaviour
     {
-        private float zOffset               = 0f;
+        private float zOffset               = -999f;
         private Vector3 relativeDistance    = Vector3.zero;
 
 		private void Awake()
 		{
-            zOffset = Vector3.Distance(Camera.main.transform.position, transform.position);
+            if(Camera.main != null)
+			{
+                zOffset = Vector3.Distance(Camera.main.transform.position, transform.position);
+            }            
         }
 
 		void Update()
@@ -19,6 +22,11 @@ namespace XPlan.Gesture
             // 检查是否有一个手指触摸屏幕
             if (CheckInput() && Camera.main)
             {
+                if(zOffset == -999f)
+				{
+                    zOffset = Vector3.Distance(Camera.main.transform.position, transform.position);
+                }
+
                 // 从屏幕坐标转换为世界坐标
                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(GetScreenPos());
 

@@ -1,9 +1,37 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace XPlan.Extensions
 {
     public static class GameObjectExtensions
     {
+        public static List<GameObject> GetAllChildren(this GameObject gameObject, Func<GameObject, bool> filter = null)
+		{
+            List<GameObject> allChildren = new List<GameObject>();
+
+            // 遞迴函數，遍歷子物件
+            void GetChildrenRecursive(Transform parent)
+            {
+                foreach (Transform child in parent)
+                {
+                    // 只有符合過濾條件的子物件才會被加入列表
+                    if (filter == null || filter(child.gameObject))
+                    {
+                        allChildren.Add(child.gameObject);
+                    }
+
+                    // 遞迴調用，檢查這個子物件的子物件
+                    GetChildrenRecursive(child);
+                }
+            }
+
+            // 從傳入的 GameObject 開始遞迴
+            GetChildrenRecursive(gameObject.transform);
+
+            return allChildren;
+        }
+
         public static void ClearAllChildren(this GameObject gameObject, float delayTime = 0f)
 		{
             // 取得父物件的Transform

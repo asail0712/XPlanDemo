@@ -70,6 +70,7 @@ namespace XPlan.AR
         {
             while(true)
             {
+                yield return new WaitForSeconds(duration);
                 yield return new WaitUntil(() => ARSession.state == ARSessionState.SessionTracking);
 
                 // 获取屏幕中央下方 1/3 的位置
@@ -84,8 +85,6 @@ namespace XPlan.AR
                 ARPlaneMsg msg = new ARPlaneMsg(bFind, hitPos);
 
                 msg.Send();
-
-                yield return new WaitForSeconds(duration);
             }
         }
 #endif //AR
