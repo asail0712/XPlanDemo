@@ -15,7 +15,7 @@ namespace XPlan.Demo.InputMode
         [SerializeField] string sceneName   = "";
         [SerializeField] string nextScene   = "";
 
-        public Func<string> GetLazySectorID
+        public Func<string> GetLazyZoneID
         {
             get
             {
@@ -23,7 +23,7 @@ namespace XPlan.Demo.InputMode
             }
             set
             {
-                GetLazySectorID = value;
+                GetLazyZoneID = value;
             }
         }
 

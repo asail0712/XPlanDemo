@@ -12,7 +12,7 @@ namespace XPlan.Demo.InputMode
 {
     public class ParentSceneLogic : SystemBase, INotifyReceiver
     {
-        public Func<string> GetLazySectorID
+        public Func<string> GetLazyZoneID
         {
             get; set;
         }
