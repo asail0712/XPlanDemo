@@ -524,28 +524,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 6194741141962001126, guid: 5cde64db41b4fa14faede30a8f482193, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5cde64db41b4fa14faede30a8f482193, type: 3}
---- !u!1 &1315292850 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4982171101316251409, guid: 5cde64db41b4fa14faede30a8f482193, type: 3}
-  m_PrefabInstance: {fileID: 1315292849}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1315292851
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315292850}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2549224b1253a2e4388e1badfe1791c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  csvAssetList:
-  - {fileID: 4900000, guid: 4bd54b71c2b6933408c1190ed95edf65, type: 3}
 --- !u!1001 &1366485945
 PrefabInstance:
   m_ObjectHideFlags: 0

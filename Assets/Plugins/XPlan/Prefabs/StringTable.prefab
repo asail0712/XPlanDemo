@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6427410815466941904}
-  - component: {fileID: 2600924213358006229}
+  - component: {fileID: 1315292851}
   m_Layer: 0
   m_Name: StringTable
   m_TagString: Untagged
@@ -24,15 +24,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4982171101316251409}
-  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 166, y: 341.67188, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2600924213358006229
+--- !u!114 &1315292851
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -44,4 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2549224b1253a2e4388e1badfe1791c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  csvAssetList: []
+  csvAssetList:
+  - {fileID: 4900000, guid: 4bd54b71c2b6933408c1190ed95edf65, type: 3}
