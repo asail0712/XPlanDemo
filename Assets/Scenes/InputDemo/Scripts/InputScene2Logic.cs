@@ -21,9 +21,9 @@ namespace XPlan.Demo.InputMode
         {
             Debug.Log("It is Input Scene2");
 
-            NotifySystem.Instance.RegisterNotify<InputActionMsg>(this, (msgReceiver) =>
+            NotifySystem.Instance.RegisterNotify<XInputActionMsg>(this, (msgReceiver) =>
             {
-                InputActionMsg msg = msgReceiver.GetMessage<InputActionMsg>();
+                XInputActionMsg msg = msgReceiver.GetMessage<XInputActionMsg>();
 
                 switch(msg.inputAction)
 				{

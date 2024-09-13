@@ -1,18 +1,26 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace XPlan.Gesture
 {
     public class DragToRotate : MonoBehaviour
     {
-        [SerializeField] private bool bOnlyRotateY      = true;
-        [SerializeField] private float rotationSpeed    = 0.05f; // 控制旋转速度
+        [SerializeField] private bool bAllowPassThroughUI   = false;
+        [SerializeField] private bool bOnlyRotateY          = true;
+        [SerializeField] private float rotationSpeed        = 0.05f; // 控制旋转速度
 
         private Vector2 previousTouchPosition;
 
         void Update()
         {
+            if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
+            {
+                //Debug.Log("點擊到了 UI 元素");
+                return;
+            }
+
             if (CheckInput())
             {
                 if (InputStart())

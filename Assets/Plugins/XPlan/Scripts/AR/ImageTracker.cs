@@ -31,19 +31,19 @@ namespace XPlan.AR
 		{
 			foreach (ARTrackedImage imgTracker in eventArgs.added)
 			{
-				string imgKey		= imgTracker.referenceImage.name;
-				Vector3 spawnPos	= imgTracker.transform.position;
-				ARModelSpawnMsg msg = new ARModelSpawnMsg(imgKey, spawnPos);
+				string imgKey			= imgTracker.referenceImage.name;
+				Vector3 spawnPos		= imgTracker.transform.position;
+				XARModelSpawnMsg msg	= new XARModelSpawnMsg(imgKey, spawnPos);
 
 				msg.Send();
 			}
 
 			foreach (ARTrackedImage imgTracker in eventArgs.updated)
 			{
-				string imgKey		= imgTracker.referenceImage.name;
-				bool bOn			= imgTracker.trackingState == TrackingState.Tracking;
-				Vector3 spawnPos	= imgTracker.transform.position;
-				ARModelTrackMsg msg = new ARModelTrackMsg(imgKey, bOn, spawnPos);
+				string imgKey			= imgTracker.referenceImage.name;
+				bool bOn				= imgTracker.trackingState == TrackingState.Tracking;
+				Vector3 spawnPos		= imgTracker.transform.position;
+				XARModelTrackMsg msg	= new XARModelTrackMsg(imgKey, bOn, spawnPos);
 
 				msg.Send();
 			}

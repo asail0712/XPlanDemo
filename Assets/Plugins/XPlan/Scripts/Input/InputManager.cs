@@ -8,11 +8,11 @@ using XPlan.Utility;
 
 namespace XPlan.InputMode
 {
-    public class InputActionMsg : MessageBase
+    public class XInputActionMsg : MessageBase
 	{
         public string inputAction;
 
-        public InputActionMsg(string inputAction, string groupID = "")
+        public XInputActionMsg(string inputAction, string groupID = "")
 		{
             this.inputAction = inputAction;
 
@@ -91,7 +91,7 @@ namespace XPlan.InputMode
                     if (bIsTrigger)
                     {
                         inputAction?.Invoke(inputInfo.actionStr, setting.msgGroupName);
-                        new InputActionMsg(inputInfo.actionStr, setting.msgGroupName);
+                        new XInputActionMsg(inputInfo.actionStr, setting.msgGroupName);
 
                         if (inputInfo.timeToDenind > 0f)
                         { 

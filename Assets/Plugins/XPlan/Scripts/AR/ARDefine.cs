@@ -13,32 +13,32 @@ namespace XPlan.AR
         [SerializeField] public GameObject arPrefab;
     }
 
-    public class ARModelSpawnMsg : MessageBase
+    public class XARModelSpawnMsg : MessageBase
 	{
         public string imgKey;
         public Vector3 spawnPos;
 
-        public ARModelSpawnMsg(string imgKey, Vector3 spawnPos)
+        public XARModelSpawnMsg(string imgKey, Vector3 spawnPos)
 		{
             this.imgKey     = imgKey;
             this.spawnPos   = spawnPos;
         }
     }
 
-    public class ARModelTrackMsg : MessageBase
+    public class XARModelTrackMsg : MessageBase
     {
         public string imgKey;
         public bool bOn;
         public Vector3 trackPos;
 
-        public ARModelTrackMsg(string imgKey, bool bOn, Vector3 trackPos)
+        public XARModelTrackMsg(string imgKey, bool bOn, Vector3 trackPos)
         {
             this.imgKey     = imgKey;
             this.bOn        = bOn;
             this.trackPos   = trackPos;
         }
 
-        public static bool operator ==(ARModelTrackMsg m1, ARModelTrackMsg m2)
+        public static bool operator ==(XARModelTrackMsg m1, XARModelTrackMsg m2)
         {
             // 如果兩個對象的引用相同，則返回 true
             if (ReferenceEquals(m1, m2))
@@ -57,7 +57,7 @@ namespace XPlan.AR
         }
 
         // 重載 != 運算符
-        public static bool operator !=(ARModelTrackMsg p1, ARModelTrackMsg p2)
+        public static bool operator !=(XARModelTrackMsg p1, XARModelTrackMsg p2)
         {
             return !(p1 == p2);
         }
@@ -69,7 +69,7 @@ namespace XPlan.AR
                 return false;
             }
 
-            ARModelTrackMsg p = (ARModelTrackMsg)obj;
+            XARModelTrackMsg p = (XARModelTrackMsg)obj;
             return imgKey == p.imgKey && bOn == p.bOn && trackPos == p.trackPos;
         }
 
@@ -80,12 +80,12 @@ namespace XPlan.AR
         }
     }
 
-    public class ARPlaneMsg : MessageBase
+    public class XARPlaneMsg : MessageBase
     {
         public Vector3 hitPos;
         public bool bFind;
 
-        public ARPlaneMsg(bool bFind, Vector3 hitPos)
+        public XARPlaneMsg(bool bFind, Vector3 hitPos)
         {
             this.hitPos = hitPos;
             this.bFind  = bFind;

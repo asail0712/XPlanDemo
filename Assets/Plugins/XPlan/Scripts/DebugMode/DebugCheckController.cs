@@ -12,15 +12,15 @@ namespace XPlan.DebugMode
         // Start is called before the first frame update
         void Awake()
         {
+            DebugCheck[] debugCheckArr          = FindObjectsOfType<DebugCheck>(true);
+            Queue<DebugCheck> debugCheckQueue   = new Queue<DebugCheck>(debugCheckArr);
+
             // Debug Manager有Initial的話，表示不是單一Scene獨立測試
             // 就把該物件視為Debug物件而關閉
             if (!DebugManager.IsInitial())
             {
-                DebugCheck[] debugCheckArr = FindObjectsOfType<DebugCheck>(true);
-
                 // UICintroller必須比UILoader早啟動
                 // 將有UIController的物件提前到第一個
-                Queue<DebugCheck> debugCheckQueue   = new Queue<DebugCheck>(debugCheckArr);
                 int currCount                       = 0;
                 UIController dummy                  = null;
 
@@ -40,6 +40,15 @@ namespace XPlan.DebugMode
                 foreach(DebugCheck debugCheck in debugCheckQueue)
 				{
                     debugCheck.gameObject.SetActive(true);
+                }
+            }
+			else
+			{
+                while (debugCheckQueue.Count > 0)
+                {
+                    DebugCheck debugCheck = debugCheckQueue.Dequeue();
+
+                    GameObject.DestroyImmediate(debugCheck.gameObject);
                 }
             }
 

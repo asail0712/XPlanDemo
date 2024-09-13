@@ -1,20 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace XPlan.Gesture
 { 
     public class PinchToZoom : MonoBehaviour
     {
-        [SerializeField] private float zoomInRatio  = 0.15f;
-        [SerializeField] private float zoomOutRatio = 0.25f;
+        [SerializeField] private bool bAllowPassThroughUI   = false;
+        [SerializeField] private float zoomInRatio          = 0.15f;
+        [SerializeField] private float zoomOutRatio         = 0.25f;
 
         private float lastDist;
         private Vector3 lastScale;
 
         void Update()
         {
+            if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
+            {
+                //Debug.Log("點擊到了 UI 元素");
+                return;
+            }
+
             if (Input.touchCount == 2)
             {
                 Touch touch1 = Input.GetTouch(0);

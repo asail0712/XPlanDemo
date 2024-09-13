@@ -82,7 +82,7 @@ namespace XPlan.AR
                     hitPos = hitList[0].pose.position;
                 }
 
-                ARPlaneMsg msg = new ARPlaneMsg(bFind, hitPos);
+                XARPlaneMsg msg = new XARPlaneMsg(bFind, hitPos);
 
                 msg.Send();
             }

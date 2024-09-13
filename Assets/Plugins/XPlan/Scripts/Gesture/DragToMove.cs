@@ -1,17 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace XPlan.Gesture
 {
     public class DragToMove : MonoBehaviour
     {
+        [SerializeField] private bool bAllowPassThroughUI = false;
+
         private float zOffset               = -999f;
         private Vector3 relativeDistance    = Vector3.zero;
 
 		private void Awake()
 		{
-            if(Camera.main != null)
+            if (Camera.main != null)
 			{
                 zOffset = Vector3.Distance(Camera.main.transform.position, transform.position);
             }            
@@ -19,6 +22,12 @@ namespace XPlan.Gesture
 
 		void Update()
         {
+            if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
+            {
+                //Debug.Log("點擊到了 UI 元素");
+                return;
+            }
+
             // 检查是否有一个手指触摸屏幕
             if (CheckInput() && Camera.main)
             {
