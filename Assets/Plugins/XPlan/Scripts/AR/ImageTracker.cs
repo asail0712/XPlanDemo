@@ -30,6 +30,11 @@ namespace XPlan.AR
 #if AR_FOUNDATION
 			trackedImageMgr.trackedImagesChanged += OnTrakedImgChanged;
 #elif VUFORIA		
+			if(observerEventHandler == null)
+			{
+				return;
+			}
+
 			observerEventHandler.OnTargetFound.AddListener(OnTargetFound);
 			observerEventHandler.OnTargetLost.AddListener(OnTargetLost);
 #endif
@@ -43,6 +48,11 @@ namespace XPlan.AR
 			if(trackCoroutine != null)
 			{
 				StopCoroutine(trackCoroutine);
+			}
+
+			if (observerEventHandler == null)
+			{
+				return;
 			}
 
 			observerEventHandler.OnTargetFound.RemoveListener(OnTargetFound);
@@ -75,7 +85,7 @@ namespace XPlan.AR
 #elif VUFORIA
 		private void OnTargetFound()
 		{
-			ObserverBehaviour mObserverBehaviour = GetComponent<ObserverBehaviour>();
+			ObserverBehaviour mObserverBehaviour = observerEventHandler.GetComponent<ObserverBehaviour>();
 
 			if (mObserverBehaviour == null)
 			{
@@ -107,10 +117,11 @@ namespace XPlan.AR
 
 				Debug.Log($"{targetKey} => {go.transform.position}");
 
-				string imgKey = targetKey;
-				bool bOn = bTargetFound;
-				Vector3 spawnPos = go.transform.position;
-				XARModelTrackMsg msg = new XARModelTrackMsg(imgKey, bOn, spawnPos);
+				string imgKey			= targetKey;
+				bool bOn				= bTargetFound;
+				Vector3 spawnPos		= go.transform.position;
+				XARModelTrackMsg msg	= new XARModelTrackMsg(imgKey, bOn, spawnPos);
+				msg.Send();
 
 			} while (bTargetFound);
 		}
