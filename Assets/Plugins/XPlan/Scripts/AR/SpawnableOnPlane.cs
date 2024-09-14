@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-#if AR
+
+#if AR_FOUNDATION
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-#endif //AR
-// 參考資料
+#endif //AR_FOUNDATION
+
+// AR_FOUNDATION 參考資料
 // https://www.youtube.com/watch?v=Fpw7V3oa4fs
 // https://www.youtube.com/watch?v=yrbs0l6FZxI
 
@@ -13,7 +15,7 @@ namespace XPlan.AR
 { 
     public class SpawnableOnPlane : MonoBehaviour
     {
-#if AR
+#if AR_FOUNDATION
         [SerializeField] private ARRaycastManager raycastManager;
         [SerializeField] private float duration = 1f;
 
@@ -87,6 +89,6 @@ namespace XPlan.AR
                 msg.Send();
             }
         }
-#endif //AR
+#endif //AR_FOUNDATION
     }
 }

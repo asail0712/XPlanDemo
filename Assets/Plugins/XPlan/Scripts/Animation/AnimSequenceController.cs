@@ -598,6 +598,7 @@ namespace XPlan.Anim
 		{
             if(playRatio < 0f || playRatio > 1.0f)
 			{
+                LogSystem.Record($"Play Ratio異常，數值為 {playRatio} !!", LogType.Warning);
                 return null;
 			}
 
