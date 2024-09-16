@@ -17,13 +17,16 @@ namespace XPlan.AR
 {
 	public class ImageTracker : MonoBehaviour
 	{
+		[SerializeField] Vector3 relativePos;
+
 #if AR_FOUNDATION
 		[SerializeField] private ARTrackedImageManager trackedImageMgr;
 #elif VUFORIA
-		[SerializeField] DefaultObserverEventHandler observerEventHandler;
+		[SerializeField] private DefaultObserverEventHandler observerEventHandler;
+
 		private Coroutine trackCoroutine	= null;
 		private bool bTargetFound			= false;
-#endif
+#endif		
 
 		private void OnEnable()
 		{
@@ -119,7 +122,8 @@ namespace XPlan.AR
 
 				string imgKey			= targetKey;
 				bool bOn				= bTargetFound;
-				Vector3 spawnPos		= go.transform.position;
+				Vector3 spawnPos		= go.transform.position + relativePos;
+
 				XARModelTrackMsg msg	= new XARModelTrackMsg(imgKey, bOn, spawnPos);
 				msg.Send();
 
