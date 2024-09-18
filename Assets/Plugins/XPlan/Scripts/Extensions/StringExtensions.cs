@@ -4,10 +4,10 @@ using System.Net.Mail;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-#if ZXing 
+#if ZXING
 using ZXing;
 using ZXing.Common;
-#endif // ZXing 
+#endif // ZXING 
 
 namespace XPlan.Extensions
 {

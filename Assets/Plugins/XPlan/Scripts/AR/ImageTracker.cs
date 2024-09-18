@@ -38,6 +38,15 @@ namespace XPlan.AR
 				return;
 			}
 
+			ObserverBehaviour mObserverBehaviour = observerEventHandler.GetComponent<ObserverBehaviour>();
+
+			if (mObserverBehaviour == null)
+			{
+				return;
+			}
+
+			// mObserverBehaviour
+			mObserverBehaviour.enabled = true;
 			observerEventHandler.OnTargetFound.AddListener(OnTargetFound);
 			observerEventHandler.OnTargetLost.AddListener(OnTargetLost);
 #endif
@@ -58,8 +67,17 @@ namespace XPlan.AR
 				return;
 			}
 
-			observerEventHandler.OnTargetFound.RemoveListener(OnTargetFound);
-			observerEventHandler.OnTargetLost.RemoveListener(OnTargetLost);
+			ObserverBehaviour mObserverBehaviour = observerEventHandler.GetComponent<ObserverBehaviour>();
+
+			if (mObserverBehaviour == null)
+			{
+				return;
+			}
+
+			// mObserverBehaviour
+			mObserverBehaviour.enabled = false;
+			observerEventHandler.OnTargetFound.RemoveAllListeners();
+			observerEventHandler.OnTargetLost.RemoveAllListeners();
 #endif
 		}
 

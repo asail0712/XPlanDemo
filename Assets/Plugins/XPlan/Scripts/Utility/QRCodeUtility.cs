@@ -5,15 +5,15 @@ using System.Net.Mail;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-#if ZXing 
+#if ZXING 
 using ZXing;
 using ZXing.Common;
-#endif // ZXing 
+#endif // ZXING 
 
 namespace XPlan.Utility
 {
 
-#if ZXing
+#if ZXING
     public static class QRCodeUtility
     {
 
@@ -130,6 +130,6 @@ namespace XPlan.Utility
         }
     }
 
-#endif // ZXing 
+#endif // ZXING 
 }
 
