@@ -4,7 +4,7 @@ using System.Net.Mail;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-#if ZXING
+#if ZXING 
 using ZXing;
 using ZXing.Common;
 #endif // ZXING 

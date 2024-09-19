@@ -112,13 +112,10 @@ namespace XPlan.Utility
 		private void RotationImg(RawImage cameraImg, WebCamTexture webCamTexture)
 		{
 			float angle			= webCamTexture.videoRotationAngle;
-			bool bNeedToMirror	= false;
-
-			// IOS與Android要鏡像翻轉的情形不同
 #if UNITY_IOS
-			bNeedToMirror = webCamTexture.deviceName == WebCamTexture.devices[0].name;
+			bool bNeedToMirror	= false // IOS不需要翻轉
 #else
-			bNeedToMirror = webCamTexture.deviceName != WebCamTexture.devices[0].name;
+			bool bNeedToMirror	= IsFrontFacing(webCamTexture); // 只有前鏡頭需要鏡像
 #endif
 
 			if (bNeedToMirror)
@@ -131,6 +128,19 @@ namespace XPlan.Utility
 				cameraImg.transform.localScale	= new Vector3(1f, 1f, 1f);
 				cameraImg.transform.rotation	*= Quaternion.AngleAxis(angle, Vector3.back);
 			}
+		}
+
+		private bool IsFrontFacing(WebCamTexture webCamTexture)
+		{
+			foreach(WebCamDevice webCamDevice in WebCamTexture.devices)
+			{
+				if(webCamTexture.deviceName == webCamDevice.name)
+				{
+					return webCamDevice.isFrontFacing;
+				}
+			}
+
+			return false;
 		}
 	}
 

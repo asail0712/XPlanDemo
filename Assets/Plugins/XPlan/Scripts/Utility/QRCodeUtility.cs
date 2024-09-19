@@ -79,7 +79,7 @@ namespace XPlan.Utility
 
         void Start()
         {
-            // 初始化 ZXing barcode reader
+            // 初始化 ZXING barcode reader
             barcodeReader = new BarcodeReader
             {
                 AutoRotate  = true,
