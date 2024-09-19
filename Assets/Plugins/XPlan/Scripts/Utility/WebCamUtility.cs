@@ -113,7 +113,7 @@ namespace XPlan.Utility
 		{
 			float angle			= webCamTexture.videoRotationAngle;
 #if UNITY_IOS
-			bool bNeedToMirror	= false; // IOS不需要翻轉
+			bool bNeedToMirror	= true; // IOS刻意翻轉
 #else
 			bool bNeedToMirror	= IsFrontFacing(webCamTexture); // 只有前鏡頭需要鏡像
 #endif
