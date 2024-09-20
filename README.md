@@ -69,14 +69,14 @@
   - 二維條碼加解密
   - SH256加密
 # 6.其他
-- 前置處理器
+- 前置定義
   - PCSC 可開啟支援讀取Smart Card功能
-  - ZXing 可開啟轉二維條碼功能
+  - ZXING 可開啟轉二維條碼功能
   - USE_OPENCV 開啟OpenCV的美顏功能
   - AR 可開啟AR功能
 - DLL說明
   - PCSC、System 該DLL用於讀取Smart Card，沒有使用可移除
-  - ZXing 該DLL用於將字串轉為二維條碼，沒有使用可移除
+  - ZXING 該DLL用於將字串轉為二維條碼，沒有使用可移除
 
 # 7.聯繫方式
 Email: asail0712@gmail.com
