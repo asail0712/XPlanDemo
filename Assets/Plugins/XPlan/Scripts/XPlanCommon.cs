@@ -6,6 +6,6 @@ namespace XPlan
 { 
     public static class XPlanCommon
     {
-        public const string Version = "1.7.10";
+        public const string Version = "1.8.10";
     }
 }
