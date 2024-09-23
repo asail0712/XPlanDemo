@@ -38,4 +38,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SceneDebugDemo/ChildDemo.unity
     guid: 0ce098ded3b4efe408d94bc9c520d011
-  m_configObjects: {}
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: dc0c589bd80f04f41ab7fc5239685e05, type: 2}
+    UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 4fe4c6e8d0942ec4ab0474f186ad0d25, type: 2}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 28e4187519896554596dddd1bb110be7, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: da35dc6c5225f6d42b1b76012174db50, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 9d897fa71ceac134884e36de8bc89bf8, type: 2}
