@@ -1,10 +1,12 @@
 # 1.簡介
 為加快專案開發速度並減少維護成本，基於資料導向(Data-Oriented)為基礎，並兼具物件導向(Object-Oriented)優勢，設計出用於Unity的程式開發框架。著重在降低代碼耦合度與提高模組的覆用性，並將開發的重點放在邏輯的撰寫，而不是引用的傳遞與管理。
 # 2.版本資訊
-- Version 1.6.10
+- Version 1.8.10
 # 3.安裝指南
 ### 系統要求
-- Unity 2021.3.6f1 或更高版本。
+- Unity 2022.3.33f1 或更高版本
+- Unity 2021.3.6f1
+  - AR相關功能可能無法正常運作
 ### 安裝指南
 - 將XPlan資料夾放進專案中的Assets/Plugins即可
 - 不需要使用的DLL可以刪除，請參照"其他"的說明
@@ -37,6 +39,8 @@
 - Assets/Scenes/GestureDemo/GestureDemo.unity
   - 示範手勢功能如何使用
   - 包含Drag to Move，Drag to Rotate、Pinch to Zoom、Tap to Point
+- Assets/Scenes/ARDemo/ARDemoScene
+  - 示範如何透過XPlan使用AR Foundation
 - Assets/Scenes/SceneDebugDemo/SceneDebugDemo.unity
   - 示範專案中的每個Scene要如何設定，讓單一場景可以獨立運作
  
@@ -73,7 +77,7 @@
   - PCSC 可開啟支援讀取Smart Card功能
   - ZXING 可開啟轉二維條碼功能
   - USE_OPENCV 開啟OpenCV的美顏功能
-  - AR 可開啟AR功能
+  - AR_FOUNDATION 可開啟AR功能
 - DLL說明
   - PCSC、System 該DLL用於讀取Smart Card，沒有使用可移除
   - ZXING 該DLL用於將字串轉為二維條碼，沒有使用可移除
