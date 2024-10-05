@@ -524,6 +524,23 @@ namespace XPlan.Scenes
 			}			
 		}
 
+		public string GetCurrSceneName()
+		{
+			int currSceneIdx = currSceneStack.Count - 1;
+
+			if (currSceneStack.IsValidIndex<int>(currSceneIdx))
+			{
+				Scene currScene = SceneManager.GetSceneByBuildIndex(currSceneStack[currSceneIdx]);
+
+				return currScene.name;
+			}
+			else
+			{
+				Debug.LogWarning("Level Error");
+				return "";
+			}
+		}
+
 		private int GetBuildIndexByName(string sceneName)
 		{
 			for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
