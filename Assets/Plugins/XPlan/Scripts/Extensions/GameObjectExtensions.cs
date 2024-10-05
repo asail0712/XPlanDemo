@@ -53,15 +53,15 @@ namespace XPlan.Extensions
             }
         }
 
-        public static void AddChild(this GameObject gameObject, GameObject childGO)
-        {
-            if (childGO == null)
-            {
-                return;
-            }
+        //public static void AddChild(this GameObject gameObject, GameObject childGO)
+        //{
+        //    if (childGO == null)
+        //    {
+        //        return;
+        //    }
 
-            childGO.transform.SetParent(gameObject.transform);
-        }
+        //    childGO.transform.SetParent(gameObject.transform);
+        //}
 
         public static void AddChild(this GameObject gameObject, GameObject childGO
             , Vector3 locPos        = default(Vector3)
@@ -79,9 +79,9 @@ namespace XPlan.Extensions
 			childGO.transform.localScale        = new Vector3(ratio, ratio, ratio);
         }
 
-        public static void SetLayer(this GameObject gameObject, int layer, bool bContainChild = true)
+        public static void SetLayer(this GameObject gameObject, string layer, bool bContainChild = true)
         {
-            gameObject.layer = layer;
+            gameObject.layer = LayerMask.NameToLayer(layer);
 
             if(bContainChild)
 			{
