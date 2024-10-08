@@ -178,6 +178,11 @@ namespace XPlan.Scenes
 
 		public bool ChangeTo(int sceneType, Action finishAction = null, bool bActiveScene = true, bool bForceChange = false)
 		{
+			if (unloadRoutine != null || loadRoutine != null)
+			{
+				return false;
+			}
+
 			if (currSceneStack.Count == 0)
 			{
 				LoadScene(sceneType, finishAction, bActiveScene, true);
