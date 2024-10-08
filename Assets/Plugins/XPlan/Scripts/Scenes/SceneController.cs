@@ -50,9 +50,14 @@ namespace XPlan.Scenes
 
 	public class LoadInfo : ChangeInfo
 	{
-		public LoadInfo(int sceneType)
+		public bool bActiveScene;
+		public Action finishAction;
+
+		public LoadInfo(int sceneType, bool bActiveScene, Action finishAction)
 			: base(sceneType)
 		{
+			this.bActiveScene = bActiveScene;
+			this.finishAction = finishAction;
 		}
 	}
 
@@ -164,18 +169,23 @@ namespace XPlan.Scenes
 			return true;
 		}
 
-		public bool ChangeTo(string sceneName, bool bForceChange = false)
+		public bool ChangeTo(string sceneName, Action finishAction = null, bool bActiveScene = true, bool bForceChange = false)
 		{
 			int buildIndex = GetBuildIndexByName(sceneName);
 
-			return ChangeTo(buildIndex, bForceChange);
+			return ChangeTo(buildIndex, finishAction, bActiveScene, bForceChange);
 		}
 
-		public bool ChangeTo(int sceneType, bool bForceChange = false)
+		public bool ChangeTo(int sceneType, Action finishAction = null, bool bActiveScene = true, bool bForceChange = false)
 		{
+			if (unloadRoutine != null || loadRoutine != null)
+			{
+				return false;
+			}
+
 			if (currSceneStack.Count == 0)
 			{
-				LoadScene(sceneType, true);
+				LoadScene(sceneType, finishAction, bActiveScene, true);
 				return true;
 			}
 
@@ -200,14 +210,14 @@ namespace XPlan.Scenes
 					else 
 					{
 						// 先loading 再做unload 避免畫面太空
-						LoadScene(sceneType);
+						LoadScene(sceneType, finishAction, bActiveScene);
 						UnloadScene(currSceneType, bForceChange);
 						break;
 					}
 				}
 				else
 				{
-					LoadScene(sceneType);
+					LoadScene(sceneType, finishAction, bActiveScene);
 					break;
 				}
 			}
@@ -235,9 +245,11 @@ namespace XPlan.Scenes
 
 			if(info is LoadInfo)
 			{
+				LoadInfo loadInfo = (LoadInfo)info;
+
 				Debug.Log($"載入關卡 {info.sceneType}");
-				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(info.sceneType, LoadSceneMode.Additive);
-				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, info.sceneType));
+				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(loadInfo.sceneType, LoadSceneMode.Additive);
+				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, loadInfo.sceneType, loadInfo.bActiveScene, loadInfo.finishAction));
 
 				currSceneStack.Add(info.sceneType);
 			}
@@ -264,7 +276,7 @@ namespace XPlan.Scenes
 			changeQueue.RemoveAt(0);
 		}
 
-		protected bool LoadScene(int sceneType, bool bImmediately = false)
+		protected bool LoadScene(int sceneType, Action finishAction, bool bActiveScene, bool bImmediately = false)
 		{
 			Scene scene = SceneManager.GetSceneByBuildIndex(sceneType);
 
@@ -278,13 +290,13 @@ namespace XPlan.Scenes
 			{
 				Debug.Log($"載入關卡 {sceneType}");
 				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(sceneType, LoadSceneMode.Additive);
-				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, sceneType));
+				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, sceneType, bActiveScene, finishAction));
 
 				currSceneStack.Add(sceneType);
 			}
 			else
 			{
-				changeQueue.Add(new LoadInfo(sceneType));
+				changeQueue.Add(new LoadInfo(sceneType, bActiveScene, finishAction));
 			}
 			
 			return true;
@@ -347,7 +359,7 @@ namespace XPlan.Scenes
 			}
 		}
 
-		private IEnumerator WaitLoadingScene(AsyncOperation asyncOperation, int sceneType)
+		private IEnumerator WaitLoadingScene(AsyncOperation asyncOperation, int sceneType, bool bActiveScene, Action finishAction)
 		{
 			while (!asyncOperation.isDone)
 			{
@@ -355,6 +367,14 @@ namespace XPlan.Scenes
 				Debug.Log("關卡載入進度: " + (progress * 100) + "%");
 				yield return null;
 			}
+
+			if(bActiveScene)
+			{
+				Scene scene = SceneManager.GetSceneByBuildIndex(sceneType);
+				SceneManager.SetActiveScene(scene);
+			}
+
+			finishAction?.Invoke();
 
 			loadRoutine = null;
 		}
@@ -507,6 +527,23 @@ namespace XPlan.Scenes
 				Debug.LogWarning("Level Error");
 				return -1;
 			}			
+		}
+
+		public string GetCurrSceneName()
+		{
+			int currSceneIdx = currSceneStack.Count - 1;
+
+			if (currSceneStack.IsValidIndex<int>(currSceneIdx))
+			{
+				Scene currScene = SceneManager.GetSceneByBuildIndex(currSceneStack[currSceneIdx]);
+
+				return currScene.name;
+			}
+			else
+			{
+				Debug.LogWarning("Level Error");
+				return "";
+			}
 		}
 
 		private int GetBuildIndexByName(string sceneName)

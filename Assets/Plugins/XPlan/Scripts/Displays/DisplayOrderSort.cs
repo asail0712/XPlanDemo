@@ -18,12 +18,12 @@ namespace XPlan.Displays
 	public class DisplayOrderSort : LogicComponentBase
 	{
 		// Start is called before the first frame update
-		public DisplayOrderSort(string orderFilePath, List<Camera> cameraList, List<Canvas> canvasList = null)
+		public DisplayOrderSort(string orderFilePath, List<CameraOrderData> cameraList, List<CanvasOrderData> canvasList = null)
         {
 			StartCoroutine(AllCamera(orderFilePath, cameraList, canvasList));
 		}
 
-		private IEnumerator AllCamera(string orderFilePath, List<Camera> cameraList, List<Canvas> canvasList)
+		private IEnumerator AllCamera(string orderFilePath, List<CameraOrderData> cameraList, List<CanvasOrderData> canvasList)
 		{
 			string[] orderArr = null;
 
@@ -54,15 +54,15 @@ namespace XPlan.Displays
 			}
 		}
 
-		private void CameraOrder(string[] orderArr, List<Camera> cameraList)
+		private void CameraOrder(string[] orderArr, List<CameraOrderData> cameraDataList)
 		{			
-			if (orderArr.Length != cameraList.Count)
+			if (orderArr.Length != cameraDataList.Count)
 			{
-				LogSystem.Record($"{cameraList} 數量 與 外部檔案數量 不一致!!", LogType.Warning);
+				LogSystem.Record($"{cameraDataList} 數量 與 外部檔案數量 不一致!!", LogType.Warning);
 			}
 
 			// 避免兩者數量不一致
-			int totalNum = Mathf.Min(orderArr.Length, cameraList.Count);
+			int totalNum = Mathf.Min(orderArr.Length, cameraDataList.Count);
 
 			// orderArr為Display的順序
 			for (int i = 0; i < totalNum; ++i)
@@ -74,7 +74,12 @@ namespace XPlan.Displays
 
 				if (int.TryParse(orderArr[i], out int displayIdx))
 				{
-					cameraList[i].targetDisplay = displayIdx - 1;
+					List<Camera> cameraList = cameraDataList[i].cameraList;
+
+					for (int j = 0; j < cameraList.Count; ++j)
+					{
+						cameraList[j].targetDisplay = displayIdx - 1;
+					}					
 				}
 				else
 				{
@@ -83,15 +88,15 @@ namespace XPlan.Displays
 			}
 		}
 
-		private void CanvasOrder(string[] orderArr, List<Canvas> canvasList)
+		private void CanvasOrder(string[] orderArr, List<CanvasOrderData> canvasDataList)
 		{
-			if (orderArr.Length != canvasList.Count)
-			{
-				LogSystem.Record($"{canvasList} 數量 與 外部檔案數量 不一致!!", LogType.Warning);
-			}
+			//if (orderArr.Length != canvasList.Count)
+			//{
+			//	LogSystem.Record($"{canvasList} 數量 與 外部檔案數量 不一致!!", LogType.Warning);
+			//}
 
 			// 避免兩者數量不一致
-			int totalNum = Mathf.Min(orderArr.Length, canvasList.Count);
+			int totalNum = Mathf.Min(orderArr.Length, canvasDataList.Count);
 
 			// orderArr為Display的順序
 			for (int i = 0; i < totalNum; ++i)
@@ -103,7 +108,12 @@ namespace XPlan.Displays
 
 				if (int.TryParse(orderArr[i], out int displayIdx))
 				{
-					canvasList[i].targetDisplay = displayIdx - 1;
+					List<Canvas> canvasList = canvasDataList[i].canvasList;
+
+					for (int j = 0; j < canvasList.Count; ++j)
+					{
+						canvasList[j].targetDisplay = displayIdx - 1;
+					}
 				}
 				else
 				{

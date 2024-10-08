@@ -101,8 +101,6 @@ namespace XPlan.AR
 				XARModelTrackMsg msg	= new XARModelTrackMsg(imgKey, bOn, spawnPos);
 
 				msg.Send();
-
-				Debug.Log(imgKey);
 			}
 		}
 #elif VUFORIA

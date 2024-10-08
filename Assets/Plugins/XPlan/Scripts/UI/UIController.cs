@@ -28,14 +28,16 @@ namespace XPlan.UI
 	class UIVisibleInfo
 	{
 		public GameObject uiIns;
+		public int rootIdx;
 		public int referCount;
 		public string uiName;
 
-		public UIVisibleInfo(GameObject u, string s, int r)
+		public UIVisibleInfo(GameObject u, string s, int r, int i)
 		{
 			uiIns			= u;
 			uiName			= s;
 			referCount		= r;
+			rootIdx			= i;
 		}
 	}
 
@@ -92,16 +94,17 @@ namespace XPlan.UI
 
 				int idx = currVisibleList.FindIndex((X) =>
 				{
-					return X.uiName == uiPerfab.name;
+					return X.uiName == uiPerfab.name && X.rootIdx == loadingInfo.rootIdx;
 				});
 
 				if (idx == -1)
 				{
 					// 確認加載 UI Root
-					if(!uiRootList.IsValidIndex<GameObject>(loadingInfo.rootIdx))
+					if(!uiRootList.IsValidIndex<GameObject>(loadingInfo.rootIdx)
+						|| uiRootList[loadingInfo.rootIdx] == null)
 					{
-						LogSystem.Record($"{loadingInfo.rootIdx} 是無效的rootIdx", LogType.Error);
-						return;
+						LogSystem.Record($"{loadingInfo.rootIdx} 是無效的rootIdx", LogType.Warning);
+						continue;
 					}
 
 					// 生成UI
@@ -119,7 +122,7 @@ namespace XPlan.UI
 					}
 
 					// 確認是否為常駐UI
-					UIVisibleInfo vInfo = new UIVisibleInfo(uiIns, uiPerfab.name, 1);
+					UIVisibleInfo vInfo = new UIVisibleInfo(uiIns, uiPerfab.name, 1, loadingInfo.rootIdx);
 					if (loadingInfo.bIsPersistentUI)
 					{
 						persistentUIList.Add(vInfo);

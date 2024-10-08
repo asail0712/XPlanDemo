@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
+using XPlan.Scenes;
 
 namespace XPlan.Utility
 {
@@ -9,6 +12,16 @@ namespace XPlan.Utility
         public static MonoBehavourInstance StartCoroutine(IEnumerator routine, bool persistent = false)
         {
             MonoBehavourInstance MonoHelper = new GameObject("Coroutine => " + routine.ToString()).AddComponent<MonoBehavourInstance>();
+
+            if(SceneController.IsInstance())
+			{
+                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, SceneController.Instance.gameObject.scene);
+            }
+            else
+			{
+                // 預設0是MainScene
+                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, SceneManager.GetSceneByBuildIndex(0));
+            }
 
             MonoHelper.DestroyWhenComplete(routine, persistent);
 
@@ -26,6 +39,15 @@ namespace XPlan.Utility
             IEnumerator routine             = Func?.Invoke();
             MonoBehavourInstance MonoHelper = new GameObject("Coroutine- " + funcName).AddComponent<MonoBehavourInstance>();
 
+            if (SceneController.IsInstance())
+            {
+                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, SceneController.Instance.gameObject.scene);
+            }
+            else
+            {
+                // 預設0是MainScene
+                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, SceneManager.GetSceneByBuildIndex(0));
+            }
             MonoHelper.DestroyWhenComplete(routine, persistent);
 
             return MonoHelper;
@@ -71,6 +93,6 @@ namespace XPlan.Utility
 
                 Destroy(this.gameObject);
             }
-        }
+		}
     }
 }
