@@ -100,10 +100,11 @@ namespace XPlan.UI
 				if (idx == -1)
 				{
 					// 確認加載 UI Root
-					if(!uiRootList.IsValidIndex<GameObject>(loadingInfo.rootIdx))
+					if(!uiRootList.IsValidIndex<GameObject>(loadingInfo.rootIdx)
+						|| uiRootList[loadingInfo.rootIdx] == null)
 					{
-						LogSystem.Record($"{loadingInfo.rootIdx} 是無效的rootIdx", LogType.Error);
-						return;
+						LogSystem.Record($"{loadingInfo.rootIdx} 是無效的rootIdx", LogType.Warning);
+						continue;
 					}
 
 					// 生成UI
