@@ -262,7 +262,7 @@ namespace XPlan.UI
 		{
 			OnDispose();
 
-			SceneController.UnregisterFadeCallback(sceneType, TriggerToFadeOut, IsFadeOutFinish);
+			SceneController.UnregisterFadeCallback(sceneIdx, TriggerToFadeOut, IsFadeOutFinish);
 			
 			UISystem.UnlistenAllCall(this);
 			UISystem.UnregisterAllCallback(this);
@@ -278,19 +278,19 @@ namespace XPlan.UI
 		 * *****************************/
 
 		private int sortIdx		= -1;
-		private int sceneType	= -1;
+		private int sceneIdx	= -1;
 
 		protected virtual void OnInitialUI()
 		{
 			// for overrdie
 		}
 
-		public void InitialUI(int idx, int sceneType)
+		public void InitialUI(int idx, int sceneIdx)
 		{
 			this.sortIdx		= idx;
-			this.sceneType		= sceneType;
+			this.sceneIdx		= sceneIdx;
 
-			SceneController.RegisterFadeCallback(sceneType, TriggerToFadeOut, IsFadeOutFinish);
+			SceneController.RegisterFadeCallback(sceneIdx, TriggerToFadeOut, IsFadeOutFinish);
 
 			OnInitialUI();
 		}
