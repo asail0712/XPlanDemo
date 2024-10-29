@@ -29,7 +29,7 @@ namespace XPlan.DebugMode
 #endif //DEBUG
         }
 #if DEBUG
-        private void Update()
+        protected override void OnPostUpdate(float deltaTime)
 		{
 			if(gameSpeedRatio != currGameSpeed)
 			{
