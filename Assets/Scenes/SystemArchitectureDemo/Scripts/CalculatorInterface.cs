@@ -12,7 +12,7 @@ namespace XPlan.Demo.Architecture
         void Calcular(int a, int b, OperatorType type, Action<int> finishAction);
     }
 
-    public class CalculatorInterface : LogicComponentBase, ICalculator
+    public class CalculatorInterface : LogicComponent, ICalculator
     {
         // Start is called before the first frame update
         public CalculatorInterface()

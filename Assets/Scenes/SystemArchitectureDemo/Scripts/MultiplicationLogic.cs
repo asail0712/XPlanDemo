@@ -20,7 +20,7 @@ namespace XPlan.Demo.Architecture
             this.finishAction   = finishAction;
         }
     }
-    public class MultiplicationLogic : LogicComponentBase
+    public class MultiplicationLogic : LogicComponent
     {
         public MultiplicationLogic()
         {

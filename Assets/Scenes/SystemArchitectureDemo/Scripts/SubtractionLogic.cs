@@ -20,7 +20,7 @@ namespace XPlan.Demo.Architecture
             this.finishAction   = finishAction;
         }
     }
-    public class SubtractionLogic : LogicComponentBase
+    public class SubtractionLogic : LogicComponent
     {
         public SubtractionLogic()
         {

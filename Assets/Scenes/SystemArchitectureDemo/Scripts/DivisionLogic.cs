@@ -21,7 +21,7 @@ namespace XPlan.Demo.Architecture
         }
     }
 
-    public class DivisionLogic : LogicComponentBase
+    public class DivisionLogic : LogicComponent
     {
         public DivisionLogic()
         {

@@ -21,7 +21,7 @@ namespace XPlan.Demo.Architecture
         }
     }
 
-    public class AdditionLogic : LogicComponentBase
+    public class AdditionLogic : LogicComponent
     {
         public AdditionLogic()
 		{

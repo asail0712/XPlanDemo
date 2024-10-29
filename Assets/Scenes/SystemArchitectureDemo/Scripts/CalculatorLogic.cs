@@ -30,7 +30,7 @@ namespace XPlan.Demo.Architecture
         public OperatorType operatorType;
     }
 
-    public class CalculatorLogic : LogicComponentBase, INotifyReceiver
+    public class CalculatorLogic : LogicComponent, INotifyReceiver
     {
         // Start is called before the first frame update
         public CalculatorLogic()
