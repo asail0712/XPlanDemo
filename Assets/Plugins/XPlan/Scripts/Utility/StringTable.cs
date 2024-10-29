@@ -5,27 +5,29 @@ using UnityEngine.UI;
 
 namespace XPlan.Utility
 {
-    public class StringTable : CreateSingleton<StringTable>
+    public class StringTable
 	{
-		[SerializeField]
-		public TextAsset[] csvAssetList;
-
 		private Dictionary<string, string> stringTable	= new Dictionary<string, string>();
 
-		protected override void InitSingleton()
+		public StringTable()
+		{
+
+		}
+
+		public void InitialStringTable(TextAsset[] csvAssetList)
 		{
 			if (csvAssetList == null)
 			{
 				return;
 			}
 
-			foreach(TextAsset csvAsset in csvAssetList)
-			{ 
+			foreach (TextAsset csvAsset in csvAssetList)
+			{
 				string fileContent	= csvAsset.text;
 				string[] lines		= fileContent.Split('\n'); // 將文件內容分成行
 
-				foreach(string line in lines)
-				{ 
+				foreach (string line in lines)
+				{
 					string[] values = line.Split(',');
 
 					if (values.Length != 2)

@@ -8,6 +8,12 @@ using XPlan.Utility;
 
 namespace XPlan.UI.Template
 {
+	public enum DialogResult
+	{
+		Confirm = 0,
+		Cancal,
+	}
+
 	public static class DialogMessage
 	{
 		public const string Confirm			= "key_confirm";
@@ -27,26 +33,14 @@ namespace XPlan.UI.Template
 		public string showStr			= "";
 		public string confirmStr		= "";
 		public string cancelStr			= "";
-		public Action<int> clickAction	= null;
+		public Action<DialogResult> clickAction	= null;
 
-		public ShowDialogue(DialogType dialogType, string showStr, Action<int> clickAction = null, string confirmKey = "", string cancelKey = "")
+		public ShowDialogue(DialogType dialogType, string showStr, Action<DialogResult> clickAction = null, string confirmKey = "", string cancelKey = "")
 		{
 			Initial(dialogType, showStr, clickAction, confirmKey, cancelKey);
 		}
 		
-		public ShowDialogue(DialogType dialogType, string[] showStrList, Action<int> clickAction = null, string confirmKey = "", string cancelKey = "")
-		{			
-			string showStr = "";
-
-			for (int i = 0; i < showStrList.Length; ++i)
-			{
-				showStr += StringTable.Instance.GetStr(showStrList[i]);
-			}
-
-			Initial(dialogType, showStr, clickAction, confirmKey, cancelKey);
-		}
-
-		private void Initial(DialogType dialogType, string showStr, Action<int> clickAction, string confirmKey = "", string cancelKey = "")
+		private void Initial(DialogType dialogType, string showStr, Action<DialogResult> clickAction, string confirmKey = "", string cancelKey = "")
 		{
 			if (confirmKey == "")
 			{
@@ -60,9 +54,9 @@ namespace XPlan.UI.Template
 
 
 			this.dialogType		= dialogType;
-			this.showStr		= StringTable.Instance.GetStr(showStr);
-			this.confirmStr		= StringTable.Instance.GetStr(confirmKey);
-			this.cancelStr		= StringTable.Instance.GetStr(cancelKey);
+			this.showStr		= showStr;
+			this.confirmStr		= confirmKey;
+			this.cancelStr		= cancelKey;
 			this.clickAction	= clickAction;
 
 			UISystem.DirectCall<ShowDialogue>(DialogMessage.ConfirmMessage, this);
@@ -78,27 +72,27 @@ namespace XPlan.UI.Template
 		[SerializeField] public Text confirmTxt;
 		[SerializeField] public Text cancelTxt;
 
-		private Action<int> clickAction;
+		private Action<DialogResult> clickAction;
 
 		private void Awake()
 		{
 			RegisterButton("", confirmBtn, () =>
 			{
-				clickAction?.Invoke(0);
+				clickAction?.Invoke(DialogResult.Confirm);
 				uiRoot.SetActive(false);
 			});
 
 			RegisterButton("", cancelBtn, () =>
 			{
-				clickAction?.Invoke(1);
+				clickAction?.Invoke(DialogResult.Cancal);
 				uiRoot.SetActive(false);
 			});
 
 			ListenCall<ShowDialogue>(DialogMessage.ConfirmMessage, (info)=> 
 			{
-				showStrTxt.text = info.showStr;
-				confirmTxt.text = info.confirmStr;
-				cancelTxt.text	= info.cancelStr;
+				showStrTxt.text = GetStr(info.showStr);
+				confirmTxt.text = GetStr(info.confirmStr);
+				cancelTxt.text	= GetStr(info.cancelStr);
 				clickAction		= info.clickAction;
 
 				cancelBtn.gameObject.SetActive(info.dialogType == DialogType.DualButton);

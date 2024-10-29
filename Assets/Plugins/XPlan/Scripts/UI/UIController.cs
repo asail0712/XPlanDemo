@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-using XPlan.Extensions;
+using XPlan.Utilitys;
 using XPlan.Utility;
 
 namespace XPlan.UI
@@ -46,13 +46,17 @@ namespace XPlan.UI
 		[SerializeField]
 		public List<GameObject> uiRootList;
 
-		List<UIVisibleInfo> currVisibleList		= new List<UIVisibleInfo>();
-		List<UIVisibleInfo> persistentUIList	= new List<UIVisibleInfo>();
-		List<UILoader> loaderStack				= new List<UILoader>();
+		[SerializeField]
+		public TextAsset[] csvAssetList;
+
+		private List<UIVisibleInfo> currVisibleList		= new List<UIVisibleInfo>();
+		private List<UIVisibleInfo> persistentUIList	= new List<UIVisibleInfo>();
+		private List<UILoader> loaderStack				= new List<UILoader>();
+		private StringTable stringTable					= new StringTable();
 
 		protected override void InitSingleton()
 		{
-	
+			stringTable.InitialStringTable(csvAssetList);
 		}
 
 		/**************************************
@@ -65,9 +69,6 @@ namespace XPlan.UI
 			 * ***********************************/
 			List<UILoadingInfo> loadingList		= loader.GetLoadingList();
 			bool bNeedToDestroyOtherUI			= loader.NeedToDestroyOtherUI();
-
-			Scene currScene						= loader.gameObject.scene;
-			int buildIdx						= currScene.buildIndex;
 
 			// 添加新UI的處理
 			foreach (UILoadingInfo loadingInfo in loadingList)
@@ -111,14 +112,14 @@ namespace XPlan.UI
 					GameObject uiIns = GameObject.Instantiate(loadingInfo.uiPerfab, uiRootList[loadingInfo.rootIdx].transform);
 
 					// 加上文字
-					StringTable.Instance.InitialUIText(uiIns);
+					stringTable.InitialUIText(uiIns);
 
 					// 初始化所有的 ui base
 					UIBase[] newUIList = uiIns.GetComponents<UIBase>();
 
 					foreach (UIBase newUI in newUIList)
 					{
-						newUI.InitialUI(loadingInfo.sortIdx, buildIdx);
+						newUI.InitialUI(loadingInfo.sortIdx);
 					}
 
 					// 確認是否為常駐UI
@@ -215,7 +216,7 @@ namespace XPlan.UI
 
 				int idx = currVisibleList.FindIndex((X) =>
 				{
-					return X.uiName == uiGO.name;
+					return X.uiName == uiGO.name && X.rootIdx == loadingInfo.rootIdx;
 				});
 
 				if (idx != -1)				
@@ -328,6 +329,14 @@ namespace XPlan.UI
 			{
 				X.SetActive(bEnable);
 			});
+		}
+
+		/**************************************
+		 * String Table
+		 * ************************************/
+		public string GetStr(string keyStr, bool bShowWarning = false)
+		{
+			return stringTable.GetStr(keyStr, bShowWarning);
 		}
 	}
 }
