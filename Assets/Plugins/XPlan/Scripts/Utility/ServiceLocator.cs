@@ -52,6 +52,11 @@ namespace XPlan.Utility
             services.Remove(typeof(T));
         }
 
+        public static void DeregisterAll()
+        {
+            services.Clear();
+        }
+
         public static T GetService<T>()
             where T : class
         {
