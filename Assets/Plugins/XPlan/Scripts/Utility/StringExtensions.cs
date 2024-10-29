@@ -9,7 +9,7 @@ using ZXing;
 using ZXing.Common;
 #endif // ZXING 
 
-namespace XPlan.Utilitys
+namespace XPlan.Utility
 {
     public static class StringExtensions
     {

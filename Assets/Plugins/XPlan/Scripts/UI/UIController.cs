@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-using XPlan.Utilitys;
 using XPlan.Utility;
 
 namespace XPlan.UI

@@ -5,7 +5,7 @@ using UnityEngine;
 
 using XPlan.Utility;
 
-namespace XPlan.Utilitys
+namespace XPlan.Utility
 {
     public static class UIExtensions
     {

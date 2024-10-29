@@ -5,7 +5,7 @@ using UnityEngine;
 
 using XPlan.AR;
 using XPlan.Observe;
-using XPlan.Extensions;
+using XPlan.Utility;
 
 namespace XPlan.Demo.AR
 {

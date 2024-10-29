@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 using XPlan;
-using XPlan.Utilitys;
 using XPlan.Utility;
 
 namespace XPlan.Displays

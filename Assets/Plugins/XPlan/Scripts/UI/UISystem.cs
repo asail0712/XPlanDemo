@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
-using XPlan.Utilitys;
+using XPlan.Utility;
 using XPlan.Interface;
 
 namespace XPlan.UI

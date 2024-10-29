@@ -6,7 +6,7 @@ using UnityEngine;
 
 using XPlan.DebugMode;
 using XPlan.Observe;
-using XPlan.Utilitys;
+using XPlan.Utility;
 
 namespace XPlan.Anim
 {
