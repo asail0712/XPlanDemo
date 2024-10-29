@@ -12,7 +12,7 @@ using XPlan.Utility;
 
 namespace XPlan
 {
-	public class LogicComponentBase : IUIListener, INotifyReceiver
+	public class LogicComponent : IUIListener, INotifyReceiver
 	{
 		private Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance> coroutineDict;
 		private static int corourintSerialNum = 0;
@@ -238,7 +238,7 @@ namespace XPlan
 		/*************************
 		 * 初始化與釋放
 		 * ***********************/
-		public LogicComponentBase()
+		public LogicComponent()
 		{
 			coroutineDict = new Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance>();
 		}

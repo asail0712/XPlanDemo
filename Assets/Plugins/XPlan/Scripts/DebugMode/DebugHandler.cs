@@ -7,7 +7,7 @@ using XPlan.Interface;
 
 namespace XPlan.DebugMode
 { 
-	public class DebugHandler : LogicComponentBase, ITickable
+	public class DebugHandler : LogicComponent, ITickable
 	{
 		private GameObject debugConsole = null;
 
@@ -16,7 +16,7 @@ namespace XPlan.DebugMode
 
 		public DebugHandler(GameObject console)
 		{
-			if(debugConsole == null)
+			if(console == null)
 			{
 				return;
 			}

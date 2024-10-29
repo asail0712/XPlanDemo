@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 using XPlan;
-using XPlan.Extensions;
+using XPlan.Utilitys;
 using XPlan.Utility;
 
 namespace XPlan.Displays
@@ -15,7 +15,7 @@ namespace XPlan.Displays
 	// https://docs.unity3d.com/cn/current/Manual/MultiDisplay.html
 	// https://blog.csdn.net/weixin_33912246/article/details/93446238?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-4-93446238-blog-117528525.235^v43^pc_blog_bottom_relevance_base9&spm=1001.2101.3001.4242.3&utm_relevant_index=7
 
-	public class DisplayOrderSort : LogicComponentBase
+	public class DisplayOrderSort : LogicComponent
 	{
 		// Start is called before the first frame update
 		public DisplayOrderSort(string orderFilePath, List<CameraOrderData> cameraList, List<CanvasOrderData> canvasList = null)

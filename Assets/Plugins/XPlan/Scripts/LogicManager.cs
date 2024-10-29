@@ -9,7 +9,7 @@ namespace XPlan
 {
 	public class LogicComponentInfo
 	{
-		public LogicComponentBase logicComp;
+		public LogicComponent logicComp;
 		public SystemBase container;
 		public Type handlerType;
 	}
@@ -22,7 +22,7 @@ namespace XPlan
 		* 初始化
 		* **********************************/
 
-		public void RegisterScope(LogicComponentBase logicComp, SystemBase container)
+		public void RegisterScope(LogicComponent logicComp, SystemBase container)
 		{
 			string key = GetKey(logicComp, container);
 
@@ -33,7 +33,7 @@ namespace XPlan
 				handlerType = logicComp.GetType(),
 			});
 		}
-		public void UnregisterScope(LogicComponentBase logicComp, SystemBase container)
+		public void UnregisterScope(LogicComponent logicComp, SystemBase container)
 		{
 			if(null == logicComp)
 			{
@@ -71,7 +71,7 @@ namespace XPlan
 		{
 			foreach (var kvp in logicDict)
 			{
-				LogicComponentBase handler = kvp.Value.logicComp;
+				LogicComponent handler = kvp.Value.logicComp;
 
 				handler.PostInitial();
 			}
@@ -81,7 +81,7 @@ namespace XPlan
 		{
 			foreach (var kvp in logicDict)
 			{
-				LogicComponentBase handler = kvp.Value.logicComp;
+				LogicComponent handler = kvp.Value.logicComp;
 
 				if (handler is ITickable)
 				{
@@ -92,7 +92,7 @@ namespace XPlan
 			}
 		}
 
-		private string GetKey(LogicComponentBase logicComp, SystemBase container)
+		private string GetKey(LogicComponent logicComp, SystemBase container)
 		{
 			string key1			= logicComp.GetType().ToString();
 			int lastDotIndex1	= key1.LastIndexOf('.'); // 找到最後一個小數點的索引
