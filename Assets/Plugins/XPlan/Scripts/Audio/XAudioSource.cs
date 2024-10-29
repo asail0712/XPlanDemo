@@ -93,8 +93,11 @@ namespace XPlan.Audio
         {
             audioSource.Stop();
 
-            playMBIns.StopCoroutine();
-            playMBIns = null;
+            if(playMBIns != null)
+            { 
+                playMBIns.StopCoroutine();
+                playMBIns = null;
+            }
 
             finishAction?.Invoke();
         }
