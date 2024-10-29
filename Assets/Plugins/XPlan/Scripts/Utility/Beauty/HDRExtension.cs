@@ -15,7 +15,7 @@ using XPlan.Utility;
 // https://blog.51cto.com/stq054188/4537286
 // https://linux.cn/article-9754-1.html
 
-namespace XPlan.Extension.Beauty
+namespace XPlan.Utility.Beauty
 {
 	public static class HDRExtension
 	{

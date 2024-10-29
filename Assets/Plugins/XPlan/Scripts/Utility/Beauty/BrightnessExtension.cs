@@ -20,7 +20,7 @@ using XPlan.Utility;
 // 使用映射表美白
 // https://walkonnet.com/archives/204309
 
-namespace XPlan.Extension.Beauty
+namespace XPlan.Utility.Beauty
 {
     public static class BrightnessExtension
     {

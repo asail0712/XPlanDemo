@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace XPlan.Extension.Beauty
+namespace XPlan.Utility.Beauty
 {
 	public static class BlurExtension
 	{

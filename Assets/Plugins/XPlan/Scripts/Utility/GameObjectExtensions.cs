@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace XPlan.Extensions
+namespace XPlan.Utilitys
 {
     public static class GameObjectExtensions
     {
