@@ -32,7 +32,7 @@ namespace XPlan.UI
 		* *****************************/
 		public void ListenCall(string id, ListenOption option, Action<UIParam[]> paramAction)
 		{
-			UISystem.ListenCall(id, this, option, (paramList) => 
+			UISystem.ListenCall(id, this, option, (paramList) =>
 			{
 				if (bSpawnByLoader &&
 					UIController.IsInstance()
@@ -162,17 +162,17 @@ namespace XPlan.UI
 
 		protected void RegisterToggle(string uniqueID, Toggle toggle, Action<bool> onPress = null)
 		{
-			toggle.onValueChanged.AddListener((bOn)=> 
+			toggle.onValueChanged.AddListener((bOn) =>
 			{
-				UISystem.TriggerCallback<bool>(uniqueID, bOn, onPress);				
+				UISystem.TriggerCallback<bool>(uniqueID, bOn, onPress);
 			});
 		}
 
 		protected void RegisterToggles(string uniqueID, Toggle[] toggleArr, bool bCancelSelf = false, Action<int> onPress = null)
 		{
-			foreach(Toggle toggle in toggleArr)
+			foreach (Toggle toggle in toggleArr)
 			{
-				if(toggle == null)
+				if (toggle == null)
 				{
 					continue;
 				}
@@ -180,10 +180,10 @@ namespace XPlan.UI
 				toggle.onValueChanged.AddListener((bOn) =>
 				{
 					// 只要收取按下的那個label即可
-					if(!bOn)
+					if (!bOn)
 					{
 						// 重複點擊可以自我取消
-						if(bCancelSelf)
+						if (bCancelSelf)
 						{
 							toggle.SetIsOnWithoutNotify(false);
 						}
@@ -201,7 +201,7 @@ namespace XPlan.UI
 		}
 
 		protected void RegisterPointTrigger(string uniqueID, PointEventTriggerHandler pointTrigger,
-												Action<PointerEventData> onPress = null, 
+												Action<PointerEventData> onPress = null,
 												Action<PointerEventData> onPull = null)
 		{
 			pointTrigger.OnPointDown += (val) =>
@@ -262,8 +262,6 @@ namespace XPlan.UI
 		{
 			OnDispose();
 
-			SceneController.UnregisterFadeCallback(sceneIdx, TriggerToFadeOut, IsFadeOutFinish);
-			
 			UISystem.UnlistenAllCall(this);
 			UISystem.UnregisterAllCallback(this);
 		}
@@ -277,47 +275,27 @@ namespace XPlan.UI
 		 * 初始化
 		 * *****************************/
 
-		private int sortIdx		= -1;
-		private int sceneIdx	= -1;
+		private int sortIdx = -1;
 
 		protected virtual void OnInitialUI()
 		{
 			// for overrdie
 		}
 
-		public void InitialUI(int idx, int sceneIdx)
+		public void InitialUI(int idx)
 		{
-			this.sortIdx		= idx;
-			this.sceneIdx		= sceneIdx;
-
-			SceneController.RegisterFadeCallback(sceneIdx, TriggerToFadeOut, IsFadeOutFinish);
+			this.sortIdx = idx;
 
 			OnInitialUI();
 		}
 		public int SortIdx { get => sortIdx; set => sortIdx = value; }
-
-		/***************************************
-		* 場景切換等待UI流程
-		* *************************************/
-		private void TriggerToFadeOut()
+		
+		/********************************
+		 * 其他
+		 * *****************************/
+		public string GetStr(string keyStr, bool bShowWarning = false)
 		{
-			OnTriggerToFadeOut();
-		}
-
-		protected virtual void OnTriggerToFadeOut()
-		{
-			// for override
-		}
-
-		public bool IsFadeOutFinish()
-		{
-			return OnIsFadeOutFinish();
-		}
-
-		protected virtual bool OnIsFadeOutFinish()
-		{
-			// for override
-			return true;
+			return UIController.Instance.GetStr(keyStr, bShowWarning);
 		}
 	}
 }

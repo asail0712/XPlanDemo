@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 using XPlan.DebugMode;
-using XPlan.Extensions;
+using XPlan.Utilitys;
 using XPlan.Utility;
 
 namespace XPlan.Scenes
@@ -26,15 +26,11 @@ namespace XPlan.Scenes
 	{
 		public int sceneIdx;
 		public int level;
-		public List<Action> triggerToFadeOutList;
-		public List<Func<bool>> isFadeOutFinishList;
 
 		public SceneInfo(int s, int l)
 		{
 			sceneIdx				= s;
 			level					= l;
-			triggerToFadeOutList	= new List<Action>();
-			isFadeOutFinishList		= new List<Func<bool>>();
 		}
 	}
 
@@ -87,7 +83,6 @@ namespace XPlan.Scenes
 
 		private List<ChangeInfo> changeQueue			= new List<ChangeInfo>();
 
-		private Coroutine unloadRoutine					= null;
 		private Coroutine loadRoutine					= null;
 		private int loadingSceneIdx						= -1;
 
@@ -181,6 +176,8 @@ namespace XPlan.Scenes
 		{
 			if (!CanLoad(buildIndex))
 			{
+				Debug.LogWarning($"{buildIndex} 此場景無法載入");
+
 				return false;
 			}
 
@@ -237,7 +234,7 @@ namespace XPlan.Scenes
 
 		public void ChangeSceneProcess(float deltaTime)
 		{
-			if(changeQueue.Count == 0 || unloadRoutine != null || loadRoutine != null)
+			if(changeQueue.Count == 0 || loadRoutine != null)
 			{
 				return;
 			}
@@ -257,14 +254,14 @@ namespace XPlan.Scenes
 			else if(info is UnloadInfo)
 			{
 				Debug.Log($"卸載關卡 {info.sceneIdx}");
-				unloadRoutine = StartCoroutine(WaitAllFadeOut(UnloadScene_Internal, info.sceneIdx, false));
+				UnloadScene_Internal(info.sceneIdx);
 
 				currSceneStack.Remove(info.sceneIdx);
 			}
 			else if (info is UnloadInfoImmediately)
 			{
 				Debug.Log($"立刻卸載關卡 {info.sceneIdx}");
-				unloadRoutine = StartCoroutine(WaitAllFadeOut(UnloadScene_Internal, info.sceneIdx, true));
+				UnloadScene_Internal(info.sceneIdx);
 
 				currSceneStack.Remove(info.sceneIdx);
 			}
@@ -329,37 +326,6 @@ namespace XPlan.Scenes
 			SceneManager.UnloadSceneAsync(sceneIdx);			
 		}
 
-		/************************************
-		* UI Fade in/out流程處理
-		* **********************************/
-		static public void RegisterFadeCallback(int sceneIdx, Action FadeOutFunc, Func<bool> retFunc)
-		{
-			int idx = sceneInfoList.FindIndex((X) =>
-			{
-				return X.sceneIdx == sceneIdx;
-			});
-
-			if(idx != -1)
-			{
-				sceneInfoList[idx].triggerToFadeOutList.Add(FadeOutFunc);
-				sceneInfoList[idx].isFadeOutFinishList.Add(retFunc);
-			}
-		}
-
-		static public void UnregisterFadeCallback(int sceneIdx, Action func, Func<bool> retFunc)
-		{
-			int idx = sceneInfoList.FindIndex((X) =>
-			{
-				return X.sceneIdx == sceneIdx;
-			});
-
-			if (idx != -1)
-			{
-				sceneInfoList[idx].triggerToFadeOutList.Remove(func);
-				sceneInfoList[idx].isFadeOutFinishList.Remove(retFunc);
-			}
-		}
-
 		private IEnumerator WaitLoadingScene(AsyncOperation asyncOperation, int sceneIdx, bool bActiveScene, Action finishAction)
 		{
 			loadingSceneIdx = sceneIdx;
@@ -367,7 +333,7 @@ namespace XPlan.Scenes
 			while (!asyncOperation.isDone)
 			{
 				float progress = Mathf.Clamp01(asyncOperation.progress / 0.9f); // 0.9 是載入完成的標誌
-				Debug.Log("關卡載入進度: " + (progress * 100) + "%");
+				//Debug.Log("關卡載入進度: " + (progress * 100) + "%");
 				yield return null;
 			}
 
@@ -380,48 +346,6 @@ namespace XPlan.Scenes
 			finishAction?.Invoke();
 
 			loadRoutine = null;
-		}
-
-		private IEnumerator WaitAllFadeOut(Action<int> ReallyUnload, int sceneIdx, bool bImmediately)
-		{
-			if (!bImmediately)
-			{
-				List<Func<bool>> isFadeOutCallback		= GetIsFadeOutCallback(sceneIdx);
-				List<Action> triggerToFadeOutCallback	= GetTriggerToFadeOutCallback(sceneIdx);
-
-				int numOfCallbacks = triggerToFadeOutCallback == null ? 0 : triggerToFadeOutCallback.Count;
-				int numOfCompleted = 0;
-
-				foreach (Action callback in triggerToFadeOutCallback)
-				{
-					callback?.Invoke();
-				}
-
-				while (numOfCompleted < numOfCallbacks)
-				{
-					numOfCompleted = 0;
-
-					foreach (Func<bool> UnloadResult in isFadeOutCallback)
-					{
-						// 判斷fade out 表演是否結束
-
-						if (UnloadResult == null)
-						{
-							++numOfCompleted;
-						}
-						else if (UnloadResult.Invoke())
-						{
-							++numOfCompleted;
-						}
-					}
-
-					yield return null;
-				}
-			}
-
-			ReallyUnload(sceneIdx);
-
-			unloadRoutine = null;
 		}
 
 		/************************************
@@ -485,36 +409,6 @@ namespace XPlan.Scenes
 			}
 
 			return sceneInfoList[idx].level;
-		}
-
-		private List<Action> GetTriggerToFadeOutCallback(int sceneIdx)
-		{
-			int idx = sceneInfoList.FindIndex((X) =>
-			{
-				return X.sceneIdx == sceneIdx;
-			});
-
-			if (idx == -1)
-			{
-				return null;
-			}
-
-			return sceneInfoList[idx].triggerToFadeOutList;
-		}
-
-		private List<Func<bool>> GetIsFadeOutCallback(int sceneIdx)
-		{
-			int idx = sceneInfoList.FindIndex((X) =>
-			{
-				return X.sceneIdx == sceneIdx;
-			});
-
-			if (idx == -1)
-			{
-				return null;
-			}
-
-			return sceneInfoList[idx].isFadeOutFinishList;
 		}
 
 		public int GetCurrSceneIdx()
