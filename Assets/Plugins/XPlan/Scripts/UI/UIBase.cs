@@ -25,7 +25,7 @@ namespace XPlan.UI
 	public class UIBase : MonoBehaviour, IUIListener
 	{
 		// 判斷是否由UILoader仔入
-		public bool bSpawnByLoader = false;
+		private bool bSpawnByLoader = false;
 
 		/********************************
 		* Listen Handler Call
@@ -284,7 +284,8 @@ namespace XPlan.UI
 
 		public void InitialUI(int idx)
 		{
-			this.sortIdx = idx;
+			this.sortIdx		= idx;
+			this.bSpawnByLoader = true;
 
 			OnInitialUI();
 		}

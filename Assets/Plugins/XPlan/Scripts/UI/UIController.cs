@@ -72,27 +72,23 @@ namespace XPlan.UI
 			// 添加新UI的處理
 			foreach (UILoadingInfo loadingInfo in loadingList)
 			{
+				/********************************
+				 * 確認 perfab
+				 * *****************************/
 				GameObject uiPerfab = loadingInfo.uiPerfab;
 
 				if (uiPerfab == null)
 				{
-					LogSystem.Record("Loading Info is null !", LogType.Warning);
+					LogSystem.Record("Loading Info is null !", LogType.Error);
 
 					continue;
 				}
 
-				UIBase uiBase = uiPerfab.GetComponent<UIBase>();
-
-				if (uiBase != null)
-				{
-					uiBase.bSpawnByLoader = true;
-				}
-				else 
-				{
-					LogSystem.Record("uiBase is null !", LogType.Warning);
-				}
-
-				int idx = currVisibleList.FindIndex((X) =>
+				/********************************
+				 * 判斷該UI是否已經在畫面上
+				 * *****************************/
+				GameObject uiIns	= null;
+				int idx				= currVisibleList.FindIndex((X) =>
 				{
 					return X.uiName == uiPerfab.name && X.rootIdx == loadingInfo.rootIdx;
 				});
@@ -108,13 +104,20 @@ namespace XPlan.UI
 					}
 
 					// 生成UI
-					GameObject uiIns = GameObject.Instantiate(loadingInfo.uiPerfab, uiRootList[loadingInfo.rootIdx].transform);
+					uiIns = GameObject.Instantiate(loadingInfo.uiPerfab, uiRootList[loadingInfo.rootIdx].transform);
 
 					// 加上文字
 					stringTable.InitialUIText(uiIns);
 
 					// 初始化所有的 ui base
 					UIBase[] newUIList = uiIns.GetComponents<UIBase>();
+
+					if (newUIList == null || newUIList.Length == 9)
+					{
+						LogSystem.Record("uiBase is null !", LogType.Error);
+
+						continue;
+					}
 
 					foreach (UIBase newUI in newUIList)
 					{
@@ -136,17 +139,28 @@ namespace XPlan.UI
 				{
 					UIVisibleInfo vInfo = currVisibleList[idx];
 					++vInfo.referCount;
-
-					UIBase[] newUIList = vInfo.uiIns.GetComponents<UIBase>();
+					uiIns				= vInfo.uiIns;
+					UIBase[] newUIList	= uiIns.GetComponents<UIBase>();
 
 					foreach (UIBase newUI in newUIList)
 					{
 						newUI.SortIdx = loadingInfo.sortIdx;
 					}
 				}
+
+				/********************************
+				 * 設定UI Visible
+				 * *****************************/
+				if(uiIns != null)
+				{
+					uiIns.SetActive(loadingInfo.bVisible);
+				}
 			}
 
-			if(bNeedToDestroyOtherUI)
+			/********************************
+			 * 判斷是否有UI需要移除
+			 * *****************************/
+			if (bNeedToDestroyOtherUI)
 			{
 				for (int i = 0; i < currVisibleList.Count; ++i)
 				{
@@ -176,6 +190,9 @@ namespace XPlan.UI
 				}
 			}
 
+			/********************************
+			 * 將剩下的UI依照順序排列
+			 * *****************************/
 			List<UIVisibleInfo> sortUIList = new List<UIVisibleInfo>();
 			sortUIList.AddRange(currVisibleList);
 			sortUIList.AddRange(persistentUIList);
