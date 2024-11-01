@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,42 +12,34 @@ namespace XPlan.Audio
     public class XAudioSource : IPoolable
     {
         private AudioSource audioSource;
-        private MonoBehaviourHelper.MonoBehavourInstance playMBIns;
+        private MonoBehaviourHelper.MonoBehavourInstance playCoroutine;
+        private MonoBehaviourHelper.MonoBehavourInstance fadeInCoroutine;
+        private MonoBehaviourHelper.MonoBehavourInstance stopCoroutine;
         private Action finishAction;
+        private SoundInfo _soundInfo;
 
-        public bool loop 
-        { 
-            get 
-            { 
-                return audioSource.loop; 
-            }
-            set 
-            { 
-                audioSource.loop = value; 
-            }
-        }
-        public AudioClip clip
+        public SoundInfo soundInfo
         {
             get
             {
-                return audioSource.clip;
+                return _soundInfo;
             }
             set
             {
-                audioSource.clip = value;
+                _soundInfo = value;
             }
         }
         public float volume
         {
-            get
-            {
-                return audioSource.volume;
-            }
-            set
-            {
-                audioSource.volume = value;
-            }
-        }
+			get
+			{
+				return audioSource.volume;
+			}
+			set
+			{
+				audioSource.volume = value;
+			}
+		}
 
         public void InitialSource()
 		{
@@ -64,39 +56,144 @@ namespace XPlan.Audio
             GameObject.DestroyImmediate(audioSource);
         }
 
-        public void Play(Action finishAction = null)
+        public void Play(float fadeInTime, Action<string> finishAction = null)
 		{
-            if(playMBIns != null)
+            // 有在撥放聲音的話得先停下來
+            if (playCoroutine != null)
+            {
+                MonoBehaviourHelper.StartCoroutine(FadeInOut(fadeInTime, finishAction));
+            }
+            else
 			{
-                playMBIns.StopCoroutine();
-                playMBIns = null;
+                playCoroutine = MonoBehaviourHelper.StartCoroutine(Play_Internal(fadeInTime, finishAction));
+            }
+        }
 
-                finishAction?.Invoke();
+        private IEnumerator FadeInOut(float fadeInTime, Action<string> finishAction = null)
+		{
+            if (stopCoroutine == null)
+			{
+                stopCoroutine = MonoBehaviourHelper.StartCoroutine(Stop_Internal(fadeInTime / 2f));
             }
 
-            this.finishAction   = finishAction;
-            this.playMBIns      = MonoBehaviourHelper.StartCoroutine(Play_Internal());
+            yield return new WaitUntil(() => playCoroutine == null);
 
-            audioSource.Play();
+            playCoroutine = MonoBehaviourHelper.StartCoroutine(Play_Internal(fadeInTime / 2f, finishAction));
         }
 
-        private IEnumerator Play_Internal()
+        private IEnumerator Play_Internal(float fadeInTime, Action<string> finishAction = null)
 		{
-            // ���ְ��� �I�sfinishAction
-            yield return new WaitForEndOfFrame();
-            yield return new WaitUntil(() => !audioSource.isPlaying);
+            if(soundInfo.clipList == null || soundInfo.clipList.Count == 0)
+			{
+                yield break;
+			}
 
-            finishAction?.Invoke();
+            yield return new WaitForEndOfFrame();
+
+            int playIndex   = 0;
+
+            // 設定fade in
+            fadeInCoroutine = MonoBehaviourHelper.StartCoroutine(FadeIn(fadeInTime / 2f));
+
+            while (playIndex < soundInfo.clipList.Count)
+            {
+                // 設定SoundInfo資料
+                audioSource.clip = soundInfo.clipList[playIndex];
+                audioSource.loop = false;
+                audioSource.Play();
+
+                // 音樂停止 呼叫finishAction
+                yield return new WaitUntil(() => !audioSource.isPlaying);
+
+                ++playIndex;
+
+                if (soundInfo.bLoop)
+				{
+                    playIndex %= soundInfo.clipList.Count;
+                }
+            }
+
+            finishAction?.Invoke(soundInfo.clipName);
         }
 
-        public void Stop()
+        private IEnumerator FadeIn(float fadeInTime)
+		{
+            // fade in 設定
+            if (fadeInTime == 0f)
+            {
+                audioSource.volume = soundInfo.volume;
+            }
+            else
+            {
+                float targetVolume  = soundInfo.volume;
+                float startTime     = Time.time;
+
+                while (Time.time < startTime + fadeInTime)
+                {
+                    yield return null;
+                    audioSource.volume = Mathf.Lerp(0f, targetVolume, (Time.time - startTime) / fadeInTime);
+                }
+
+                audioSource.volume = targetVolume;
+            }
+        }
+
+        public void Stop(float fadeOutTime)
+        {
+            // 確定是否再撥放
+            if (!IsPlaying())
+            {
+                return;
+            }
+
+            // 確認是否在停止中
+            if (stopCoroutine != null)
+			{
+                return;
+			}
+
+            if (fadeOutTime > 0f)
+            {
+                stopCoroutine = MonoBehaviourHelper.StartCoroutine(Stop_Internal(fadeOutTime));
+            }
+            else
+			{
+                StopImmediately();
+            }
+        }
+
+        private IEnumerator Stop_Internal(float fadeOutTime)
+		{
+            float startVolume   = audioSource.volume;
+            float startTime     = Time.time;
+
+            while (Time.time < startTime + fadeOutTime)
+            {
+                audioSource.volume = Mathf.Lerp(startVolume, 0f, (Time.time - startTime) / fadeOutTime);
+                yield return null;
+            }
+
+            audioSource.volume = 0f;
+            
+            StopImmediately();
+
+            stopCoroutine = null;
+        }
+
+        private void StopImmediately()
         {
             audioSource.Stop();
 
-            if(playMBIns != null)
-            { 
-                playMBIns.StopCoroutine();
-                playMBIns = null;
+            if(playCoroutine != null)
+            {
+                playCoroutine.StopCoroutine();
+                playCoroutine = null;
+            }
+
+            if (fadeInCoroutine != null)
+            {
+                fadeInCoroutine.StopCoroutine();
+                fadeInCoroutine = null;
             }
 
             finishAction?.Invoke();
@@ -112,14 +209,13 @@ namespace XPlan.Audio
             audioSource.Pause();
         }
 
-        public void UnPause()
+        public void Resume()
         {
             audioSource.UnPause();
         }
 
-
         /***************************************
-         * ��@IPoolable
+         * 實作IPoolable
          * ************************************/
 
         public void InitialPoolable()

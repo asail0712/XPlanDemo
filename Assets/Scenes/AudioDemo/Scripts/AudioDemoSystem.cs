@@ -30,7 +30,7 @@ namespace XPlan.Demo.Audio
 
                 infoList.Add($"Play Sound VFX1 in {channel.ToString()}!");
 
-                AudioSystem.Instance.PlaySound("VFX1", (clipName) => 
+                AudioSystem.Instance.PlaySound("VFX1", 1f, 0f, (clipName) => 
                 {
                     infoList.Add("Sound VFX1 finish!");
                 });
@@ -40,7 +40,7 @@ namespace XPlan.Demo.Audio
             {
                 infoList.Add("Play Sound VFX1 Without Channel!");
 
-                AudioSystem.Instance.PlayWithoutChannel("VFX1", (clipName) =>
+                AudioSystem.Instance.PlayWithoutChannel("VFX1", 1f, 0f, (clipName) =>
                 {
                     infoList.Add("Sound VFX1 finish!");
                 });
@@ -52,7 +52,7 @@ namespace XPlan.Demo.Audio
 
                 infoList.Add($"Play Sound VFX2 in {channel.ToString()}!");
 
-                AudioSystem.Instance.PlaySound("VFX2", (clipName) =>
+                AudioSystem.Instance.PlaySound("VFX2", 1f, 0f, (clipName) =>
                 {
                     infoList.Add("Sound VFX2 finish!");
                 });
