@@ -12,21 +12,21 @@ namespace XPlan.Utility
         public static MonoBehavourInstance StartCoroutine(IEnumerator routine, bool persistent = false)
         {
             MonoBehavourInstance MonoHelper = new GameObject("Coroutine => " + routine.ToString()).AddComponent<MonoBehavourInstance>();
-            Scene moveToScene;
+            Scene targetScene;
 
             if(SceneController.IsInstance())
 			{
-                moveToScene = SceneController.Instance.gameObject.scene;
+                targetScene = SceneController.Instance.gameObject.scene;
             }
             else
 			{
                 // 預設0是MainScene
-                moveToScene = SceneManager.GetSceneByBuildIndex(0);
+                targetScene = SceneManager.GetSceneByBuildIndex(0);
             }
 
-            if(moveToScene.buildIndex !=-1)
+            if(targetScene.isLoaded)
 			{
-                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, moveToScene);
+                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, targetScene);
             }
             
             MonoHelper.DestroyWhenComplete(routine, persistent);
@@ -45,21 +45,21 @@ namespace XPlan.Utility
             IEnumerator routine             = Func?.Invoke();
             MonoBehavourInstance MonoHelper = new GameObject("Coroutine- " + funcName).AddComponent<MonoBehavourInstance>();
 
-            Scene moveToScene;
+            Scene targetScene;
 
             if (SceneController.IsInstance())
             {
-                moveToScene = SceneController.Instance.gameObject.scene;
+                targetScene = SceneController.Instance.gameObject.scene;
             }
             else
             {
                 // 預設0是MainScene
-                moveToScene = SceneManager.GetSceneByBuildIndex(0);
+                targetScene = SceneManager.GetSceneByBuildIndex(0);
             }
 
-            if (moveToScene.buildIndex != -1)
+            if (targetScene.isLoaded)
             {
-                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, moveToScene);
+                SceneManager.MoveGameObjectToScene(MonoHelper.gameObject, targetScene);
             }
 
             MonoHelper.DestroyWhenComplete(routine, persistent);
