@@ -67,7 +67,6 @@ namespace XPlan.UI.Template
     {
 		[SerializeField] public Button confirmBtn;
 		[SerializeField] public Button cancelBtn;
-		[SerializeField] public GameObject uiRoot;
 		[SerializeField] public Text showStrTxt;
 		[SerializeField] public Text confirmTxt;
 		[SerializeField] public Text cancelTxt;
@@ -79,13 +78,13 @@ namespace XPlan.UI.Template
 			RegisterButton("", confirmBtn, () =>
 			{
 				clickAction?.Invoke(DialogResult.Confirm);
-				uiRoot.SetActive(false);
+				gameObject.SetActive(false);
 			});
 
 			RegisterButton("", cancelBtn, () =>
 			{
 				clickAction?.Invoke(DialogResult.Cancal);
-				uiRoot.SetActive(false);
+				gameObject.SetActive(false);
 			});
 
 			ListenCall<ShowDialogue>(DialogMessage.ConfirmMessage, (info)=> 
@@ -96,8 +95,6 @@ namespace XPlan.UI.Template
 				clickAction		= info.clickAction;
 
 				cancelBtn.gameObject.SetActive(info.dialogType == DialogType.DualButton);
-
-				uiRoot.SetActive(true);
 			});
 		}
 	}

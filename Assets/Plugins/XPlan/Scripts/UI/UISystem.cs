@@ -274,6 +274,9 @@ namespace XPlan.UI
 				}
 			}
 
+			/*******************************
+			 * 生成param
+			 ******************************/
 			List<UIParam> paramList = new List<UIParam>();
 
 			for (int i = 0; i < paramArr.Length; ++i)
@@ -294,6 +297,9 @@ namespace XPlan.UI
 					continue;
 				}
 
+				// 執行命令的UI，一定要設定為enable
+				actionInfo.ui.gameObject.SetActive(true);
+				// 執行命令
 				actionInfo.callingAction?.Invoke(paramArr);
 			}
 		}

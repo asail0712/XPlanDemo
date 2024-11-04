@@ -106,6 +106,9 @@ namespace XPlan.UI
 					// 生成UI
 					uiIns = GameObject.Instantiate(loadingInfo.uiPerfab, uiRootList[loadingInfo.rootIdx].transform);
 
+					// 強制enable 去觸發 Awake，來註冊Command
+					uiIns.SetActive(true);
+
 					// 加上文字
 					stringTable.InitialUIText(uiIns);
 
