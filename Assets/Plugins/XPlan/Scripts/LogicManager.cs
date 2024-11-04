@@ -10,30 +10,38 @@ namespace XPlan
 	public class LogicComponentInfo
 	{
 		public LogicComponent logicComp;
-		public SystemBase container;
-		public Type handlerType;
+		public Type logicType;
 	}
 
 	public class LogicManager
 	{
-        private Dictionary<string, LogicComponentInfo> logicDict	= new Dictionary<string, LogicComponentInfo>();
+        private Dictionary<Type, LogicComponentInfo> logicDict = new Dictionary<Type, LogicComponentInfo>();
 
 		/************************************
 		* 初始化
 		* **********************************/
 
-		public void RegisterScope(LogicComponent logicComp, SystemBase container)
+		public void RegisterScope(LogicComponent logicComp)
 		{
-			string key = GetKey(logicComp, container);
+			Type logicType = logicComp.GetType();
 
-			logicDict.Add(key, new LogicComponentInfo() 
+			logicDict.Add(logicType, new LogicComponentInfo() 
 			{
 				logicComp	= logicComp,
-				container	= container,
-				handlerType = logicComp.GetType(),
+				logicType	= logicComp.GetType(),
 			});
+
+			if(logicComp is LogicSwitcher)
+			{
+				LogicSwitcher logicSwitcher = logicComp as LogicSwitcher;
+
+				if(logicSwitcher != null)
+				{
+					logicSwitcher.switchLogicAction = SwitchLogic;
+				}
+			}
 		}
-		public void UnregisterScope(LogicComponent logicComp, SystemBase container)
+		public void UnregisterScope(LogicComponent logicComp)
 		{
 			if(null == logicComp)
 			{
@@ -41,24 +49,19 @@ namespace XPlan
 			}
 
 			logicComp.Dispose(false);
-
-			string key = GetKey(logicComp, container);
-
-			logicDict.Remove(key);
+			
+			logicDict.Remove(logicComp.GetType());
 		}
 
-		public void UnregisterScope(SystemBase container, bool bAppQuit)
+		public void UnregisterScope(bool bAppQuit)
 		{
-			List<string> disposeList = new List<string>();
+			List<Type> disposeList = new List<Type>();
 
 			foreach (var kvp in logicDict)
 			{
-				if(kvp.Value.container == container)
-				{
-					kvp.Value.logicComp.Dispose(bAppQuit);
+				kvp.Value.logicComp.Dispose(bAppQuit);
 
-					disposeList.Add(kvp.Key);
-				}				
+				disposeList.Add(kvp.Key);
 			}
 
 			disposeList.ForEach((key) => 
@@ -71,9 +74,9 @@ namespace XPlan
 		{
 			foreach (var kvp in logicDict)
 			{
-				LogicComponent handler = kvp.Value.logicComp;
+				LogicComponent logicComp = kvp.Value.logicComp;
 
-				handler.PostInitial();
+				logicComp.PostInitial();
 			}
 		}
 
@@ -81,36 +84,28 @@ namespace XPlan
 		{
 			foreach (var kvp in logicDict)
 			{
-				LogicComponent handler = kvp.Value.logicComp;
+				LogicComponent logicComp = kvp.Value.logicComp;
 
-				if (handler is ITickable)
+				if (logicComp is ITickable && logicComp.IsEnabled())
 				{
-					ITickable tickable = (ITickable)handler;
+					ITickable tickable = (ITickable)logicComp;
 
 					tickable.Tick(deltaTime);
 				}
 			}
 		}
 
-		private string GetKey(LogicComponent logicComp, SystemBase container)
+		/************************************
+		* 其他
+		* **********************************/
+		private void SwitchLogic(Type type, bool bEnabled)
 		{
-			string key1			= logicComp.GetType().ToString();
-			int lastDotIndex1	= key1.LastIndexOf('.'); // 找到最後一個小數點的索引
-
-			if(lastDotIndex1 != -1)
+			if(!logicDict.ContainsKey(type))
 			{
-				key1 = key1.Substring(lastDotIndex1 + 1);
+				return;
 			}
 
-			string key2			= container.GetType().ToString();
-			int lastDotIndex2	= key2.LastIndexOf('.'); // 找到最後一個小數點的索引
-
-			if (lastDotIndex2 != -1)
-			{
-				key2 = key2.Substring(lastDotIndex2 + 1);
-			}
-
-			return key1 + "_" + key2;
+			logicDict[type].logicComp.SwitchLogic(bEnabled);
 		}
 	}
 }

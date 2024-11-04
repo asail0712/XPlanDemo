@@ -15,7 +15,8 @@ namespace XPlan
 	public class LogicComponent : IUIListener, INotifyReceiver
 	{
 		private Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance> coroutineDict;
-		private static int corourintSerialNum = 0;
+		private static int corourintSerialNum	= 0;
+		private bool bEnabled					= true;
 
 		/*************************
 		 * 實作 INotifyReceiver
@@ -84,6 +85,11 @@ namespace XPlan
 		 * ***********************/
 		protected void RegisterNotify<T>(Action<T> notifyAction) where T : MessageBase
 		{
+			if (!bEnabled)
+			{
+				return;
+			}
+
 			INotifyReceiver notifyReceiver = this as INotifyReceiver;
 
 			if(notifyReceiver == null)
@@ -102,6 +108,11 @@ namespace XPlan
 
 		protected void RegisterNotify<T>(ReceiveOption option, Action<T> notifyAction) where T : MessageBase
 		{
+			if (!bEnabled)
+			{
+				return;
+			}
+
 			INotifyReceiver notifyReceiver = this as INotifyReceiver;
 
 			if (notifyReceiver == null)
@@ -211,6 +222,11 @@ namespace XPlan
 
 		protected void AddUIListener<T>(string uniqueID, Action<T> callback)
 		{
+			if(!bEnabled)
+			{
+				return;
+			}
+
 			UISystem.RegisterCallback(uniqueID, this, (param)=> 
 			{
 				callback?.Invoke(param.GetValue<T>());
@@ -219,6 +235,11 @@ namespace XPlan
 
 		protected void AddUIListener(string uniqueID, Action callback)
 		{
+			if (!bEnabled)
+			{
+				return;
+			}
+
 			UISystem.RegisterCallback(uniqueID, this, (dump) =>
 			{
 				callback?.Invoke();
@@ -285,6 +306,23 @@ namespace XPlan
 			// for override
 		}
 
+		/*************************
+		 * Enabled相關
+		 * ***********************/
+		public void SwitchLogic(bool bEnabled)
+		{
+			this.bEnabled = bEnabled;
+
+			if(!bEnabled)
+			{
+				coroutineDict.Clear();
+			}
+		}
+
+		public bool IsEnabled()
+		{
+			return bEnabled;
+		}
 	}
 }
 
