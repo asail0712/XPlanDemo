@@ -1,7 +1,8 @@
 # 1.簡介
-為加快專案開發速度並減少維護成本，設計出用於Unity的程式開發框架。著重在降低代碼耦合度與提高模組的覆用性，並將開發的重點放在邏輯的撰寫，而不是引用的傳遞與管理。
+一個改良EDA架構的Unity中小型專案快速開發框架，協助開發者不需精通設計模式也給予代碼足夠的靈活性與擴展度。
+### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 1.8.10
+- Version 2.0.0
 # 3.安裝指南
 ### 系統要求
 - Unity 2022.3.33f1 或更高版本
