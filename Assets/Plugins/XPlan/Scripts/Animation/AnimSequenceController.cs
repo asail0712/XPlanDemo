@@ -24,11 +24,11 @@ namespace XPlan.Anim
         }
     }
 
-    public class XAnimEndMsg : MessageBase
+    public class XAnimSegmentMsg : MessageBase
     {
         public int animIdx;
 
-        public XAnimEndMsg(int animIdx)
+        public XAnimSegmentMsg(int animIdx)
         {
             this.animIdx = animIdx;
         }
@@ -292,7 +292,7 @@ namespace XPlan.Anim
         [SerializeField] private bool bIsLoop = false;
 
         public Action<int, float, bool> onProgressAction;
-        public Action<int> onEndAction;
+        public Action finishAction;
 
         private List<AnimUnit> animUnitList;
         private Coroutine progressCoroutine;
@@ -560,6 +560,19 @@ namespace XPlan.Anim
             return currRatio;
         }
 
+        public float GetTimeRatioBySegment(int segment)
+		{
+            if(segment + 1 > animUnitList.Count)
+			{
+                return 1f;
+			}
+
+            float segmentTime   = GetAnimStartTime(segment + 1);
+            float totalTime     = GetTotalTime();
+
+            return segmentTime / totalTime;
+        }
+
         public void PauseAnimByTime(float playTime)
 		{
             PauseAnim(playTime / GetTotalTime());
@@ -655,12 +668,12 @@ namespace XPlan.Anim
                 else
 				{
                     prevAnimUnit.PauseAnim(0.99f); // 直接設定duration會把影片重置，所以要故意小一點                    
+
+                    finishAction?.Invoke();
                 }
             }
 
-            onEndAction?.Invoke(animIdx);
-
-            XAnimEndMsg msg = new XAnimEndMsg(animIdx);
+            XAnimSegmentMsg msg = new XAnimSegmentMsg(animIdx);
             msg.Send();
         }
 
