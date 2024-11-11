@@ -12,45 +12,49 @@ using XPlan.Utility;
 
 namespace XPlan.Net
 {
-    public class WebSocket
+    public class WebSocket: IConnectHandler, IEventHandler, ISendHandler
     {
         private ClientWebSocket ws      = null;
         private Uri uri                 = null;
-        private bool bIsUserClose       = false;//是否最后由用户手动关闭
+        private List<byte> bs           = null;
+        private byte[] buffer           = null;
+        private bool bIsUserClose       = false; // 判斷是否為使用者主動關閉
 
         private bool bTriggerOpen       = false;
         private bool bTriggerClose      = false;
         private Exception errorEx       = null;
         private Queue<string> msgQueue  = null;
-        private List<byte> bs           = null;
-        private byte[] buffer           = null;
+        private bool bInterruptConnect  = false;
 
         private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
-        
+        private IEventHandler eventHandler;
+
         public WebSocketState? State { get => ws?.State; }
         public Uri Url { get => uri; }
 
-        public delegate void MessageEventHandler(object sender, string data);
-        public delegate void ErrorEventHandler(object sender, Exception ex);
-
-        public event EventHandler OnOpen;
-        public event MessageEventHandler OnMessage;
-        public event ErrorEventHandler OnError;
-        public event EventHandler OnClose;
-
-        public WebSocket(string wsUrl)
+        public WebSocket(string wsUrl, IEventHandler handler)
         {
             // 初始化
-            uri         = new Uri(wsUrl);
-            msgQueue    = new Queue<string>();
-
-            // 緩衝區
-            bs          = new List<byte>();
-            buffer      = new byte[1024 * 4];
+            uri             = new Uri(wsUrl);
+            eventHandler    = handler;
         }
 
+        /***********************************
+         * 實作IConnectHandler
+         * ********************************/
         public void Connect()
         {
+            msgQueue        = new Queue<string>();
+
+            // 緩衝區
+            bs              = new List<byte>();
+            buffer          = new byte[1024 * 4];
+
+            if(callbackRoutine != null)
+			{
+                callbackRoutine.StopCoroutine();
+            }
+
             callbackRoutine = MonoBehaviourHelper.StartCoroutine(Tick());
 
             Task.Run(async () =>
@@ -77,12 +81,20 @@ namespace XPlan.Net
                     await ws.ConnectAsync(uri, CancellationToken.None);
 
                     // 等連線完成後觸發Connect
-                    bTriggerOpen = true;
+                    bTriggerOpen        = true;
+                    bInterruptConnect   = false;
 
                     WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);//监听Socket信息
                     
                     while (!result.CloseStatus.HasValue)
                     {
+                        if (bInterruptConnect)
+                        {
+                            bInterruptConnect = false;
+
+                            throw new Exception("強制觸發例外導致連線中斷");
+                        }
+
                         if (result.MessageType == WebSocketMessageType.Text)
                         {
                             bs.AddRange(buffer.Take(result.Count));
@@ -129,6 +141,20 @@ namespace XPlan.Net
             });
         }
 
+        public void Reconnect()
+		{
+            bInterruptConnect = true;
+        }
+
+        public void CloseConnect()
+        {
+            bIsUserClose = true;
+            Close(WebSocketCloseStatus.NormalClosure, "用户主動關閉");
+        }
+
+        /***********************************
+         * 實作ISendHandler
+         * ********************************/
         public bool Send(string mess)
         {
             if (ws.State != WebSocketState.Open)
@@ -166,13 +192,7 @@ namespace XPlan.Net
             return true;
         }
 
-        public void Close()
-        {
-            bIsUserClose = true;
-            Close(WebSocketCloseStatus.NormalClosure, "用户主動關閉");
-        }
-
-        public void Close(WebSocketCloseStatus closeStatus, string statusDescription)
+        private void Close(WebSocketCloseStatus closeStatus, string statusDescription)
         {
             Task.Run(async () =>
             {
@@ -185,7 +205,7 @@ namespace XPlan.Net
                     }
                     catch (Exception ex)
                     {
-                        errorEx = ex;
+                        LogSystem.Record(ex.Message, LogType.Assert);
                     }
                 }
 
@@ -196,9 +216,6 @@ namespace XPlan.Net
             });
         }
 
-        /****************************
-         * 實作ITickable
-         * *************************/
         private IEnumerator Tick()
         {
             // 為了讓call back 都由主執行序觸發
@@ -212,19 +229,13 @@ namespace XPlan.Net
                 {
                     bTriggerOpen = false;
 
-                    if (OnOpen != null)
-                    {
-                        OnOpen(this, new EventArgs());
-                    }
+                    Open(this);
                 }
 
                 if (errorEx != null)
                 {
-                    if (OnError != null)
-                    {
-                        OnError(this, errorEx);
-                    }
-
+                    Error(this, errorEx.Message);
+                 
                     errorEx = null;
                 }
 
@@ -232,10 +243,7 @@ namespace XPlan.Net
                 {
                     bTriggerClose = false;
 
-                    if (OnClose != null)
-                    {
-                        OnClose(this, new EventArgs());
-                    }
+                    Close(this);
 
                     if (callbackRoutine != null)
                     {
@@ -246,12 +254,32 @@ namespace XPlan.Net
 
 				while (msgQueue != null && msgQueue.Count > 0)
 				{
-					if (OnMessage != null)
-					{
-						OnMessage(this, msgQueue.Dequeue());
-					}
+					Message(this, msgQueue.Dequeue());
 				}
             }
+        }
+
+        /********************************************
+         * 實作 IStatefulConnection
+         * *****************************************/
+        public void Open(IEventHandler handler)
+		{
+            eventHandler?.Open(handler);
+		}
+
+        public void Close(IEventHandler handler)
+		{
+            eventHandler?.Close(handler);
+        }
+
+        public void Error(IEventHandler handler, string errorTxt)
+		{
+            eventHandler?.Error(handler, errorTxt);
+        }
+
+        public void Message(IEventHandler handler, string msgTxt)
+		{
+            eventHandler?.Message(handler, msgTxt);
         }
     }
 }
