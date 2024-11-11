@@ -83,7 +83,7 @@ namespace XPlan
 		**********************************************/
 		private bool bAppQuit;
 
-		void OnDestroy()
+		private void OnDestroy()
 		{
 			if(logicManager != null)
 			{
