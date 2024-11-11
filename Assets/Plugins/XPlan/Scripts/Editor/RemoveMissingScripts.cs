@@ -5,7 +5,7 @@ namespace XPlan.Editors
 {
     public class RemoveMissingScripts : MonoBehaviour
     {
-        [MenuItem("Tools/Remove Missing Scripts")]
+        [MenuItem("XPlanTools/Remove Missing Scripts")]
         private static void RemoveMissingScriptsFromSelected()
         {
             foreach (GameObject obj in Selection.gameObjects)
