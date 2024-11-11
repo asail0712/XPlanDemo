@@ -40,6 +40,11 @@ namespace XPlan.Recycle
 
         public void OnRecycle()
         {
+            if(gameObject == null)
+			{
+                return;
+			}
+
             gameObject.SetActive(false);
         }
     }

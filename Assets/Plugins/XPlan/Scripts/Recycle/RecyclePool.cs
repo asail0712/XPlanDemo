@@ -108,7 +108,7 @@ namespace XPlan.Recycle
         /**************************************************
          * 註冊流程        
          * *************************************************/
-        static public bool RegisterType(GameObject prefab, int num = 5)
+        static public bool RegisterType(GameObject prefab, int num = 5, GameObject poolRoot = null)
         {
             if (!typeof(PoolableComponent).IsAssignableFrom(typeof(T)))
             {
@@ -128,10 +128,11 @@ namespace XPlan.Recycle
 
             for (int i = 0; i < num; ++i)
             {
-                GameObject go = GameObject.Instantiate(prefab);
-                T comp = go.GetComponent<T>();
+                GameObject go       = GameObject.Instantiate(prefab);
+                T comp              = go.GetComponent<T>();
+                go.transform.parent = poolRoot.transform;
 
-                go.SetActive(false);
+                go.SetActive(false);                
                 poolableQueue.Enqueue(comp);
             }
 
