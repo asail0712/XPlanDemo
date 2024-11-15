@@ -24,18 +24,28 @@ namespace XPlan.Anim
         }
     }
 
-    public class XAnimSegmentMsg : MessageBase
+    public class XAnimSegmentStartMsg : MessageBase
     {
         public int animIdx;
 
-        public XAnimSegmentMsg(int animIdx)
+        public XAnimSegmentStartMsg(int animIdx)
+        {
+            this.animIdx = animIdx;
+        }
+    }
+
+    public class XAnimSegmentEndMsg : MessageBase
+    {
+        public int animIdx;
+
+        public XAnimSegmentEndMsg(int animIdx)
         {
             this.animIdx = animIdx;
         }
     }
 
     public class AnimInfo
-	{
+    {
         public string triggerID;
 
         public AnimationClip animclip;
@@ -45,14 +55,22 @@ namespace XPlan.Anim
 
         public AnimatorEventReceiver receiver;
 
-        public AnimInfo(Animator animator, Action finishAction)
-		{
+        private float playRatio = 1f;
+        private bool bIsPause   = false;
+
+        public AnimInfo(Animator animator, Action startAction, Action finishAction)
+        {
             this.triggerID  = "";
             this.animclip   = animator.GetClip();
             this.animator   = animator;
             this.animGO     = animator.transform.parent.gameObject;
             this.duration   = animclip == null ? 0f : animclip.length;
             this.receiver   = animator.gameObject.AddComponent<AnimatorEventReceiver>();
+
+            receiver.onStart += (dummy, lenght) =>
+            {
+                startAction?.Invoke();
+            };
 
             receiver.onFinish += (dummy) =>
             {
@@ -62,25 +80,31 @@ namespace XPlan.Anim
 
         public void PlayAnim(float ratio)
         {
+            bIsPause = false;
+
             animGO.SetActive(true);
             animator.Play(animclip.name, 0, ratio);
-            animator.speed = 1f;
+            animator.speed = playRatio;
         }
 
         public void StopAnim()
         {
             animGO.SetActive(false);
-            animator.speed = 1f;
+            animator.speed = playRatio;
         }
 
         public void PauseAnim()
         {
+            bIsPause = true;
+
             animGO.SetActive(true);
             animator.speed = 0f;
         }
 
         public void PauseAnim(float ratio)
         {
+            bIsPause = true;
+
             animGO.SetActive(true);
             animator.Play(animclip.name, 0, ratio);
             animator.speed = 0f;
@@ -96,7 +120,17 @@ namespace XPlan.Anim
         // 進度條沒在動且看的到東西為pause
         public bool IsPause()
         {
-            return animGO.activeSelf && animator.speed == 0f;
+            return bIsPause;
+        }
+
+        public void SetPlayRatio(float f)
+        {
+            if(!bIsPause)
+			{
+                animator.speed = f;
+            }
+
+            playRatio = f;
         }
     }
 
@@ -106,9 +140,10 @@ namespace XPlan.Anim
         public Dictionary<string, AnimInfo> animInfoDict;
 
         private List<string> triggerList;
+        private Action<int> startAction;
         private Action<int> finishAction;
 
-        public AnimUnit(int idx, Animator animator, Action<int> finishAction)
+        public AnimUnit(int idx, Animator animator, Action<int> startAction, Action<int> finishAction)
 	    {
             /***********************************
              * 初始化
@@ -116,9 +151,16 @@ namespace XPlan.Anim
             this.idx            = idx;
             this.animInfoDict   = new Dictionary<string, AnimInfo>();
             this.triggerList    = new List<string>();
+
+            this.startAction    = startAction;
             this.finishAction   = finishAction;
 
-            AnimInfo animInfo   = new AnimInfo(animator, ()=> 
+            AnimInfo animInfo   = new AnimInfo(animator, 
+            () =>
+            {
+                startAction?.Invoke(idx);
+            }, 
+            ()=> 
             {
                 finishAction?.Invoke(idx);
             });
@@ -207,6 +249,14 @@ namespace XPlan.Anim
             return animInfoDict[triggerID].duration;
         }
 
+        public void SetPlayRatio(float f)
+        {
+            foreach (KeyValuePair<string, AnimInfo> kvp in animInfoDict)
+            {
+                kvp.Value.SetPlayRatio(f);
+            }
+        }
+
         public float GetPlayProgress()
 		{
             string triggerID = GetTriggerID();
@@ -216,7 +266,12 @@ namespace XPlan.Anim
 
         public void AddAlternate(string triggerID, Animator animator)
 		{           
-            AnimInfo animInfo = new AnimInfo(animator, () =>
+            AnimInfo animInfo = new AnimInfo(animator,
+            () =>
+            {
+                startAction?.Invoke(idx);
+            },
+            () =>
             {
                 finishAction?.Invoke(idx);
             });
@@ -285,7 +340,7 @@ namespace XPlan.Anim
         [SerializeField] public string triggerID;
     }
 
-    public class AnimSequenceController : MonoBehaviour
+    public class AnimSequencePlayer : MonoBehaviour
     {
         [SerializeField] public Animator[] animatorArr;
         [SerializeField] public AnimAlternate[] animAlternateList;
@@ -330,7 +385,7 @@ namespace XPlan.Anim
             // 設定default的 animInfo            
             for (int i = 0; i < animatorArr.Length; ++i)
             {
-                AnimUnit animUnit   = new AnimUnit(i, animatorArr[i], OnAnimEnd);
+                AnimUnit animUnit   = new AnimUnit(i, animatorArr[i], OnAnimStart, OnAnimEnd);
                 totalTime           += animUnit.Duration();
                 
                 animUnitList.Add(animUnit);
@@ -352,7 +407,7 @@ namespace XPlan.Anim
 
                 int currIdx     = GetCurrPlayIndex();
                 float currRatio = GetPlayRatio();
-                bool bIsPause = IsPause();
+                bool bIsPause   = IsPause();
 
                 onProgressAction?.Invoke(currIdx, currRatio, bIsPause);
 
@@ -573,6 +628,27 @@ namespace XPlan.Anim
             return segmentTime / totalTime;
         }
 
+        public int GetSegmentByTimeRatio(float timeRatio)
+        {
+            float currTime  = GetTotalTime() * timeRatio;
+            float totalTime = 0f;
+            int currSegment = 0;
+
+            for (currSegment = 0; currSegment < animUnitList.Count; ++currSegment)
+            {
+                AnimUnit animUnit = animUnitList[currSegment];
+
+                totalTime += animUnit.Duration();
+
+                if (totalTime >= currTime)
+                {
+                    break;
+                }
+            }
+
+            return currSegment;
+        }
+
         public void PauseAnimByTime(float playTime)
 		{
             PauseAnim(playTime / GetTotalTime());
@@ -590,6 +666,16 @@ namespace XPlan.Anim
 
             return totalTime;
 		}
+
+        public void SetPlayRatio(float f)
+		{
+            for (int i = 0; i < animUnitList.Count; ++i)
+            {
+                AnimUnit animUnit = animUnitList[i];
+
+                animUnit.SetPlayRatio(f);
+            }
+        }
 
         /***********************************
         * 其他 private
@@ -633,6 +719,11 @@ namespace XPlan.Anim
 
             return animUnit;
         }
+        private void OnAnimStart(int animIdx)
+        {
+            XAnimSegmentStartMsg msg = new XAnimSegmentStartMsg(animIdx);
+            msg.Send();
+        }
 
         private void OnAnimEnd(int animIdx)
 		{
@@ -673,7 +764,7 @@ namespace XPlan.Anim
                 }
             }
 
-            XAnimSegmentMsg msg = new XAnimSegmentMsg(animIdx);
+            XAnimSegmentEndMsg msg = new XAnimSegmentEndMsg(animIdx);
             msg.Send();
         }
 
