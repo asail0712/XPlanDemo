@@ -25,7 +25,7 @@ namespace XPlan.Demo.Websocket
         // Start is called before the first frame update
         void Start()
 		{
-            webSocket = new WebSocket(URL, this);
+            webSocket = new WebSocket(URL, new ConnectionRecovery(this));
             webSocket.Connect();            
         }
 
