@@ -33,7 +33,7 @@ namespace XPlan.Utility
             Color32[] color32 = barcodeWriter.Write(content);
 
             // 創建一個 Unity Texture2D 並設定像素
-            Texture2D texture = new Texture2D(size, size);
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGB24, false);
             texture.SetPixels32(color32);
             texture.Apply();
 

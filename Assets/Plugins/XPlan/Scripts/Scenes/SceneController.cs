@@ -6,7 +6,6 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-using XPlan.DebugMode;
 using XPlan.Utility;
 
 namespace XPlan.Scenes
@@ -28,8 +27,8 @@ namespace XPlan.Scenes
 
 		public SceneInfo(int s, int l)
 		{
-			sceneIdx				= s;
-			level					= l;
+			sceneIdx	= s;
+			level		= l;
 		}
 	}
 
@@ -64,14 +63,6 @@ namespace XPlan.Scenes
 		}
 	}
 
-	public class UnloadInfoImmediately : ChangeInfo
-	{
-		public UnloadInfoImmediately(int sceneIdx)
-			: base(sceneIdx)
-		{
-		}
-	}
-
 	public class SceneController : CreateSingleton<SceneController>
 	{
 		[SerializeField] private List<SceneData> sceneDataList;
@@ -83,6 +74,7 @@ namespace XPlan.Scenes
 		private List<ChangeInfo> changeQueue			= new List<ChangeInfo>();
 
 		private Coroutine loadRoutine					= null;
+		private Coroutine unloadRoutine					= null;
 		private int loadingSceneIdx						= -1;
 
 		/************************************
@@ -164,25 +156,42 @@ namespace XPlan.Scenes
 			return true;
 		}
 
-		public bool ChangeTo(string sceneName, Action finishAction = null, bool bActiveScene = true, bool bForceChange = false)
+		public bool ChangeTo(string sceneName, Action finishAction = null, bool bActiveScene = true)
 		{
 			int buildIndex = GetBuildIndexByName(sceneName);
 
-			return ChangeTo(buildIndex, finishAction, bActiveScene, bForceChange);
+			return ChangeTo(buildIndex, finishAction, bActiveScene);
 		}
 
-		public bool ChangeTo(int buildIndex, Action finishAction = null, bool bActiveScene = true, bool bForceChange = false)
+		private void AddStack(int sceneIdx)
 		{
-			if (!CanLoad(buildIndex))
-			{
-				Debug.LogWarning($"{buildIndex} 此場景無法載入");
+			int scenelevel = GetLevel(sceneIdx);
 
-				return false;
+			while(currSceneStack.Count < scenelevel)
+			{
+				currSceneStack.Add(-1);
 			}
 
+			currSceneStack.Add(sceneIdx);
+		}
+
+		private void RemoveStack(int sceneIdx)
+		{			
+			while (currSceneStack.Contains(sceneIdx))
+			{
+				currSceneStack.RemoveAt(currSceneStack.Count - 1);
+			}
+		}
+
+		public bool ChangeTo(int buildIndex, Action finishAction = null, bool bActiveScene = true)
+		{
 			if (currSceneStack.Count == 0)
 			{
-				LoadScene(buildIndex, finishAction, bActiveScene, true);
+				// 立刻加載
+				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(buildIndex, LoadSceneMode.Additive);
+				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, buildIndex, bActiveScene, finishAction));
+
+				AddStack(buildIndex);
 				return true;
 			}
 
@@ -195,8 +204,9 @@ namespace XPlan.Scenes
 				if (currScenelevel > newScenelevel)
 				{
 					// 考慮到SceneLevel的差距，所以強制關閉，不用等回調
-					UnloadScene(currSceneIndex, bForceChange);
+					AddQueueUnload(currSceneIndex);
 
+					RemoveStack(buildIndex);
 				}
 				else if (currScenelevel == newScenelevel)
 				{
@@ -207,14 +217,19 @@ namespace XPlan.Scenes
 					else 
 					{
 						// 先loading 再做unload 避免畫面太空
-						LoadScene(buildIndex, finishAction, bActiveScene);
-						UnloadScene(currSceneIndex, bForceChange);
+						AddQueueLoad(buildIndex, finishAction, bActiveScene);
+						AddQueueUnload(currSceneIndex);
+
+						currSceneStack[currScenelevel] = buildIndex;
+
 						break;
 					}
 				}
 				else
 				{
-					LoadScene(buildIndex, finishAction, bActiveScene);
+					AddQueueLoad(buildIndex, finishAction, bActiveScene);
+
+					AddStack(buildIndex);
 					break;
 				}
 			}
@@ -233,7 +248,7 @@ namespace XPlan.Scenes
 
 		public void ChangeSceneProcess(float deltaTime)
 		{
-			if(changeQueue.Count == 0 || loadRoutine != null)
+			if(changeQueue.Count == 0 || loadRoutine != null || unloadRoutine != null)
 			{
 				return;
 			}
@@ -242,27 +257,27 @@ namespace XPlan.Scenes
 
 			if(info is LoadInfo)
 			{
-				LoadInfo loadInfo = (LoadInfo)info;
+				LoadInfo loadInfo	= (LoadInfo)info;
+				Scene loadScene		= SceneManager.GetSceneByBuildIndex(loadInfo.sceneIdx);
 
-				Debug.Log($"載入關卡 {info.sceneIdx}");
-				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(loadInfo.sceneIdx, LoadSceneMode.Additive);
-				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, loadInfo.sceneIdx, loadInfo.bActiveScene, loadInfo.finishAction));
-
-				currSceneStack.Add(info.sceneIdx);
+				if (!loadScene.isLoaded)
+				{
+					Debug.Log($"載入關卡 {info.sceneIdx}");
+					AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(loadInfo.sceneIdx, LoadSceneMode.Additive);
+					loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, loadInfo.sceneIdx, loadInfo.bActiveScene, loadInfo.finishAction));
+				}
 			}
 			else if(info is UnloadInfo)
 			{
-				Debug.Log($"卸載關卡 {info.sceneIdx}");
-				UnloadScene_Internal(info.sceneIdx);
+				UnloadInfo unloadInfo	= (UnloadInfo)info;
+				Scene unloadScene		= SceneManager.GetSceneByBuildIndex(unloadInfo.sceneIdx);
 
-				currSceneStack.Remove(info.sceneIdx);
-			}
-			else if (info is UnloadInfoImmediately)
-			{
-				Debug.Log($"立刻卸載關卡 {info.sceneIdx}");
-				UnloadScene_Internal(info.sceneIdx);
-
-				currSceneStack.Remove(info.sceneIdx);
+				if (unloadScene.isLoaded)
+				{
+					Debug.Log($"卸載關卡 {unloadInfo.sceneIdx}");
+					AsyncOperation loadOperation	= SceneManager.UnloadSceneAsync(unloadInfo.sceneIdx);
+					unloadRoutine					= StartCoroutine(WaitUnloadingScene(loadOperation));
+				}
 			}
 			else
 			{
@@ -273,68 +288,23 @@ namespace XPlan.Scenes
 			changeQueue.RemoveAt(0);
 		}
 
-		protected bool LoadScene(int sceneIdx, Action finishAction, bool bActiveScene, bool bImmediately = false)
+		protected void AddQueueLoad(int sceneIdx, Action finishAction, bool bActiveScene)
 		{
-			Scene scene = SceneManager.GetSceneByBuildIndex(sceneIdx);
-
-			// 檢查沒有被載入
-			if (scene.isLoaded)
-			{
-				return false;
-			}
-
-			if(bImmediately)
-			{
-				Debug.Log($"載入關卡 {sceneIdx}");
-				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(sceneIdx, LoadSceneMode.Additive);
-				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, sceneIdx, bActiveScene, finishAction));
-
-				currSceneStack.Add(sceneIdx);
-			}
-			else
-			{
-				changeQueue.Add(new LoadInfo(sceneIdx, bActiveScene, finishAction));
-			}
-			
-			return true;
+			Debug.Log($"oo加入載入佇列oo {sceneIdx}");
+			changeQueue.Add(new LoadInfo(sceneIdx, bActiveScene, finishAction));
 		}
 
-		protected bool UnloadScene(int sceneIdx, bool bImmediately = false)
+		protected void AddQueueUnload(int sceneIdx)
 		{
-			if(bImmediately)
-			{
-				changeQueue.Add(new UnloadInfoImmediately(sceneIdx));
-			}
-			else
-			{
-				changeQueue.Add(new UnloadInfo(sceneIdx));
-			}
-			
-			return true;
-		}
-
-		protected void UnloadScene_Internal(int sceneIdx)
-		{ 
-			Scene scene = SceneManager.GetSceneByBuildIndex(sceneIdx);
-
-			if (!scene.isLoaded)
-			{
-				return;
-			}
-
-			SceneManager.UnloadSceneAsync(sceneIdx);			
+			Debug.Log($"xx加入卸載佇列xx {sceneIdx}");
+			changeQueue.Add(new UnloadInfo(sceneIdx));
 		}
 
 		private IEnumerator WaitLoadingScene(AsyncOperation asyncOperation, int sceneIdx, bool bActiveScene, Action finishAction)
 		{
 			loadingSceneIdx = sceneIdx;
 
-			while (!asyncOperation.isDone)
-			{
-				float progress = Mathf.Clamp01(asyncOperation.progress / 0.9f); // 0.9 是載入完成的標誌
-				//Debug.Log("關卡載入進度: " + (progress * 100) + "%");
-				yield return null;
-			}
+			yield return new WaitUntil(() => asyncOperation.isDone);
 
 			if(bActiveScene)
 			{
@@ -345,6 +315,13 @@ namespace XPlan.Scenes
 			finishAction?.Invoke();
 
 			loadRoutine = null;
+		}
+
+		private IEnumerator WaitUnloadingScene(AsyncOperation asyncOperation)
+		{
+			yield return new WaitUntil(() => asyncOperation.isDone);
+
+			unloadRoutine = null;
 		}
 
 		/************************************
@@ -394,7 +371,6 @@ namespace XPlan.Scenes
 			return false;
 		}
 
-		
 		private int GetLevel(int sceneIdx)
 		{
 			int idx = sceneInfoList.FindIndex((X)=> 
@@ -458,14 +434,6 @@ namespace XPlan.Scenes
 			LogSystem.Record($"{sceneName} 不在Build List裡面", LogType.Error);
 
 			return -1; // 返回 -1 表示未找到该场景
-		}
-
-		private bool CanLoad(int sceneIdx)
-		{
-			int newSceneLevel		= GetLevel(sceneIdx);
-			int loadingSceneLevel	= GetLevel(loadingSceneIdx);
-
-			return loadRoutine == null || (newSceneLevel > loadingSceneLevel);
 		}
 	}
 }

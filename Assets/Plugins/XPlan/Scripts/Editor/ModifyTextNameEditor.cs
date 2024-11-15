@@ -13,7 +13,7 @@ namespace XPlan.Editors
 {
     public class ModifyTextNameEditor : EditorWindow
     {
-        [MenuItem("Window/Modify Text Name")]
+        [MenuItem("XPlanTools/Localization/Modify Text Name")]
         static void Init()
         {
             ModifyTextNameEditor window = (ModifyTextNameEditor)EditorWindow.GetWindow(typeof(ModifyTextNameEditor));

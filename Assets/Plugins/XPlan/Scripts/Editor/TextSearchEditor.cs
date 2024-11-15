@@ -13,7 +13,7 @@ namespace XPlan.Editors
 {
     public class TextToCSV : EditorWindow
     {
-        [MenuItem("Window/Text To CSV")]
+        [MenuItem("XPlanTools/Localization/Text To CSV")]
         static void Init()
         {
             TextToCSV window = (TextToCSV)EditorWindow.GetWindow(typeof(TextToCSV));

@@ -10,7 +10,7 @@ using XPlan.Net;
 namespace XPlan.Demo.Websocket
 {
 
-    public class WebSocketDemoScene : MonoBehaviour
+    public class WebSocketDemoScene : MonoBehaviour, IEventHandler
     {
         [SerializeField] private Text showMsgTxt;
         [SerializeField] private InputField inputTxt;
@@ -25,29 +25,25 @@ namespace XPlan.Demo.Websocket
         // Start is called before the first frame update
         void Start()
 		{
-            webSocket = new WebSocket(URL);
-			webSocket.OnMessage += OnMessage;
-            webSocket.OnOpen    += OnOpen;
-            webSocket.OnError   += OnError;
-            webSocket.OnClose   += OnClose;
+            webSocket = new WebSocket(URL, this);
             webSocket.Connect();            
         }
 
-        private void OnOpen(object sender, System.EventArgs e)
+        public void Open(IEventHandler eventHandler)
         {
             Debug.Log("WebSocket opened");
         }
 
-        private void OnMessage(object sender, string data)
+        public void Message(IEventHandler eventHandler, string dataStr)
         {
-            if (data == null || data == "")
+            if (dataStr == null || dataStr == "")
             {
                 return;
             }
 
-            Debug.Log("Receiver Message is " + data);
+            Debug.Log("Receiver Message is " + dataStr);
 
-            msgQueue.Enqueue(data);
+            msgQueue.Enqueue(dataStr);
 
             while(msgQueue.Count > MaxMsgCount)
 			{
@@ -65,14 +61,14 @@ namespace XPlan.Demo.Websocket
             }            
         }
 
-        private void OnError(object sender, Exception e)
+        public void Error(IEventHandler eventHandler, string errorTxt)
         {
-            Debug.LogWarning("WebSocket error: " + e.Message);
+            Debug.LogWarning("WebSocket error: " + errorTxt);
         }
 
-        private void OnClose(object sender, EventArgs e)
+        public void Close(IEventHandler eventHandler)
         {
-            Debug.Log("WebSocket closed with Url Is " + webSocket.Url + " reason is " + e.ToString());
+            Debug.Log("WebSocket closed with Url Is " + webSocket.Url);
 
             if (webSocket != null)
             {

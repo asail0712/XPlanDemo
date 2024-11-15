@@ -9,33 +9,34 @@ namespace XPlan.Utility
 { 
 	public static class LocalPref
 	{
-		public static bool HasKeyInEditor(string key)
+		public static bool HasKey(string key)
 		{
 #if UNITY_EDITOR
 			return EditorPrefs.HasKey(key);
 #else
-			return false;
-#endif //UNITY_EDITOR
-		}
-
-		public static bool HasKey(string key)
-		{
 			return PlayerPrefs.HasKey(key);
-		}
-
-		public static void DeleteKeyInEditor(string key)
-		{
-#if UNITY_EDITOR
-			EditorPrefs.DeleteKey(key);
 #endif //UNITY_EDITOR
 		}
 
 		public static void DeleteKey(string key)
 		{
+#if UNITY_EDITOR
+			EditorPrefs.DeleteKey(key);
+#else
 			PlayerPrefs.DeleteKey(key);
+#endif //UNITY_EDITOR
 		}
 
-		public static void SetValueInEditor<T>(string key, T value)
+		public static void ClearAll()
+		{
+#if UNITY_EDITOR
+			EditorPrefs.DeleteAll();
+#else
+			PlayerPrefs.DeleteAll();
+#endif //UNITY_EDITOR
+		}
+
+		public static void SetValue<T>(string key, T value)
 		{
 	#if UNITY_EDITOR
 			if (typeof(T) == typeof(int))
@@ -54,12 +55,8 @@ namespace XPlan.Utility
 			{
 				EditorPrefs.SetString(key, Convert.ToString(value));
 			}
-	#endif //UNITY_EDITOR
-		}
-
-		public static void SetValue<T>(string key, T value)
-		{
-			if(typeof(T) == typeof(int))
+	#else
+			if (typeof(T) == typeof(int))
 			{
 				PlayerPrefs.SetInt(key, Convert.ToInt32(value));
 			}
@@ -73,11 +70,12 @@ namespace XPlan.Utility
 			}
 			else if (typeof(T) == typeof(bool))
 			{
-				PlayerPrefs.SetInt(key, Convert.ToBoolean(value)?1:0);
+				PlayerPrefs.SetInt(key, Convert.ToBoolean(value) ? 1 : 0);
 			}
+#endif //UNITY_EDITOR
 		}
 
-		public static T GetValueInEditor<T>(string key, T defaultValue = default(T))
+		public static T GetValue<T>(string key, T defaultValue = default(T))
 		{
 	#if UNITY_EDITOR
 			if(!EditorPrefs.HasKey(key))
@@ -101,15 +99,7 @@ namespace XPlan.Utility
 			{
 				return (T)Convert.ChangeType(EditorPrefs.GetString(key), typeof(T));
 			}
-	#endif //UNITY_EDITOR
-
-			Debug.LogError("LocalPref型態不支援");
-
-			return default(T);
-		}
-
-		public static T GetValue<T>(string key, T defaultValue = default(T))
-		{
+#else
 			if (!PlayerPrefs.HasKey(key))
 			{
 				return defaultValue;
@@ -131,6 +121,7 @@ namespace XPlan.Utility
 			{
 				return (T)(object)(PlayerPrefs.GetInt(key) == 1);
 			}
+#endif //UNITY_EDITOR
 
 			Debug.LogError("LocalPref型態不支援");
 

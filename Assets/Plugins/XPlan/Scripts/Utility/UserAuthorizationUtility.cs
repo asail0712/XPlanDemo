@@ -13,38 +13,69 @@ using UnityEngine.Android;
 
 namespace XPlan.Utility
 { 
-	public static class UserAuthorizationUtility
+    public enum DevicePermission
+	{
+        Camera      = 0,
+        Microphone,
+    }
+
+
+    public static class UserAuthorizationUtility
 	{
 		/*******************************************
 		 * 相機權限
 		 * *****************************************/
-		static public void requestCameraAuthorization(Action<bool> finishAction)
+		static public void RequestAuthorization(DevicePermission devicePermission, Action<bool> finishAction)
 		{
 #if UNITY_IOS
-			Debug.Log("判斷IOS是否有權限");
-			if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
+            UserAuthorization authorization = UserAuthorization.WebCam;
+
+			switch (devicePermission)
 			{
-				Debug.Log("開始要求IOS相機權限");
-				MonoBehaviourHelper.StartCoroutine(RequestCameraPermission(finishAction));
+                case DevicePermission.Camera:
+                    authorization = UserAuthorization.WebCam;
+                    break;
+                case DevicePermission.Microphone:
+                    authorization = UserAuthorization.Microphone;
+                    break;
+            }
+
+			Debug.Log("判斷IOS是否有權限");
+			if (!Application.HasUserAuthorization(authorization))
+			{
+				Debug.Log("開始要求IOS權限");
+				MonoBehaviourHelper.StartCoroutine(RequestPermission(authorization, finishAction));
 			}
 			else
 			{
-				Debug.Log("相機 一開始就有權限");
+				Debug.Log("一開始就有權限");
 				finishAction?.Invoke(true);
 			}
 #elif UNITY_ANDROID
+            string permission = Permission.Camera;
+
+            switch (devicePermission)
+            {
+                case DevicePermission.Camera:
+                    permission = Permission.Camera;
+                    break;
+                case DevicePermission.Microphone:
+                    permission = Permission.Microphone;
+                    break;
+            }
+
             Debug.Log("判斷Android是否有權限");
-            bool bHasCameraPermission = Permission.HasUserAuthorizedPermission(Permission.Camera);
+            bool bHasCameraPermission = Permission.HasUserAuthorizedPermission(permission);
 
             if (!bHasCameraPermission)
             {
-                Debug.Log("開始要求Android相機權限");
+                Debug.Log("開始要求Android權限");
                 // 如果沒有相機使用權限，則索取權限
-                RequestCameraPermission(finishAction);
+                RequestPermission(permission, finishAction);
             }
             else
             {
-                Debug.Log("Android相機 一開始就有權限");
+                Debug.Log("一開始就有權限");
                 finishAction?.Invoke(true);
             }
 #else
@@ -57,12 +88,12 @@ namespace XPlan.Utility
         /****************************************
          * IOS 流程
          * *************************************/
-        static private IEnumerator RequestCameraPermission(Action<bool> finishAction)
+        static private IEnumerator RequestPermission(UserAuthorization authorization, Action<bool> finishAction)
         {
             Debug.Log("IOS Request 相機權限");
-            yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
+            yield return Application.RequestUserAuthorization(authorization);
 
-            if (Application.HasUserAuthorization(UserAuthorization.WebCam))
+            if (Application.HasUserAuthorization(authorization))
             {
                 Debug.Log("IOS 相機權限授予");
                 finishAction?.Invoke(true);
@@ -81,7 +112,7 @@ namespace XPlan.Utility
         /****************************************
         * Abdroid 流程
         * *************************************/
-        static private void RequestCameraPermission(Action<bool> finishAction)
+        static private void RequestPermission(string permission, Action<bool> finishAction)
         {
             Debug.Log("Android Request 相機權限");
 
@@ -97,24 +128,20 @@ namespace XPlan.Utility
             {
                 Debug.Log($"{permissionName} PermissionCallbacks_PermissionDenied");
 
-                PermissionWhenDenied();
-
                 finishAction.Invoke(false);
             };
             callbacks.PermissionDeniedAndDontAskAgain   += (permissionName) =>
             {
                 Debug.Log($"{permissionName} PermissionDeniedAndDontAskAgain");
 
-                PermissionWhenDenied();
-
                 finishAction.Invoke(false);
             }; 
 
             // 索取相機使用權限
-            Permission.RequestUserPermission(Permission.Camera, callbacks);
+            Permission.RequestUserPermission(permission, callbacks);
         }
 
-        static private void PermissionWhenDenied()
+        static public void PermissionWhenDenied()
         {         
             AndroidJavaClass unityPlayer        = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             AndroidJavaObject currentActivity   = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");

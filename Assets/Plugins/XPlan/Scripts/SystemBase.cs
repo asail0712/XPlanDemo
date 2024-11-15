@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using XPlan.DebugMode;
-
 // MonoBehaviour 函數的執行先後順序
 // https://home.gamer.com.tw/creationDetail.php?sn=2491667
 
@@ -25,11 +23,11 @@ namespace XPlan
 				return GetType().ToString();
 			};
 
-			logicManager.RegisterScope(logicComp, this);
+			logicManager.RegisterScope(logicComp);
 		}
 		protected void UnregisterLogic(LogicComponent logicComp)
 		{
-			logicManager.UnregisterScope(logicComp, this);
+			logicManager.UnregisterScope(logicComp);
 		}
 
 		/**********************************************
@@ -85,11 +83,11 @@ namespace XPlan
 		**********************************************/
 		private bool bAppQuit;
 
-		void OnDestroy()
+		private void OnDestroy()
 		{
 			if(logicManager != null)
 			{
-				logicManager.UnregisterScope(this, bAppQuit);
+				logicManager.UnregisterScope(bAppQuit);
 			}
 			
 			OnRelease(bAppQuit);

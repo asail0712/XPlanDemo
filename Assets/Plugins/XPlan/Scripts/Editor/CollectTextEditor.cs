@@ -13,7 +13,7 @@ namespace XPlan.Editors
 {
     public class CollectTextEditor : EditorWindow
     {
-        [MenuItem("Window/Generate CHT CSV")]
+        [MenuItem("XPlanTools/Localization/Generate CHT CSV")]
         static void Init()
         {
             CollectTextEditor window = (CollectTextEditor)EditorWindow.GetWindow(typeof(CollectTextEditor));

@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 using XPlan.Utility;
 
@@ -106,6 +106,10 @@ namespace XPlan.UI
 					// 生成UI
 					uiIns = GameObject.Instantiate(loadingInfo.uiPerfab, uiRootList[loadingInfo.rootIdx].transform);
 
+					// 強制enable 去觸發 Awake，來註冊Command
+					uiIns.SetActive(true);
+					uiIns.transform.localScale = Vector3.zero;
+
 					// 加上文字
 					stringTable.InitialUIText(uiIns);
 
@@ -148,13 +152,7 @@ namespace XPlan.UI
 					}
 				}
 
-				/********************************
-				 * 設定UI Visible
-				 * *****************************/
-				if(uiIns != null)
-				{
-					uiIns.SetActive(loadingInfo.bVisible);
-				}
+				StartCoroutine(UIVisibleSetting(uiIns, loadingInfo.bVisible));
 			}
 
 			/********************************
@@ -212,7 +210,22 @@ namespace XPlan.UI
 				visibleInfo.uiIns.transform.SetSiblingIndex(i);
 			}
 
-			loaderStack.Add(loader);
+			loaderStack.Add(loader);			
+		}
+
+		private IEnumerator UIVisibleSetting(GameObject uiIns, bool bVisible)
+		{
+			yield return new WaitForEndOfFrame();
+			
+			/********************************
+			* 設定UI Visible
+			* *****************************/			
+			
+			if (uiIns != null)
+			{
+				uiIns.SetActive(bVisible);
+				uiIns.transform.localScale = Vector3.one;
+			}
 		}
 
 		public void UnloadingUI(UILoader loader)
