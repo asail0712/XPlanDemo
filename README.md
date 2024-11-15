@@ -2,7 +2,7 @@
 一個改良EDA架構的Unity中小型專案快速開發框架，協助開發者不需精通設計模式也給予代碼足夠的靈活性與擴展度。
 ### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 2.0.0
+- Version 2.0.1
 # 3.安裝指南
 ### 系統要求
 - Unity 2022.3.33f1 或更高版本
