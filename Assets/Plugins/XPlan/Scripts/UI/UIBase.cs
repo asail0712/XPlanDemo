@@ -200,6 +200,30 @@ namespace XPlan.UI
 			}
 		}
 
+		protected void RegisterToggleBtns(string uniqueID, Button[] buttonArr, int defaultIndex = 0, Action<int> onPress = null)
+		{
+			// 初始化
+			for(int i = 0; i < buttonArr.Length; ++i)
+			{
+				Button btn = buttonArr[i];
+
+				btn.gameObject.SetActive(i == defaultIndex);
+
+				btn.onClick.AddListener(() =>
+				{
+					int currIdx		= Array.IndexOf(buttonArr, btn);
+					int chooseIdx	= (currIdx + 1) % buttonArr.Length;
+
+					for (int i = 0; i < buttonArr.Length; ++i)
+					{
+						buttonArr[i].gameObject.SetActive(i == chooseIdx);
+					}
+
+					DirectTrigger<int>(uniqueID, chooseIdx, onPress);
+				});
+			}
+		}
+
 		protected void RegisterPointTrigger(string uniqueID, PointEventTriggerHandler pointTrigger,
 												Action<PointerEventData> onPress = null,
 												Action<PointerEventData> onPull = null)
