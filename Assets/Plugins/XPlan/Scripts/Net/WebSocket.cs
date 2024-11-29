@@ -19,12 +19,12 @@ namespace XPlan.Net
         private List<byte> bs           = null;
         private byte[] buffer           = null;
         private bool bIsUserClose       = false; // 判斷是否為使用者主動關閉
+        private bool bInterruptConnect  = false;
 
         private bool bTriggerOpen       = false;
         private bool bTriggerClose      = false;
         private Exception errorEx       = null;
         private Queue<string> msgQueue  = null;
-        private bool bInterruptConnect  = false;
 
         private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
         private IEventHandler eventHandler;
@@ -44,6 +44,11 @@ namespace XPlan.Net
          * ********************************/
         public void Connect()
         {
+            if (ws != null && (ws.State == WebSocketState.Connecting || ws.State == WebSocketState.Open))
+			{
+                return;
+            }
+
             msgQueue        = new Queue<string>();
 
             // 緩衝區
@@ -59,14 +64,8 @@ namespace XPlan.Net
 
             Task.Run(async () =>
             {
-                ws = new ClientWebSocket();
-
-                if (ws.State == WebSocketState.Connecting || ws.State == WebSocketState.Open)
-                {
-                    return;
-                }
-
                 // reset數值
+                ws              = new ClientWebSocket();
                 string netErr   = string.Empty;
                 bIsUserClose    = false;
                 errorEx         = null;
@@ -142,7 +141,7 @@ namespace XPlan.Net
         }
 
         public void Reconnect()
-		{
+        {
             bInterruptConnect = true;
         }
 
@@ -234,16 +233,15 @@ namespace XPlan.Net
 
                 if (errorEx != null)
                 {
-                    Error(this, errorEx.Message);
-                 
-                    errorEx = null;
+                    Error(this, errorEx.Message);                 
                 }
 
                 if (bTriggerClose)
                 {
-                    bTriggerClose = false;
+                    Close(this, errorEx != null);
 
-                    Close(this);
+                    bTriggerClose   = false;
+                    errorEx         = null;
 
                     if (callbackRoutine != null)
                     {
@@ -267,9 +265,9 @@ namespace XPlan.Net
             eventHandler?.Open(handler);
 		}
 
-        public void Close(IEventHandler handler)
+        public void Close(IEventHandler handler, bool bErrorHappen)
 		{
-            eventHandler?.Close(handler);
+            eventHandler?.Close(handler, bErrorHappen);
         }
 
         public void Error(IEventHandler handler, string errorTxt)
