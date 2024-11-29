@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+ï»¿using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,14 +10,12 @@ using XPlan.Net;
 namespace XPlan.Demo.Websocket
 {
 
-    public class WebSocketDemoScene : MonoBehaviour, IEventHandler
+    public class WebSocketDemoScene : MonoBehaviour, IEventHandler, IConnectHandler
     {
+        static private int MaxMsgCount = 15;
+
         [SerializeField] private Text showMsgTxt;
         [SerializeField] private InputField inputTxt;
-
-        // ¤½¦@ Websocket Test Server
-        static private string URL       = "wss://echo.websocket.org";
-        static private int MaxMsgCount  = 15;
 
         private WebSocket webSocket;
         private Queue<string> msgQueue = new Queue<string>();
@@ -25,7 +23,7 @@ namespace XPlan.Demo.Websocket
         // Start is called before the first frame update
         void Start()
 		{
-            webSocket = new WebSocket(URL, new ConnectionRecovery(this));
+            webSocket = new WebSocket(Url.ToString(), new ConnectionRecovery(this, this));
             webSocket.Connect();            
         }
 
@@ -66,21 +64,14 @@ namespace XPlan.Demo.Websocket
             Debug.LogWarning("WebSocket error: " + errorTxt);
         }
 
-        public void Close(IEventHandler eventHandler)
+        public void Close(IEventHandler eventHandler, bool bErrorHappen)
         {
             Debug.Log("WebSocket closed with Url Is " + webSocket.Url);
 
             if (webSocket != null)
             {
-                StartCoroutine(Reconnect(webSocket));
+                Reconnect();
             }
-        }
-
-        private IEnumerator Reconnect(WebSocket ws)
-        {
-            yield return new WaitForSeconds(3);
-
-            webSocket.Connect();
         }
 
         public void PressBtn()
@@ -107,8 +98,42 @@ namespace XPlan.Demo.Websocket
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"Send msg ®Éµo¥Í²§±`, ­ì¦]¬° {e.Message}");
+                Debug.LogWarning($"Send msg æ™‚ç™¼ç”Ÿç•°å¸¸, åŽŸå› ç‚º {e.Message}");
             }
+		}
+
+		/*********************************
+         * å¯¦ä½œIConnectHandler
+         * *******************************/
+		public Uri Url
+		{
+			get
+			{
+				// å…¬å…± Websocket Test Server
+				return new Uri("wss://echo.websocket.org");
+			}
+		}
+
+		public void Connect()
+		{
+            webSocket.Connect();
+        }
+
+        public void Reconnect()
+		{
+            StartCoroutine(Reconnect(webSocket));
+        }
+
+		public void CloseConnect()
+		{
+            webSocket.CloseConnect();
+        }
+
+        private IEnumerator Reconnect(WebSocket ws)
+        {
+            yield return new WaitForSeconds(3);
+
+            webSocket.Connect();
         }
     }
 }

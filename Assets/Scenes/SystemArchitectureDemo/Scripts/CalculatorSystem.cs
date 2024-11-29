@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,19 +11,19 @@ namespace XPlan.Demo.Architecture
 			Application.targetFrameRate = 60;
 		}
 
-		protected override void OnInitialHandler()
+		protected override void OnInitialLogic()
 		{
-			// ¨ä¥L¥\¯à³z¹LServiceLocator½Õ¥Î­pºâ¾÷¥\¯à
+			// å…¶ä»–åŠŸèƒ½é€éServiceLocatorèª¿ç”¨è¨ˆç®—æ©ŸåŠŸèƒ½
 			RegisterLogic(new CalculatorInterface());
-			// ¨ó§U»PUI©Îinterface°µ·¾³q
+			// å”åŠ©èˆ‡UIæˆ–interfaceåšæºé€š
 			RegisterLogic(new CalculatorLogic());
-			// °µ¥[ªk¹Bºâ
+			// åšåŠ æ³•é‹ç®—
 			RegisterLogic(new AdditionLogic());
-			// °µ´îªk¹Bºâ
+			// åšæ¸›æ³•é‹ç®—
 			RegisterLogic(new SubtractionLogic());
-			// °µ­¼ªk¹Bºâ
+			// åšä¹˜æ³•é‹ç®—
 			RegisterLogic(new MultiplicationLogic());
-			// °µ°£ªk¹Bºâ
+			// åšé™¤æ³•é‹ç®—
 			RegisterLogic(new DivisionLogic());
 		}
     }

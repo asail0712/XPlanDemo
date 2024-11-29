@@ -27,7 +27,7 @@ namespace XPlan.Displays
 
 		}
 
-		protected override void OnInitialHandler()
+		protected override void OnInitialLogic()
 		{
 			RegisterLogic(new DisplayOrderSort(displayOrderFilePath, cameraList, canvasArr));
 		}

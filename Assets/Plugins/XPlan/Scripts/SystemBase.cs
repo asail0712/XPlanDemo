@@ -45,7 +45,7 @@ namespace XPlan
         {
 			OnInitialGameObject();
 
-			OnInitialHandler();
+			OnInitialLogic();
 
 			StartCoroutine(PostInitial());
 		}
@@ -68,7 +68,7 @@ namespace XPlan
 		{
 			// for override
 		}
-		protected virtual void OnInitialHandler()
+		protected virtual void OnInitialLogic()
 		{
 			// for override
 		}
