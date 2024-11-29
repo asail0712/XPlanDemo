@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,17 +31,25 @@ namespace XPlan.UI.Template
 	public class ShowDialogue
 	{
 		public DialogType dialogType	= DialogType.SingleButton;
-		public string showStr			= "";
+		public List<string> showStrList	= null;
 		public string confirmStr		= "";
 		public string cancelStr			= "";
 		public Action<DialogResult> clickAction	= null;
 
 		public ShowDialogue(DialogType dialogType, string showStr, Action<DialogResult> clickAction = null, string confirmKey = "", string cancelKey = "")
 		{
-			Initial(dialogType, showStr, clickAction, confirmKey, cancelKey);
+			List<string> tmp = new List<string>();
+			tmp.Add(showStr);
+
+			Initial(dialogType, tmp, clickAction, confirmKey, cancelKey);
 		}
-		
-		private void Initial(DialogType dialogType, string showStr, Action<DialogResult> clickAction, string confirmKey = "", string cancelKey = "")
+
+		public ShowDialogue(DialogType dialogType, string[] showStrList, Action<DialogResult> clickAction = null, string confirmKey = "", string cancelKey = "")
+		{
+			Initial(dialogType, showStrList.ToList(), clickAction, confirmKey, cancelKey);
+		}
+
+		private void Initial(DialogType dialogType, List<string> showStrList, Action<DialogResult> clickAction, string confirmKey = "", string cancelKey = "")
 		{
 			if (confirmKey == "")
 			{
@@ -54,7 +63,7 @@ namespace XPlan.UI.Template
 
 
 			this.dialogType		= dialogType;
-			this.showStr		= showStr;
+			this.showStrList	= showStrList;
 			this.confirmStr		= confirmKey;
 			this.cancelStr		= cancelKey;
 			this.clickAction	= clickAction;
@@ -89,7 +98,14 @@ namespace XPlan.UI.Template
 
 			ListenCall<ShowDialogue>(DialogMessage.ConfirmMessage, (info)=> 
 			{
-				showStrTxt.text = GetStr(info.showStr);
+				string titleStr = "";
+
+				for(int i = 0; i < info.showStrList.Count; ++i)
+				{
+					titleStr += GetStr(info.showStrList[i]);
+				}
+
+				showStrTxt.text = titleStr;
 				confirmTxt.text = GetStr(info.confirmStr);
 				cancelTxt.text	= GetStr(info.cancelStr);
 				clickAction		= info.clickAction;
