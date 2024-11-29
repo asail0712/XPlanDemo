@@ -8,8 +8,8 @@ namespace XPlan.Gesture
     public class PinchToZoom : MonoBehaviour
     {
         [SerializeField] private bool bAllowPassThroughUI   = false;
-        [SerializeField] private float zoomInRatio          = 0.15f;
-        [SerializeField] private float zoomOutRatio         = 0.25f;
+        [SerializeField] public float zoomInRatio           = 0.15f;
+        [SerializeField] public float zoomOutRatio          = 0.25f;
 
         private float lastDist;
         private Vector3 lastScale;

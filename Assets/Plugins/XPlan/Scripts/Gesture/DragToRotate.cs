@@ -9,7 +9,7 @@ namespace XPlan.Gesture
     {
         [SerializeField] private bool bAllowPassThroughUI   = false;
         [SerializeField] private bool bOnlyRotateY          = true;
-        [SerializeField] private float rotationSpeed        = 0.05f; // 控制旋转速度
+        [SerializeField] public float rotationSpeed         = 0.05f; // 控制旋转速度
 
         private Vector2 previousTouchPosition;
 
