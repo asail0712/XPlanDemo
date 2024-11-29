@@ -9,12 +9,15 @@ namespace XPlan.Anim
 		private static readonly string FuncName_AnimStart	= "OnAnimStart";
 		private static readonly string FuncName_AnimEnd		= "OnAnimEnd";
 
+		[SerializeField]
+		private float delayToStart = 0.01f;
+
+		[HideInInspector]
+		private Animator animator;
+
 		public Action<string, float> onStart;
 		public Action<string> onFinish;
 		public Action<string, float, string> onPlaying;
-
-		[HideInInspector]
-		public Animator animator;
 
 		private void Awake()
 		{
@@ -51,7 +54,7 @@ namespace XPlan.Anim
 				{
 					AnimationEvent animStartEvent	= new AnimationEvent();
 					animStartEvent.functionName		= FuncName_AnimStart;   // 替換成您的回調函數名稱				
-					animStartEvent.time				= 0f;                   // 在動畫結束時觸發回調函數
+					animStartEvent.time				= delayToStart;         // 在動畫開始時觸發回調函數
 					clip.AddEvent(animStartEvent);
 				}
 

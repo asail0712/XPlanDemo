@@ -55,7 +55,7 @@ namespace XPlan.Anim
 
         public AnimatorEventReceiver receiver;
 
-        private float playRatio = 1f;
+        private float playSpeed = 1f;
         private bool bIsPause   = false;
 
         public AnimInfo(Animator animator, Action startAction, Action finishAction)
@@ -84,13 +84,13 @@ namespace XPlan.Anim
 
             animGO.SetActive(true);
             animator.Play(animclip.name, 0, ratio);
-            animator.speed = playRatio;
+            animator.speed = playSpeed;
         }
 
         public void StopAnim()
         {
             animGO.SetActive(false);
-            animator.speed = playRatio;
+            animator.speed = playSpeed;
         }
 
         public void PauseAnim()
@@ -115,22 +115,19 @@ namespace XPlan.Anim
             return animGO.activeSelf;// && animator.speed != 0f;
         }
 
-        // play與pause的差別為:
-        // 進度條有在動且看的到東西為play
-        // 進度條沒在動且看的到東西為pause
         public bool IsPause()
         {
-            return bIsPause;
+            return IsPlaying() && bIsPause;
         }
 
-        public void SetPlayRatio(float f)
+        public void SetPlaySpeed(float f)
         {
             if(!bIsPause)
 			{
                 animator.speed = f;
             }
 
-            playRatio = f;
+            playSpeed = f;
         }
     }
 
@@ -249,11 +246,11 @@ namespace XPlan.Anim
             return animInfoDict[triggerID].duration;
         }
 
-        public void SetPlayRatio(float f)
+        public void SetPlaySpeed(float f)
         {
             foreach (KeyValuePair<string, AnimInfo> kvp in animInfoDict)
             {
-                kvp.Value.SetPlayRatio(f);
+                kvp.Value.SetPlaySpeed(f);
             }
         }
 
@@ -288,6 +285,11 @@ namespace XPlan.Anim
         public void RemoveTriggerID(string triggerID)
         {
             triggerList.Remove(triggerID);
+        }
+
+        public bool InTrigger()
+        {
+            return triggerList.Count > 0;
         }
 
         public void ClearTriggerID()
@@ -351,6 +353,7 @@ namespace XPlan.Anim
 
         private List<AnimUnit> animUnitList;
         private Coroutine progressCoroutine;
+        private float totalTime;
 
         /***********************************
          * 初始化
@@ -360,6 +363,7 @@ namespace XPlan.Anim
             // 主線功能初始化
             animUnitList        = new List<AnimUnit>();
             progressCoroutine   = null;
+            totalTime           = -1f;
 
             InitialAnimInfo();
         }
@@ -543,6 +547,19 @@ namespace XPlan.Anim
             }
         }
 
+        public bool InTrigger()
+        {
+            foreach (AnimUnit animUnit in animUnitList)
+            {
+                if(animUnit.InTrigger())
+				{
+                    return true;
+				}
+            }
+
+            return false;
+        }
+
         public void ClearTrigger()
         {
             foreach (AnimUnit animUnit in animUnitList)
@@ -605,7 +622,7 @@ namespace XPlan.Anim
             // 沒有一個GameObject有顯示，表示播完了
             if (animUnit == null)
             {
-                return 0f;
+                return 1f;
             }
 
             float animStartTime     = GetAnimStartTime(animUnit.idx);
@@ -656,7 +673,13 @@ namespace XPlan.Anim
 
         public float GetTotalTime()
 		{
-            float totalTime = 0f;
+            if(totalTime > 0f)
+			{
+                return totalTime;
+            }
+
+            // 避免每次呼叫都要計算
+            totalTime = 0f;
 
             for(int i = 0; i < animUnitList.Count; ++i)
 			{
@@ -667,13 +690,13 @@ namespace XPlan.Anim
             return totalTime;
 		}
 
-        public void SetPlayRatio(float f)
+        public void SetPlaySpeed(float f)
 		{
             for (int i = 0; i < animUnitList.Count; ++i)
             {
                 AnimUnit animUnit = animUnitList[i];
 
-                animUnit.SetPlayRatio(f);
+                animUnit.SetPlaySpeed(f);
             }
         }
 
@@ -758,8 +781,8 @@ namespace XPlan.Anim
                 }
                 else
 				{
-                    prevAnimUnit.PauseAnim(0.99f); // 直接設定duration會把影片重置，所以要故意小一點                    
-
+                    prevAnimUnit.StopAnim();
+                 
                     finishAction?.Invoke();
                 }
             }
