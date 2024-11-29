@@ -71,11 +71,26 @@ namespace XPlan.Utility
 			// 因此使用這個方式等待
 			if (webcamTexture.width <= 16)
 			{
+				const int MaxUpdateTimes	= 100;
+				int currUpdateTimes			= 0;
+
 				LogSystem.Record($"webcamTexture need to initial !!");
 
 				while (!webcamTexture.didUpdateThisFrame)
 				{
+					++currUpdateTimes;
+
 					yield return new WaitForEndOfFrame();
+
+					if(currUpdateTimes > MaxUpdateTimes)
+					{
+						webcamTexture.Stop();
+						webcamTexture.Play();
+
+						currUpdateTimes = 0;
+
+						LogSystem.Record($"webcamTexture Reset to play !!");
+					}
 				}
 
 				LogSystem.Record($"webcamTexture Update Frame !!");
@@ -164,7 +179,7 @@ namespace XPlan.Utility
 				LogSystem.Record($"優先使用前鏡頭");
 			}
 
-			for (int i = deviceList.Length - 1; i >= 0; --i)
+			for (int i = 0; i < deviceList.Length; ++i)
 			{
 				// 優先考慮自拍鏡頭
 				if (!(bPriorityFrontFacing ^ deviceList[i].isFrontFacing))
