@@ -64,16 +64,18 @@ namespace XPlan.Utility
             }
         }
 
-        public static void DecodeQRCodeFromCamera(WebCamTexture webCamTexture, Action<string> finishAction)
+        public static QRCodeReader DecodeQRCodeFromCamera(WebCamTexture webCamTexture, Action<string> finishAction)
         {
             // 确保有一个 MonoBehaviour 来启动协程
             QRCodeReader reader = new GameObject("QRCodeReader").AddComponent<QRCodeReader>();
             reader.StartCoroutine(reader.ReadQRCodeCoroutine(webCamTexture, finishAction));
+
+            return reader;
         }
 
     }
 
-    class QRCodeReader : MonoBehaviour
+    public class QRCodeReader : MonoBehaviour
     {
         private IBarcodeReader barcodeReader;
 
