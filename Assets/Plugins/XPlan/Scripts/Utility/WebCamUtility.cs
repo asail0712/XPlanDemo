@@ -11,6 +11,7 @@ namespace XPlan.Utility
 	public class WebCamController : MonoBehaviour
 	{
 		private WebCamTexture webCamTex;
+		private MonoBehaviourHelper.MonoBehavourInstance waitCameraCoroutine;
 
 		public void InitialController(WebCamTexture webCamTex, RawImage camImg, bool bHighControllWidth = true)
 		{
@@ -21,7 +22,7 @@ namespace XPlan.Utility
 				camImg.enabled = false;
 
 				((WebCamTexture)camImg.texture).Stop();
-				GameObject.Destroy(camImg.texture);
+				GameObject.DestroyImmediate(camImg.texture);
 				camImg.texture = null;
 			}
 
@@ -30,18 +31,29 @@ namespace XPlan.Utility
 
 			webCamTex.Play();
 
-			MonoBehaviourHelper.StartCoroutine(WaitCameraDeviceInitial(camImg, webCamTex, bHighControllWidth));
+			waitCameraCoroutine = MonoBehaviourHelper.StartCoroutine(WaitCameraDeviceInitial(camImg, webCamTex, bHighControllWidth));
 		}
 
 		private void OnDestroy()
 		{
-			if (webCamTex == null)
+			if(waitCameraCoroutine != null)
 			{
-				return;
+				waitCameraCoroutine.StopCoroutine();
+				waitCameraCoroutine = null;
 			}
 
-			webCamTex.Stop();
-			GameObject.Destroy(webCamTex);
+			if (webCamTex != null)
+			{
+				if(webCamTex.isPlaying)
+				{
+					Debug.LogWarning("Stop Web camera Texture");
+					webCamTex.Stop();
+				}
+
+				Debug.LogWarning("Destory Web camera Texture");
+				GameObject.DestroyImmediate(webCamTex);
+				webCamTex = null;
+			}
 		}
 
 		public void Play()
@@ -71,29 +83,26 @@ namespace XPlan.Utility
 			// 因此使用這個方式等待
 			if (webcamTexture.width <= 16)
 			{
-				const int MaxUpdateTimes	= 100;
-				int currUpdateTimes			= 0;
+				//const int MaxTimes	= 100;
+				//int retryTimes		= 0;
 
 				LogSystem.Record($"webcamTexture need to initial !!");
 
 				while (!webcamTexture.didUpdateThisFrame)
 				{
-					++currUpdateTimes;
+					LogSystem.Record($"webcamTexture did not Update This Frame!!", LogType.Warning);
 
 					yield return new WaitForEndOfFrame();
 
-					if(currUpdateTimes > MaxUpdateTimes)
-					{
-						webcamTexture.Stop();
-						webcamTexture.Play();
+					//if (++retryTimes > MaxTimes)
+					//{
+					//	webcamTexture.Stop();
+					//	yield return new WaitForSeconds(0.5f);
+					//	webcamTexture.Play();
 
-						currUpdateTimes = 0;
-
-						LogSystem.Record($"webcamTexture Reset to play !!");
-					}
+					//	LogSystem.Record($"webcamTexture Reset!!", LogType.Warning);
+					//}
 				}
-
-				LogSystem.Record($"webcamTexture Update Frame !!");
 			}
 
 			LogSystem.Record($"webcamTexture initial complete !!");
@@ -160,7 +169,7 @@ namespace XPlan.Utility
 
 	public static class WebCamUtility
 	{
-		static public WebCamController GenerateCamController(RawImage rawImg, bool bPriorityFrontFacing = false, string SceneName = "")
+		static public WebCamController GenerateCamController(RawImage rawImg, bool bPriorityFrontFacing = false, string sceneName = "")
 		{
 			WebCamDevice[] deviceList = WebCamTexture.devices;
 
@@ -189,10 +198,10 @@ namespace XPlan.Utility
 				}
 			}
 
-			for (int i = deviceList.Length - 1; i >= 0; --i)
-			{
-				LogSystem.Record($"第 {i + 1} 個鏡頭名稱為 {deviceList[i].name},是否為前鏡頭: {deviceList[i].isFrontFacing}");
-			}
+			//for (int i = deviceList.Length - 1; i >= 0; --i)
+			//{
+			//	LogSystem.Record($"第 {i + 1} 個鏡頭名稱為 {deviceList[i].name},是否為前鏡頭: {deviceList[i].isFrontFacing}");
+			//}
 
 			LogSystem.Record($"使用第 {camIdx + 1} 個鏡頭");
 
@@ -200,7 +209,7 @@ namespace XPlan.Utility
 			WebCamTexture webCamTex				= new WebCamTexture(deviceList[camIdx].name);
 			GameObject controllerGO				= new GameObject("WebCamController");
 			WebCamController webCamController	= controllerGO.AddComponent<WebCamController>();
-			Scene targetScene					= SceneName != "" ? GetTargetScene(SceneName) : rawImg.gameObject.scene;
+			Scene targetScene					= sceneName != "" ? GetTargetScene(sceneName) : rawImg.gameObject.scene;
 
 			// 將物件搬移到對應的Scene
 			SceneManager.MoveGameObjectToScene(controllerGO, targetScene);
