@@ -1,7 +1,7 @@
 # 1.簡介
 一個基於EDA架構的Unity中小型專案快速開發框架，協助開發者不需精通設計模式也給予代碼足夠的靈活性與擴展度。
 ### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
-### [Avatar SDK Demo : 將照片轉為3D模型][https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10](https://github.com/asail0712/AvatarSDKDemo)
+### [Avatar SDK Demo : 將照片轉為3D模型](https://github.com/asail0712/AvatarSDKDemo)
 # 2.版本資訊
 - Version 2.0.2
 # 3.安裝指南
