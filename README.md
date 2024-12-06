@@ -1,8 +1,9 @@
 # 1.簡介
-一個改良EDA架構的Unity中小型專案快速開發框架，協助開發者不需精通設計模式也給予代碼足夠的靈活性與擴展度。
+一個基於EDA架構的Unity中小型專案快速開發框架，協助開發者不需精通設計模式也給予代碼足夠的靈活性與擴展度。
 ### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
+### [Avatar SDK Demo : 將照片轉為3D模型]([https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10](https://github.com/asail0712/AvatarSDKDemo))
 # 2.版本資訊
-- Version 2.0.1
+- Version 2.0.2
 # 3.安裝指南
 ### 系統要求
 - Unity 2022.3.33f1 或更高版本
@@ -47,17 +48,17 @@
  
 # 5.目標和功能
 ### 目標
-不需要精通設計模式也能輕鬆地提升代碼的靈活度與擴增性，並加速專案的開發以及減少維護的時間。
+降低專案開發難度，並節省專案的開發時間。
 ### 功能
-- 使用MVVM架構解構UI與前台邏輯，避免因為UI的頻繁更動造成代碼大幅的改動
-- Unity很多功能無法在子執行緒上使用，因此XPlan功能都放置在主執行緒上，並允許開發時使用多執行緒
-- 提供強連線與弱連線的套件組，方便做網路功能的操作
+- 使用簡化的EDA架構微系統建構的基礎
+- 使用MVVM設計模式解構UI與Client的邏輯
+- XPlan功能都放置在主執行緒上，並允許開發時使用多執行緒
+- 提供強連線與弱連線的套件組
 - 提供聲音套件，支援多個聲音的播放與切換以及Fade In/Out
-- 建立場景間的關係，提供場景管理與切換
+- 建立場景間的關係，簡化場景管理與切換
 - 提供UI的在地化處理
-- 每個場景可設定不同的按鍵輸入
-- 提供常用元件
-- 提供常用函式庫，包含
+- 提供每個場景的獨立按鍵輸入以及手勢輸入
+- 提供常用元件與函式庫，包含
   - 字串處理
   - Texture處理
   - Singleton
@@ -78,8 +79,8 @@
   - USE_OPENCV 開啟OpenCV的美顏功能
   - AR_FOUNDATION 可開啟AR功能
 - DLL說明
-  - PCSC、System 該DLL用於讀取Smart Card，沒有使用可移除
-  - ZXING 該DLL用於將字串轉為二維條碼，沒有使用可移除
+  - PCSC  用於讀取Smart Card，沒有使用可移除
+  - ZXING 對QRCode做加解密，沒有使用可移除
 
 # 7.聯繫方式
 Email: asail0712@gmail.com
