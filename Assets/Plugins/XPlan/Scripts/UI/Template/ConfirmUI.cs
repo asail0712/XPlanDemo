@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 using XPlan.Utility;
 
-namespace XPlan.UI.Template
+namespace XPlan.UI
 {
 	public enum DialogResult
 	{
