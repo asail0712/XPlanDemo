@@ -83,7 +83,7 @@ namespace XPlan.Anim
             bIsPause = false;
 
             animGO.SetActive(true);
-            animator.Play(animclip.name, 0, ratio);
+            animator.Play("", 0, ratio);
             animator.speed = playSpeed;
         }
 
@@ -106,7 +106,7 @@ namespace XPlan.Anim
             bIsPause = true;
 
             animGO.SetActive(true);
-            animator.Play(animclip.name, 0, ratio);
+            animator.Play("", 0, ratio);
             animator.speed = 0f;
         }
 
@@ -440,7 +440,17 @@ namespace XPlan.Anim
             StopAnim();
             progressCoroutine = StartCoroutine(ProgressBoardcast());
 
-            animUnit.PlayAnim(0f);
+            foreach(AnimUnit otherAnim in animUnitList)
+			{
+                if(otherAnim == animUnit)
+				{
+                    animUnit.PlayAnim(0f);
+                }
+                else
+				{
+                    otherAnim.StopAnim();
+                }
+			}
         }
 
         public void PlayAnim(float playRatio)
@@ -456,7 +466,18 @@ namespace XPlan.Anim
             StopAnim();
             progressCoroutine   = StartCoroutine(ProgressBoardcast());
             float duration      = animUnit.Duration();
-            animUnit.PlayAnim(playTime / duration);
+            
+            foreach (AnimUnit otherAnim in animUnitList)
+            {
+                if (otherAnim == animUnit)
+                {
+                    animUnit.PlayAnim(playTime / duration);
+                }
+                else
+                {
+                    otherAnim.StopAnim();
+                }
+            }
         }
 
         public void PlayAnimByTime(float playTime)
@@ -492,7 +513,7 @@ namespace XPlan.Anim
             float playTime          = 0f;
             AnimUnit newAnimUnit    = FindAnimUnit(playRatio, ref playTime);
 
-            if (newAnimUnit == null)
+            if (newAnimUnit == null || oldAnimUnit == null)
             {
                 return;
             }
@@ -504,7 +525,17 @@ namespace XPlan.Anim
 
             float ratio = playTime / newAnimUnit.Duration();
 
-            newAnimUnit.PauseAnim(ratio);
+            foreach (AnimUnit otherAnim in animUnitList)
+            {
+                if (otherAnim == newAnimUnit)
+                {
+                    newAnimUnit.PauseAnim(ratio);
+                }
+                else
+                {
+                    otherAnim.StopAnim();
+                }
+            }
         }
 
         public void PauseAnim()
@@ -518,7 +549,17 @@ namespace XPlan.Anim
                 return;
             }
 
-            animUnit.PauseAnim();
+            foreach (AnimUnit otherAnim in animUnitList)
+            {
+                if (otherAnim == animUnit)
+                {
+                    animUnit.PauseAnim();
+                }
+                else
+                {
+                    otherAnim.StopAnim();
+                }
+            }
         }
 
         public void ResumeAnim()
@@ -727,14 +768,21 @@ namespace XPlan.Anim
             float currTime  = GetTotalTime() * playRatio;
             int i           = 0;
 
-            for(i = 0; i < animUnitList.Count - 1; ++i)
+            for(i = 0; i < animUnitList.Count; ++i)
 			{
-                float nextAnimStartTime = GetAnimStartTime(i + 1);
+                float startTime = GetAnimStartTime(i);
+                float endTime   = startTime + animUnitList[i].Duration();
 
-                if (nextAnimStartTime > currTime)
+                // 使用Math.Round讓計算更為精準
+                if (Math.Round(currTime - startTime, 5) >= 0f && Math.Round(endTime - currTime, 5) > 0f)
 				{
                     break;
 				}
+			}
+
+            if(!animUnitList.IsValidIndex<AnimUnit>(i))
+			{
+                return null;
 			}
 
             AnimUnit animUnit   = animUnitList[i];
