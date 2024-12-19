@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,7 +12,7 @@ namespace XPlan.DebugMode
         // Start is called before the first frame update
         void Awake()
         {
-            DebugCheck[] debugCheckArr          = FindObjectsOfType<DebugCheck>(true);
+            DebugCheck[] debugCheckArr          = FindObjectsByType<DebugCheck>(FindObjectsSortMode.None);
             Queue<DebugCheck> debugCheckQueue   = new Queue<DebugCheck>(debugCheckArr);
 
             // Debug Manager有Initial的話，表示不是單一Scene獨立測試

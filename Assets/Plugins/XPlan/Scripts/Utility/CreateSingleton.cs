@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace XPlan.Utility
 {
@@ -22,7 +22,7 @@ namespace XPlan.Utility
             {
                 if (instance == null)
                 {
-                    instance = FindObjectOfType<T>();
+                    instance = FindFirstObjectByType<T>();
 
                     if (instance == null && Application.isPlaying)
                     {
