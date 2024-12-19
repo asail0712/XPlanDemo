@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,7 +26,8 @@ namespace XPlan.UI
 	public class ActionInfo
 	{
 		public UIBase ui;
-		public ListenOption listenOption;
+        public GameObject go;
+        public ListenOption listenOption;
 		public Action<UIParam[]> callingAction;
 	}
 
@@ -220,7 +221,8 @@ namespace XPlan.UI
 			callingInfo.callingMap.Add(id, new ActionInfo() 
 			{
 				ui				= ui,
-				listenOption	= option,
+                go              = ui.gameObject,
+                listenOption	= option,
 				callingAction	= callingAction
 			});
 		}
@@ -298,7 +300,7 @@ namespace XPlan.UI
 				}
 
 				// 執行命令的UI，一定要設定為enable
-				actionInfo.ui.gameObject.SetActive(true);
+				actionInfo.go.SetActive(true);
 				// 執行命令
 				actionInfo.callingAction?.Invoke(paramArr);
 			}
