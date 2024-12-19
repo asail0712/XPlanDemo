@@ -135,11 +135,13 @@ MonoBehaviour:
   m_Name: FoveatedRenderingFeature Android
   m_EditorClassIdentifier: 
   m_enabled: 0
-  nameUi: 
-  version: 
-  featureIdInternal: 
-  openxrExtensionStrings: 
-  company: 
+  nameUi: Foveated Rendering
+  version: 1
+  featureIdInternal: com.unity.openxr.feature.foveatedrendering
+  openxrExtensionStrings: XR_UNITY_foveation XR_FB_foveation XR_FB_foveation_configuration
+    XR_FB_swapchain_update_state XR_FB_foveation_vulkan XR_META_foveation_eye_tracked
+    XR_META_vulkan_swapchain_create_info
+  company: Unity
   priority: 0
   required: 0
 --- !u!114 &-4594372077014850405
@@ -155,16 +157,16 @@ MonoBehaviour:
   m_Name: Standalone
   m_EditorClassIdentifier: 
   features:
-  - {fileID: 8012922121015960121}
-  - {fileID: -3642712229754093519}
   - {fileID: -8124742522277404098}
   - {fileID: 3450827732329361710}
   - {fileID: 3686890745731116079}
+  - {fileID: -3642712229754093519}
   - {fileID: -9111733908889211829}
   - {fileID: 8470466884720011119}
   - {fileID: -2806118839873919806}
   - {fileID: -7573477875840147591}
   - {fileID: 627169453321195847}
+  - {fileID: 8012922121015960121}
   - {fileID: 4420221510734542705}
   - {fileID: -197723154459795002}
   - {fileID: -530496486483173163}
@@ -647,11 +649,11 @@ MonoBehaviour:
   m_Name: MetaQuestTouchPlusControllerProfile Android
   m_EditorClassIdentifier: 
   m_enabled: 0
-  nameUi: 
-  version: 
-  featureIdInternal: 
-  openxrExtensionStrings: 
-  company: 
+  nameUi: Meta Quest Touch Plus Controller Profile
+  version: 0.0.1
+  featureIdInternal: com.unity.openxr.feature.input.metaquestplus
+  openxrExtensionStrings: XR_META_touch_controller_plus
+  company: Unity
   priority: 0
   required: 0
 --- !u!114 &3686890745731116079
@@ -752,10 +754,12 @@ MonoBehaviour:
   - {fileID: -2170411564324744078}
   - {fileID: -3827498735498108947}
   - {fileID: 2285921025282965134}
+  - {fileID: -4872976583902159307}
   - {fileID: 2591743179049887075}
   - {fileID: 8752052038386855263}
   - {fileID: 1692606768322600016}
   - {fileID: 1987020350469632259}
+  - {fileID: 3464568117181161897}
   - {fileID: -2843549145847263322}
   - {fileID: -5738345369563694583}
   - {fileID: 9140017261762507317}
