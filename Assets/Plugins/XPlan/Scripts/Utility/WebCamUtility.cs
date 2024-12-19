@@ -1,4 +1,5 @@
-﻿using System.Collections;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,34 +12,44 @@ namespace XPlan.Utility
 	public class WebCamController : MonoBehaviour
 	{
 		private WebCamTexture webCamTex;
-		private MonoBehaviourHelper.MonoBehavourInstance waitCameraCoroutine;
+		private Coroutine waitCameraCoroutine;
+        private bool bDeviceReady;
 
-		public void InitialController(WebCamTexture webCamTex, RawImage camImg, bool bHighControllWidth = true)
+        public int Width
+        {
+            get
+            {
+                return webCamTex.width;
+            }
+        }
+
+        public int Height
+        {
+            get
+            {
+                return webCamTex.height;
+            }
+        }
+
+        public float FPS
+        {
+            get
+            {
+                return webCamTex.requestedFPS;
+            }
+        }
+
+        public void InitialController(WebCamTexture webCamTex)
 		{
-			this.webCamTex	= webCamTex;
-
-			if (camImg.texture != null)
-			{
-				camImg.enabled = false;
-
-				((WebCamTexture)camImg.texture).Stop();
-				GameObject.DestroyImmediate(camImg.texture);
-				camImg.texture = null;
-			}
-
-			camImg.texture = webCamTex;
-			camImg.enabled = true;
-
-			webCamTex.Play();
-
-			waitCameraCoroutine = MonoBehaviourHelper.StartCoroutine(WaitCameraDeviceInitial(camImg, webCamTex, bHighControllWidth));
-		}
+			this.webCamTex      = webCamTex;
+            this.bDeviceReady   = false;
+        }
 
 		private void OnDestroy()
 		{
 			if(waitCameraCoroutine != null)
 			{
-				waitCameraCoroutine.StopCoroutine();
+                StopCoroutine(waitCameraCoroutine);
 				waitCameraCoroutine = null;
 			}
 
@@ -56,63 +67,91 @@ namespace XPlan.Utility
 			}
 		}
 
+        public void AttachRawImage(RawImage camImg, bool bHighControllWidth = true)
+        {
+            if (camImg == null)
+            {
+                return;
+            }
+
+            // reset 原本的Texture
+            if (camImg.texture != null && camImg.texture is WebCamTexture)
+            {
+                camImg.enabled = false;
+
+                WebCamTexture webCamTexture = ((WebCamTexture)camImg.texture);
+                webCamTexture.Stop();
+
+                GameObject.DestroyImmediate(camImg.texture);
+                camImg.texture = null;
+            }
+
+            camImg.texture = webCamTex;
+            camImg.enabled = true;
+
+            // 先調整Img大小
+            FitImageSizeToCamSize(camImg, webCamTex, bHighControllWidth);
+
+            // 翻轉處理
+            RotationImg(camImg, webCamTex);
+        }
+
 		public void Play()
-		{
-			webCamTex.Play();
-		}
-		public void Pause()
+		{            
+            webCamTex.Play();
+            waitCameraCoroutine = StartCoroutine(WaitCameraDeviceInitial(webCamTex));
+        }
+
+        public void Pause()
 		{
 			webCamTex.Pause();
 		}
+
 		public void Stop()
 		{
 			webCamTex.Stop();
 		}
+
 		public bool IsPlaying()
 		{
 			return webCamTex.isPlaying;
 		}
+
 		public Texture GetTexture()
 		{
 			return webCamTex;
 		}
 
-		private IEnumerator WaitCameraDeviceInitial(RawImage cameraImg, WebCamTexture webcamTexture, bool bHighControllWidth)
+        public string GetDeviceName()
+        {
+            return webCamTex.deviceName;
+        }
+
+        public bool IsDeviceReady()
+        {
+            return bDeviceReady;
+        }
+
+        private IEnumerator WaitCameraDeviceInitial(WebCamTexture webCamTexture)
 		{
-			// 部分機器在剛開始執行時，webcamTexture會還沒有初始化完成
-			// 因此使用這個方式等待
-			if (webcamTexture.width <= 16)
-			{
-				//const int MaxTimes	= 100;
-				//int retryTimes		= 0;
+            // 部分機器在剛開始執行時，webcamTexture會還沒有初始化完成
+            // 因此使用這個方式等待
+            const int timeoutFrame  = 2000;
+            var count               = 0;
 
-				LogSystem.Record($"webcamTexture need to initial !!");
+            LogSystem.Record("Waiting for WebCamTexture to start");
 
-				while (!webcamTexture.didUpdateThisFrame)
-				{
-					LogSystem.Record($"webcamTexture did not Update This Frame!!", LogType.Warning);
+            yield return new WaitUntil(() => count++ > timeoutFrame || webCamTexture.width > 16);
 
-					yield return new WaitForEndOfFrame();
+            if (webCamTexture.width <= 16)
+            {
+                throw new TimeoutException("Failed to start WebCam");
+            }
 
-					//if (++retryTimes > MaxTimes)
-					//{
-					//	webcamTexture.Stop();
-					//	yield return new WaitForSeconds(0.5f);
-					//	webcamTexture.Play();
+            LogSystem.Record($"webcamTexture initial complete !!");
 
-					//	LogSystem.Record($"webcamTexture Reset!!", LogType.Warning);
-					//}
-				}
-			}
-
-			LogSystem.Record($"webcamTexture initial complete !!");
-
-			// 先調整Img大小
-			FitImageSizeToCamSize(cameraImg, webcamTexture, bHighControllWidth);
-
-			// 翻轉處理
-			RotationImg(cameraImg, webcamTexture);
-		}
+            bDeviceReady = true;
+        }
 
 		private void FitImageSizeToCamSize(RawImage cameraImg, WebCamTexture webcamTexture, bool bHighControllWidth)
 		{
@@ -169,7 +208,7 @@ namespace XPlan.Utility
 
 	public static class WebCamUtility
 	{
-		static public WebCamController GenerateCamController(RawImage rawImg, bool bPriorityFrontFacing = false, string sceneName = "")
+		static public WebCamController GenerateCamController(bool bPriorityFrontFacing = false, string sceneName = "")
 		{
 			WebCamDevice[] deviceList = WebCamTexture.devices;
 
@@ -209,12 +248,12 @@ namespace XPlan.Utility
 			WebCamTexture webCamTex				= new WebCamTexture(deviceList[camIdx].name);
 			GameObject controllerGO				= new GameObject("WebCamController");
 			WebCamController webCamController	= controllerGO.AddComponent<WebCamController>();
-			Scene targetScene					= sceneName != "" ? GetTargetScene(sceneName) : rawImg.gameObject.scene;
+			Scene targetScene					= sceneName != "" ? GetTargetScene(sceneName) : SceneManager.GetSceneAt(0);
 
 			// 將物件搬移到對應的Scene
 			SceneManager.MoveGameObjectToScene(controllerGO, targetScene);
 			// 初始化Controller
-			webCamController.InitialController(webCamTex, rawImg);
+			webCamController.InitialController(webCamTex);
 
 			return webCamController;
 		}
