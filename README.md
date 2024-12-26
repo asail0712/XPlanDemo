@@ -80,4 +80,3 @@ Email: asail0712@gmail.com
 ### [Avatar SDK Demo : 將照片轉為3D模型](https://github.com/asail0712/AvatarSDKDemo)
 ### [MediaPipe Demo : 影像辨識](https://github.com/asail0712/XPlan_MediaPipeDemo)
 ### [AR Demo : 擴增實境](https://github.com/asail0712/XPlan_AR)
-### [OpenCV Demo : 影像辨識](https://github.com/asail0712/XPlan_OpenCV)
