@@ -2,7 +2,7 @@
 一個基於EDA架構的Unity中小型專案快速開發框架，協助開發者不需精通設計模式也給予代碼足夠的靈活性與擴展度。
 ### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 2.0.2
+- Version 2.1.2
 # 3.安裝指南
 ### 系統要求
 - Unity 2022.3.33f1 或更高版本
@@ -47,7 +47,6 @@
 ### 功能
 - 使用簡化的EDA架構微系統建構的基礎
 - 使用MVVM設計模式解構UI與Client的邏輯
-- XPlan功能都放置在主執行緒上，並允許開發時使用多執行緒
 - 提供強連線與弱連線的套件組
 - 提供聲音套件，支援多個聲音的播放與切換以及Fade In/Out
 - 建立場景間的關係，簡化場景管理與切換
@@ -70,7 +69,6 @@
 - 前置定義
   - PCSC 可開啟支援讀取Smart Card功能
   - ZXING 可開啟轉二維條碼功能
-  - USE_OPENCV 開啟OpenCV的美顏功能
 - DLL說明
   - PCSC  用於讀取Smart Card，沒有使用可移除
   - ZXING 對QRCode做加解密，沒有使用可移除
@@ -82,3 +80,4 @@ Email: asail0712@gmail.com
 ### [Avatar SDK Demo : 將照片轉為3D模型](https://github.com/asail0712/AvatarSDKDemo)
 ### [MediaPipe Demo : 影像辨識](https://github.com/asail0712/XPlan_MediaPipeDemo)
 ### [AR Demo : 擴增實境](https://github.com/asail0712/XPlan_AR)
+### [OpenCV Demo : 影像辨識](https://github.com/asail0712/XPlan_OpenCV)
