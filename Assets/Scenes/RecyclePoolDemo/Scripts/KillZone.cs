@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,7 +17,7 @@ namespace XPlan.Demo.Recycle
 				Ball ball				= go.GetComponent<Ball>();
 				ball.transform.position = ballEmitter.transform.TransformPoint(Random.insideUnitSphere * 0.5f);
 				Rigidbody2D rigi		= ball.GetComponent<Rigidbody2D>();
-				// �קK�t�ײֿn�Ӧh
+				// 避免速度累積太多
 				rigi.velocity			= Vector2.zero;
 			}
 		}
