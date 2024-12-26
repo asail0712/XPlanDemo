@@ -6,7 +6,7 @@ namespace XPlan.Component
     {
 	    void Awake()
 	    {
-            GameObject[] objects    = GameObject.FindObjectsOfType<GameObject>();
+            GameObject[] objects    = GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
             int repeatNum           = 0;
 
             foreach (GameObject obj in objects)
