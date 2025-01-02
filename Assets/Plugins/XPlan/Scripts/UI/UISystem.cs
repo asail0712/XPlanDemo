@@ -299,8 +299,6 @@ namespace XPlan.UI
 					continue;
 				}
 
-				// 執行命令的UI，一定要設定為enable
-				actionInfo.go.SetActive(true);
 				// 執行命令
 				actionInfo.callingAction?.Invoke(paramArr);
 			}

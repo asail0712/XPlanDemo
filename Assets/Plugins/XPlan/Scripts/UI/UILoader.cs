@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -23,13 +23,16 @@ namespace XPlan.UI
 		[SerializeField]
 		public bool bVisible;
 
+        [HideInInspector]
+        public UIBase[] uiList;
+
 		public UILoadingInfo()
 		{
 			rootIdx			= 0;
 			sortIdx			= 5;
 			bIsPersistentUI = false;
 			bVisible		= true;
-		}
+        }
 	}
 
     public class UILoader : MonoBehaviour
@@ -62,6 +65,15 @@ namespace XPlan.UI
 
 		public List<UILoadingInfo> GetLoadingList()
 		{
+            // 初始化 UILoadingInfo 的 uiList
+            foreach (UILoadingInfo uiLoadingInfo in loadingList)
+            {
+                if(uiLoadingInfo.uiList == null || uiLoadingInfo.uiList.Length == 0)
+                {
+                    uiLoadingInfo.uiList = uiLoadingInfo.uiPerfab.GetComponents<UIBase>();
+                }                
+            }
+
 			return loadingList;
 		}
 

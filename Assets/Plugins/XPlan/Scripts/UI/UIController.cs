@@ -30,6 +30,7 @@ namespace XPlan.UI
 		public int rootIdx;
 		public int referCount;
 		public string uiName;
+        public List<UIBase> uiList;
 
 		public UIVisibleInfo(GameObject u, string s, int r, int i)
 		{
@@ -37,7 +38,8 @@ namespace XPlan.UI
 			uiName			= s;
 			referCount		= r;
 			rootIdx			= i;
-		}
+            uiList          = uiIns.GetComponents<UIBase>().ToList();
+        }
 	}
 
 	public class UIController : CreateSingleton<UIController>
@@ -277,10 +279,10 @@ namespace XPlan.UI
 			}
 
 			// 判斷只有在stack頂層的UI需要做驅動，其他的都視為休息中
-
+            // 先判斷常駐UI
 			foreach(UIVisibleInfo uiInfo in persistentUIList)
 			{
-				List<UIBase> uiList = uiInfo.uiIns.GetComponents<UIBase>().ToList();
+				List<UIBase> uiList = uiInfo.uiList;
 
 				if (uiList.Contains(ui))
 				{
@@ -288,13 +290,13 @@ namespace XPlan.UI
 				}
 			}
 			
+            // 判斷非常駐UI中最新的UILoader
 			UILoader lastUILoader = loaderStack[loaderStack.Count - 1];
 
 			foreach (UILoadingInfo loadingInfo in lastUILoader.GetLoadingList())
 			{
-				UIBase[] uiList = loadingInfo.uiPerfab.GetComponents<UIBase>();
-
-				bool bIsExist = Array.Exists(uiList, (X) => 
+				UIBase[] uiList = loadingInfo.uiList;
+				bool bIsExist   = Array.Exists(uiList, (X) => 
 				{
 					return X.GetType() == ui.GetType();
 				});
