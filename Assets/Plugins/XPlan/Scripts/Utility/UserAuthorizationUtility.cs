@@ -140,9 +140,15 @@ namespace XPlan.Utility
             // 索取相機使用權限
             Permission.RequestUserPermission(permission, callbacks);
         }
+#else
 
-        static public void PermissionWhenDenied()
-        {         
+#endif
+
+        static public void OpenAppSetting()
+        {
+#if UNITY_IOS
+            Application.OpenURL("app-settings:");
+#elif UNITY_ANDROID
             AndroidJavaClass unityPlayer        = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             AndroidJavaObject currentActivity   = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
 
@@ -157,9 +163,9 @@ namespace XPlan.Utility
             settingsIntent.Call<AndroidJavaObject>("setData", uri);
 
             currentActivity.Call("startActivity", settingsIntent);
-		}
 #else
-
 #endif
+        }
+
     }
 }
