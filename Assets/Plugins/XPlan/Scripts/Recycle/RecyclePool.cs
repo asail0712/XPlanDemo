@@ -82,6 +82,12 @@ namespace XPlan.Recycle
 		{
             poolable.OnRecycle();
 
+            if(poolableQueue.Contains(poolable))
+            {
+                LogSystem.Record($"{poolable} 已經再Pool裡面了 !!", LogType.Warning);
+                return;
+            }
+
             poolableQueue.Enqueue(poolable);
         }
 
