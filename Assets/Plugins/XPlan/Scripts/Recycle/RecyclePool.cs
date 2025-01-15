@@ -169,6 +169,11 @@ namespace XPlan.Recycle
 
                     poolableComp.ReleasePoolable();                    
                 }
+                else if(poolable is IPoolable)
+                {
+                    IPoolable releaseObj = poolable as IPoolable;
+                    releaseObj.ReleasePoolable();
+                }
             }
 
             poolableQueue.Clear();
