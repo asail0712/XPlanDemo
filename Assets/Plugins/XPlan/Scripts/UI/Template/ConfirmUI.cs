@@ -111,6 +111,8 @@ namespace XPlan.UI
 				clickAction		= info.clickAction;
 
 				cancelBtn.gameObject.SetActive(info.dialogType == DialogType.DualButton);
+
+				gameObject.SetActive(true);
 			});
 		}
 	}
