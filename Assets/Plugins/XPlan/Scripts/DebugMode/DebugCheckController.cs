@@ -12,7 +12,7 @@ namespace XPlan.DebugMode
         // Start is called before the first frame update
         void Awake()
         {
-            DebugCheck[] debugCheckArr          = FindObjectsByType<DebugCheck>(FindObjectsSortMode.None);
+            DebugCheck[] debugCheckArr          = FindObjectsByType<DebugCheck>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             Queue<DebugCheck> debugCheckQueue   = new Queue<DebugCheck>(debugCheckArr);
 
             // Debug Manager有Initial的話，表示不是單一Scene獨立測試
