@@ -67,11 +67,11 @@ namespace XPlan.Utility
 			}
 		}
 
-        public void AttachRawImage(RawImage camImg, bool bHighControllWidth = true)
+        public IEnumerator InitialWithRawImage(RawImage camImg, bool bHighControllWidth = true)
         {
             if (camImg == null)
             {
-                return;
+                yield break;
             }
 
             // reset 原本的Texture
@@ -86,15 +86,17 @@ namespace XPlan.Utility
                 camImg.texture = null;
             }
 
-            camImg.texture = webCamTex;
-            camImg.enabled = true;
+			camImg.texture = webCamTex;
+			camImg.enabled = true;
 
-            // 先調整Img大小
-            FitImageSizeToCamSize(camImg, webCamTex, bHighControllWidth);
+			// 先調整Img大小
+			FitImageSizeToCamSize(camImg, webCamTex, bHighControllWidth);
 
-            // 翻轉處理
-            RotationImg(camImg, webCamTex);
-        }
+			// 翻轉處理
+			RotationImg(camImg, webCamTex);
+
+			yield return WaitCameraDeviceInitial(webCamTex);
+		}
 
 		public void Play()
 		{            
@@ -102,7 +104,13 @@ namespace XPlan.Utility
             waitCameraCoroutine = StartCoroutine(WaitCameraDeviceInitial(webCamTex));
         }
 
-        public void Pause()
+		public void Play(RawImage camImg, bool bHighControllWidth = true)
+		{
+			webCamTex.Play();
+			waitCameraCoroutine = StartCoroutine(InitialWithRawImage(camImg, bHighControllWidth));
+		}
+
+		public void Pause()
 		{
 			webCamTex.Pause();
 		}
@@ -151,7 +159,7 @@ namespace XPlan.Utility
             LogSystem.Record($"webcamTexture initial complete !!");
 
             bDeviceReady = true;
-        }
+		}
 
 		private void FitImageSizeToCamSize(RawImage cameraImg, WebCamTexture webcamTexture, bool bHighControllWidth)
 		{
