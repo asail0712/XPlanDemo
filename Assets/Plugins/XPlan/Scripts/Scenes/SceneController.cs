@@ -163,7 +163,7 @@ namespace XPlan.Scenes
 			return ChangeTo(buildIndex, finishAction, bActiveScene);
 		}
 
-		private void AddStack(int sceneIdx)
+		private void AddSceneStack(int sceneIdx)
 		{
 			int scenelevel = GetLevel(sceneIdx);
 
@@ -175,12 +175,17 @@ namespace XPlan.Scenes
 			currSceneStack.Add(sceneIdx);
 		}
 
-		private void RemoveStack(int sceneIdx)
+		private void RemoveSceneStack(int sceneIdx)
 		{			
 			while (currSceneStack.Contains(sceneIdx))
 			{
 				currSceneStack.RemoveAt(currSceneStack.Count - 1);
 			}
+		}
+
+		private void ChangeSceneStack(int scenelevel, int sceneIdx)
+		{
+			currSceneStack[scenelevel] = sceneIdx;
 		}
 
 		public bool ChangeTo(int buildIndex, Action finishAction = null, bool bActiveScene = true)
@@ -191,7 +196,7 @@ namespace XPlan.Scenes
 				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(buildIndex, LoadSceneMode.Additive);
 				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, buildIndex, bActiveScene, finishAction));
 
-				AddStack(buildIndex);
+				AddSceneStack(buildIndex);
 				return true;
 			}
 
@@ -206,7 +211,7 @@ namespace XPlan.Scenes
 					// 考慮到SceneLevel的差距，所以強制關閉，不用等回調
 					AddQueueUnload(currSceneIndex);
 
-					RemoveStack(buildIndex);
+					RemoveSceneStack(buildIndex);
 				}
 				else if (currScenelevel == newScenelevel)
 				{
@@ -220,7 +225,7 @@ namespace XPlan.Scenes
 						AddQueueLoad(buildIndex, finishAction, bActiveScene);
 						AddQueueUnload(currSceneIndex);
 
-						currSceneStack[currScenelevel] = buildIndex;
+						ChangeSceneStack(currScenelevel, buildIndex);
 
 						break;
 					}
@@ -229,7 +234,7 @@ namespace XPlan.Scenes
 				{
 					AddQueueLoad(buildIndex, finishAction, bActiveScene);
 
-					AddStack(buildIndex);
+					RemoveSceneStack(buildIndex);
 					break;
 				}
 			}
