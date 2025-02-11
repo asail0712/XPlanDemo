@@ -48,7 +48,7 @@ namespace XPlan.Recycle
             {
                 if (poolableQueue.Count == 0)
                 {
-                    LogSystem.Record($"Pool {type} 型別空了 所以生成一個新的 !!", LogType.Warning);
+                    LogSystem.Record($"Pool {type} 型別空了 所以生成一個新的 !!");
 
                     poolable = new T();
                     poolable.InitialPoolable();
