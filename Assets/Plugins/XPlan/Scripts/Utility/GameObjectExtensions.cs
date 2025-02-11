@@ -6,7 +6,7 @@ namespace XPlan.Utility
 {
     public static class GameObjectExtensions
     {
-        public static List<GameObject> GetAllChildren(this GameObject gameObject, Func<GameObject, bool> filter = null)
+        public static List<GameObject> GetAllChildren(this GameObject gameObject, Func<GameObject, bool> filter = null, bool bRecursive = true)
 		{
             List<GameObject> allChildren = new List<GameObject>();
 
@@ -22,7 +22,10 @@ namespace XPlan.Utility
                     }
 
                     // 遞迴調用，檢查這個子物件的子物件
-                    GetChildrenRecursive(child);
+                    if(bRecursive)
+                    {
+                        GetChildrenRecursive(child);
+                    }                    
                 }
             }
 
