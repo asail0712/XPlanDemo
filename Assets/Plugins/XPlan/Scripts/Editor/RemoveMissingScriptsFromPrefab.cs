@@ -1,5 +1,9 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+
+using UnityEditor;
 using UnityEngine;
+
+using XPlan.Utility;
 
 namespace XPlan.Editors
 {
@@ -34,11 +38,18 @@ namespace XPlan.Editors
             }
 
             // 遍歷 Prefab 中的所有子物件
-            GameObject[] childGOList = prefabInstance.GetComponentsInChildren<GameObject>(true);
+            int totalMissCount = 0;
 
+            List<GameObject> childGOList = prefabInstance.GetAllChildren();
             foreach (GameObject childGO in childGOList)
             {
-                GameObjectUtility.RemoveMonoBehavioursWithMissingScript(childGO);
+                int missCount   = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(childGO);
+                totalMissCount  += missCount;
+            }
+
+            if(totalMissCount > 0)
+            {
+                Debug.LogWarning($"{prefabInstance.name} 一共移除了 {totalMissCount} 個 miss script");
             }
 
             // 保存 Prefab 修改
