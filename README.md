@@ -1,5 +1,5 @@
 # 1.簡介
-一個基於EDA架構的Unity中小型專案快速開發框架，協助開發者不需精通設計模式也給予代碼足夠的靈活性與擴展度。
+XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，協助開發者開發專案時，可以輕易掌握EDA的優勢來給予代碼足夠的靈活性與擴展度，同時也鬆綁使用者對設計模式的過多依賴。
 ### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
 - Version 2.1.3
@@ -47,7 +47,7 @@
 ### 功能
 - 使用簡化的EDA架構微系統建構的基礎
 - 使用MVVM設計模式解構UI與Client的邏輯
-- 提供強連線與弱連線的套件組
+- 提供API與WebSocket的套件組
 - 提供聲音套件，支援多個聲音的播放與切換以及Fade In/Out
 - 建立場景間的關係，簡化場景管理與切換
 - 提供UI的在地化處理
