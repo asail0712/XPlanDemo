@@ -55,7 +55,14 @@ namespace XPlan.Utility
 			{
 				EditorPrefs.SetString(key, Convert.ToString(value));
 			}
-	#else
+			else if (typeof(T) == typeof(Vector3))
+			{
+				string vecStr	= value.ToString();
+				vecStr			= vecStr.Substring(1, vecStr.Length - 2);
+
+				EditorPrefs.SetString(key, vecStr);
+			}
+#else
 			if (typeof(T) == typeof(int))
 			{
 				PlayerPrefs.SetInt(key, Convert.ToInt32(value));
@@ -71,6 +78,13 @@ namespace XPlan.Utility
 			else if (typeof(T) == typeof(bool))
 			{
 				PlayerPrefs.SetInt(key, Convert.ToBoolean(value) ? 1 : 0);
+			}
+			else if (typeof(T) == typeof(Vector3))
+			{
+				string vecStr	= value.ToString();
+				vecStr			= vecStr.Substring(1, vecStr.Length - 2);
+
+				PlayerPrefs.SetString(key, vecStr);
 			}
 #endif //UNITY_EDITOR
 		}
@@ -99,6 +113,12 @@ namespace XPlan.Utility
 			{
 				return (T)Convert.ChangeType(EditorPrefs.GetString(key), typeof(T));
 			}
+			else if (typeof(T) == typeof(Vector3))
+			{
+				string[] vecStrList = EditorPrefs.GetString(key).Split(",");
+
+				return (T)Convert.ChangeType(new Vector3(float.Parse(vecStrList[0]), float.Parse(vecStrList[1]), float.Parse(vecStrList[2])), typeof(T));
+			}
 #else
 			if (!PlayerPrefs.HasKey(key))
 			{
@@ -120,6 +140,12 @@ namespace XPlan.Utility
 			else if (typeof(T) == typeof(bool))
 			{
 				return (T)(object)(PlayerPrefs.GetInt(key) == 1);
+			}
+			else if (typeof(T) == typeof(Vector3))
+			{				
+				string[] vecStrList = PlayerPrefs.GetString(key).Split(",");
+
+				return (T)Convert.ChangeType(new Vector3(float.Parse(vecStrList[0]), float.Parse(vecStrList[1]), float.Parse(vecStrList[2])), typeof(T));
 			}
 #endif //UNITY_EDITOR
 
