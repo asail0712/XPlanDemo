@@ -1,14 +1,16 @@
 # 1.簡介
-基於資料導向(Data-Oriented)為基礎，並兼具物件導向(Object-Oriented)優勢，用於Unity開發的程式框架，著重在降低代碼耦合度與提高模組的覆用性，並將開發的重點放在邏輯的撰寫，而不是引用的傳遞與管理。
- 
-# 2.安裝指南
+XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，協助開發者開發專案時，可以輕易掌握EDA的優勢來給予代碼足夠的靈活性與擴展度，同時也鬆綁使用者對設計模式的過多依賴。
+### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
+# 2.版本資訊
+- Version 2.1.3
+# 3.安裝指南
 ### 系統要求
-- Unity 2021.3.6f1 或更高版本。
+- Unity 2022.3.33f1 或更高版本
 ### 安裝指南
 - 將XPlan資料夾放進專案中的Assets/Plugins即可
 - 不需要使用的DLL可以刪除，請參照"其他"的說明
   
-# 3.使用說明
+# 4.使用說明
 - Assets/Scenes/SystemArchitectureDemo/MainScene.unity
   - 此為簡易計算機的範例
   - 說明XPlan的系統架構該如何建立以及類別間的溝通方式
@@ -39,21 +41,18 @@
 - Assets/Scenes/SceneDebugDemo/SceneDebugDemo.unity
   - 示範專案中的每個Scene要如何設定，讓單一場景可以獨立運作
  
-# 4.目標和功能
+# 5.目標和功能
 ### 目標
-降低代碼的相依性，並加速專案的開發以及減少維護的時間。
+降低專案開發難度，並節省專案的開發時間。
 ### 功能
-- 減少使用複雜的設計模式來增加代碼的閱讀性，將開發的重點放在邏輯的撰寫，而不是引用的傳遞與管理
-- 使用MVVM架構解構UI與前台邏輯，避免因為UI的頻繁更動造成代碼大幅的改動
-- 使用StartCoroutine替代async/await的使用
-- Unity很多功能無法在子執行緒上使用，因此XPlan功能都放置在主執行緒上，並允許開發時使用多執行緒
-- 提供強連線與弱連線的套件組，降低網路功能的使用難度
+- 使用簡化的EDA架構微系統建構的基礎
+- 使用MVVM設計模式解構UI與Client的邏輯
+- 提供API與WebSocket的套件組
 - 提供聲音套件，支援多個聲音的播放與切換以及Fade In/Out
-- 建立場景間的關係，提供場景管理與切換
+- 建立場景間的關係，簡化場景管理與切換
 - 提供UI的在地化處理
-- 每個場景可設定不同的按鍵輸入
-- 提供常用元件
-- 提供常用函式庫，包含
+- 提供每個場景的獨立按鍵輸入以及手勢輸入
+- 提供常用元件與函式庫，包含
   - 字串處理
   - Texture處理
   - Singleton
@@ -61,24 +60,23 @@
   - Easing Functon
   - Web Camera設定
   - Gesture 功能
-  - AR相關組件
 - 其他 
   - GPS資料解析
   - PCSC支援
   - 二維條碼加解密
   - SH256加密
-# 5.其他
-- 前置處理器
+# 6.其他
+- 前置定義
   - PCSC 可開啟支援讀取Smart Card功能
-  - ZXing 可開啟轉二維條碼功能
-  - USE_OPENCV 開啟OpenCV的美顏功能
-  - AR 可開啟AR功能
+  - ZXING 可開啟轉二維條碼功能
 - DLL說明
-  - PCSC、System 該DLL用於讀取Smart Card，沒有使用可移除
-  - ZXing 該DLL用於將字串轉為二維條碼，沒有使用可移除
+  - PCSC  用於讀取Smart Card，沒有使用可移除
+  - ZXING 對QRCode做加解密，沒有使用可移除
 
-# 6.聯繫方式
+# 7.聯繫方式
 Email: asail0712@gmail.com
 
-# 7. 附加資源
-無
+# 8. 相關資源
+### [Avatar SDK Demo : 將照片轉為3D模型](https://github.com/asail0712/AvatarSDKDemo)
+### [MediaPipe Demo : 影像辨識](https://github.com/asail0712/XPlan_MediaPipeDemo)
+### [AR Demo : 擴增實境](https://github.com/asail0712/XPlan_AR)
