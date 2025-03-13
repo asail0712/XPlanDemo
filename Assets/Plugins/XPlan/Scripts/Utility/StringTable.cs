@@ -3,15 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using XPlan.UI;
+
 namespace XPlan.Utility
 {
     public class StringTable
 	{
-		private Dictionary<string, string> stringTable	= new Dictionary<string, string>();
+		public int CurrLanguage
+		{
+			get
+			{
+				return currLang;
+			}
+			set
+			{
+				currLang = value;
+				RefreshUILang();
+			}
+		}
+
+		private int currLang									= -1;
+		private Dictionary<string, List<string>> stringTable	= new Dictionary<string, List<string>>();
 
 		public StringTable()
 		{
-
+			currLang = 0;
 		}
 
 		public void InitialStringTable(TextAsset[] csvAssetList)
@@ -28,14 +44,30 @@ namespace XPlan.Utility
 
 				foreach (string line in lines)
 				{
-					string[] values = line.Split(',');
+					int index = line.IndexOf(',');
 
-					if (values.Length != 2)
+					if (index == -1)
 					{
 						continue;
 					}
 
-					stringTable.Add(values[0], values[1]);
+					string key		= line.Substring(0, index);
+					string content	= line.Substring(index + 1);
+
+					if (stringTable.ContainsKey(key))
+					{
+						List<string> strList = stringTable[key];
+
+						strList.Add(content);
+						stringTable[key] = strList;
+					}
+					else
+					{
+						List<string> strList = new List<string>();
+
+						strList.Add(content);
+						stringTable.Add(key, strList);
+					}
 				}
 			}
 		}
@@ -46,32 +78,64 @@ namespace XPlan.Utility
 
 			foreach (Text textComponent in textComponents)
 			{				
-				textComponent.text = GetStr(textComponent.text, false);
+				textComponent.text = GetStr(textComponent.text);
 			}
 
 			TextMeshProUGUI[] tmpTextComponents = uiGO.GetComponentsInChildren<TextMeshProUGUI>(true);
 			foreach (TextMeshProUGUI tmpText in tmpTextComponents)
 			{
-				tmpText.text = GetStr(tmpText.text, false);
+				tmpText.text = GetStr(tmpText.text);
 			}
 		}
 
 		public string GetStr(string keyStr, bool bShowWarning = false)
 		{
-			if (stringTable.ContainsKey(keyStr))
+			if (!stringTable.ContainsKey(keyStr))
 			{
-				string originStr	= stringTable[keyStr];
+				if (bShowWarning)
+				{
+					Debug.LogWarning("字表中沒有此關鍵字 !!");
+				}
+
+				// 使用原本的字串
+				return keyStr;
+			}
+
+			List<string> strList = stringTable[keyStr];
+
+			if(strList.Count == 0)
+            {
+				// 使用原本的字串
+				return keyStr;
+			}
+
+			if (currLang >= 0 && strList.Count > currLang)
+			{
+				string originStr	= strList[currLang];
 				string processedStr = originStr.Replace("\\n", "\n");
 
 				return processedStr;
 			}
 
-			if(bShowWarning)
+			// 使用第一個語系的字
+			return strList[0];
+		}
+
+		private void RefreshUILang()
+		{
+			List<GameObject> allVisibleUIs = UIController.Instance.GetAllVisibleUI();
+
+			foreach (GameObject uiIns in allVisibleUIs)
 			{
-				Debug.LogWarning("字表中沒有此關鍵字 !!");
+				InitialUIText(uiIns);
+
+				UIBase[] uiList = uiIns.GetComponents<UIBase>();
+
+				foreach (UIBase ui in uiList)
+				{
+					ui.RefreshText();
+				}
 			}
-			
-			return keyStr;
 		}
 	}
 }

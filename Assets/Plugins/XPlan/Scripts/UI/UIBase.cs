@@ -309,10 +309,11 @@ namespace XPlan.UI
 		public void InitialUI(int idx)
 		{
 			this.sortIdx		= idx;
-			this.bSpawnByLoader = true;
+			this.bSpawnByLoader = idx != -1;
 
 			OnInitialUI();
 		}
+
 		public int SortIdx { get => sortIdx; set => sortIdx = value; }
 		
 		/********************************
@@ -321,6 +322,21 @@ namespace XPlan.UI
 		public string GetStr(string keyStr, bool bShowWarning = false)
 		{
 			return UIController.Instance.GetStr(keyStr, bShowWarning);
+		}
+
+		/***************************************
+		 * UI文字調整
+		 * *************************************/
+		public void RefreshText()
+		{
+			Debug.Log("RefreshText");
+
+			OnRefreshText();
+		}
+
+		protected virtual void OnRefreshText()
+		{
+
 		}
 	}
 }
