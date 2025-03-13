@@ -23,11 +23,11 @@ namespace XPlan.Demo.APIDemo
 
                 if (bSuccess)
 				{
-                    resultStr   += $"成功取得高雄前金區的氣溫，氣溫是 {result} 度";
+                    resultStr   += $"成功取得台北南港區的氣溫，氣溫是 {result} 度";
 				}
                 else
 				{
-                    resultStr   += $"無法成功取到高雄前金區的氣溫，原因是 {result}";
+                    resultStr   += $"無法成功取到台北南港區的氣溫，原因是 {result}";
                     logType     = LogType.Warning;                    
                 }
 

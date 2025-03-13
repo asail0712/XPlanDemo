@@ -15,13 +15,12 @@ namespace XPlan.Demo.APIDemo
         public const string WeatherUrl          = "https://opendata.cwa.gov.tw/api";
         public const string TemperatureAPI      = "/v1/rest/datastore/F-D0047-065";
         public const string UVraysAPI           = "/v1/rest/datastore/O-A0005-001";
-        public const string KaohsiungSection    = "前金區";
+        public const string QuerySection        = "南港區";
     }
 
     public class TemperatureInfo
     {
-        public string value;
-        public string measures;
+        public string Temperature;
     }
 
     public class TimeInfo

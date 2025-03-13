@@ -13,8 +13,8 @@ namespace XPlan.Demo.APIDemo
             HttpHelper.Http.Get(APIDefine.WeatherUrl + APIDefine.TemperatureAPI)
             .AddHeader("Authorization", APIDefine.WeatherLicense)
             .AddHeader("limit", "1")
-            .AddQuery("locationName", APIDefine.KaohsiungSection)
-            .AddQuery("elementName", "AT")
+            .AddQuery("locationName", APIDefine.QuerySection)
+            .AddQuery("elementName", "%E6%BA%AB%E5%BA%A6")
             .SendAsyncJSDN<TemperatureResponse>((netResult) => 
             {
                 string temperatureStr = "0";
@@ -28,7 +28,7 @@ namespace XPlan.Demo.APIDemo
                     int timeIdx                     = FindClosestTimeElement(timeInfo);
 
                     bResult         = true;
-                    temperatureStr  = timeInfo[timeIdx].elementValue[0].value;
+                    temperatureStr  = timeInfo[timeIdx].elementValue[0].Temperature;
                 }
                 else
                 {
@@ -56,7 +56,7 @@ namespace XPlan.Demo.APIDemo
             for (int i = 0; i < timeInfo.Length; i++)
             {
                 // 将字符串时间转换为 DateTime 对象
-                DateTime elementTime = DateTime.ParseExact(timeInfo[i].dataTime, "yyyy-MM-dd HH:mm:ss", null);
+                DateTime elementTime = DateTime.ParseExact(timeInfo[i].dataTime, "yyyy-MM-ddTHH:mm:sszzz", null);
 
                 // 计算时间差
                 TimeSpan timeDifference = currentTime - elementTime;
