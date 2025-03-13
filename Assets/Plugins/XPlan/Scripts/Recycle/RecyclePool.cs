@@ -136,7 +136,7 @@ namespace XPlan.Recycle
             {
                 GameObject go       = GameObject.Instantiate(prefab);
                 T comp              = go.GetComponent<T>();
-                go.transform.parent = poolRoot == null? null : poolRoot.transform;
+                go.transform.parent = poolRoot == null ? null : poolRoot.transform;
 
                 go.SetActive(false);                
                 poolableQueue.Enqueue(comp);
