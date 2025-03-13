@@ -20,7 +20,7 @@ namespace XPlan.Displays
     {
 		[SerializeField] private string displayOrderFilePath;
 		[SerializeField] private List<CameraOrderData> cameraList;
-		[SerializeField] private List<CanvasOrderData> canvasArr;
+		[SerializeField] private bool bAdjustCanvas = false;
 
 		protected override void OnInitialGameObject()
 		{
@@ -29,7 +29,7 @@ namespace XPlan.Displays
 
 		protected override void OnInitialLogic()
 		{
-			RegisterLogic(new DisplayOrderSort(displayOrderFilePath, cameraList, canvasArr));
+			RegisterLogic(new DisplayOrderSort(displayOrderFilePath, cameraList, bAdjustCanvas));
 		}
 	}
 }
