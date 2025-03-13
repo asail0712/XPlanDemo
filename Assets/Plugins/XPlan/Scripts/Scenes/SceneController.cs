@@ -211,7 +211,7 @@ namespace XPlan.Scenes
 					// 考慮到SceneLevel的差距，所以強制關閉，不用等回調
 					AddQueueUnload(currSceneIndex);
 
-					RemoveSceneStack(buildIndex);
+					RemoveSceneStack(currSceneIndex);
 				}
 				else if (currScenelevel == newScenelevel)
 				{
@@ -221,7 +221,7 @@ namespace XPlan.Scenes
 					}
 					else 
 					{
-						// 先loading 再做unload 避免畫面太空
+						// 先loading 再做unload 避免畫面出現空白的過度
 						AddQueueLoad(buildIndex, finishAction, bActiveScene);
 						AddQueueUnload(currSceneIndex);
 
@@ -234,7 +234,7 @@ namespace XPlan.Scenes
 				{
 					AddQueueLoad(buildIndex, finishAction, bActiveScene);
 
-					RemoveSceneStack(buildIndex);
+					AddSceneStack(buildIndex);
 					break;
 				}
 			}
