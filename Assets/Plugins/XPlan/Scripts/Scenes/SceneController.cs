@@ -177,7 +177,7 @@ namespace XPlan.Scenes
 
 		private void RemoveSceneStack(int sceneIdx)
 		{			
-			while (currSceneStack.Contains(sceneIdx))
+			if(currSceneStack[currSceneStack.Count - 1] == sceneIdx)
 			{
 				currSceneStack.RemoveAt(currSceneStack.Count - 1);
 			}
@@ -301,6 +301,11 @@ namespace XPlan.Scenes
 
 		protected void AddQueueUnload(int sceneIdx)
 		{
+			if(sceneIdx == -1)
+            {
+				return;
+            }
+
 			Debug.Log($"xx加入卸載佇列xx {sceneIdx}");
 			changeQueue.Add(new UnloadInfo(sceneIdx));
 		}
@@ -385,7 +390,10 @@ namespace XPlan.Scenes
 
 			if(idx == -1)
 			{
-				return -1;
+				return currSceneStack.FindLastIndex((E04) => 
+				{
+					return E04 == -1;
+				});
 			}
 
 			return sceneInfoList[idx].level;
