@@ -191,6 +191,13 @@ namespace XPlan.UI
 						newUI.SortIdx = loadingInfo.sortIdx;
 					}
 				}
+
+				// 設定UI Visible
+				if (uiIns != null)
+				{
+					uiIns.SetActive(loadingInfo.bVisible);
+					uiIns.transform.localScale = Vector3.one;
+				}
 			}
 
 			/********************************
