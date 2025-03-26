@@ -176,6 +176,18 @@ namespace XPlan.Utility
 
 			return newTexture;
 		}
+
+		static public Sprite CreateSprite(this Texture2D texture, Vector2 pivot = default)
+		{
+			if (texture == null) return null;
+
+			if (pivot == default)
+			{
+				pivot = new Vector2(0.5f, 0.5f);
+			}
+
+			return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), pivot);
+		}
 	}
 }
 
