@@ -7,6 +7,9 @@ namespace XPlan.Gesture
 {
     public class DragToRotate : MonoBehaviour
     {
+#if !UNITY_IOS && !UNITY_ANDROID
+        [SerializeField] private MouseTrigger mouseTrigger  = MouseTrigger.LeftMouseKey;
+#endif
         [SerializeField] private bool bAllowPassThroughUI   = false;
         [SerializeField] private bool bOnlyRotateY          = true;
         [SerializeField] public float rotationSpeed         = 0.05f; // 控制旋转速度
@@ -50,10 +53,23 @@ namespace XPlan.Gesture
             }
         }
 
+        private int MouseKey()
+        {
+            switch (mouseTrigger)
+            {
+                case MouseTrigger.LeftMouseKey:
+                    return 0;
+                case MouseTrigger.MiddleMouseKey:
+                    return 2;
+                case MouseTrigger.RightMouseKey:
+                    return 1;
+            }
+            return 0;
+        }
 
         private Vector2 GetInputPos()
         {
-#if UNITY_EDITOR
+#if !UNITY_IOS && !UNITY_ANDROID
             return Input.mousePosition;
 #else
             Touch touch = Input.GetTouch(0);
@@ -65,8 +81,8 @@ namespace XPlan.Gesture
 
         private bool CheckInput()
         {
-#if UNITY_EDITOR
-            return Input.GetMouseButton(0);
+#if !UNITY_IOS && !UNITY_ANDROID
+            return Input.GetMouseButton(MouseKey());
 #else
             return Input.touchCount == 1;
 #endif
@@ -74,8 +90,8 @@ namespace XPlan.Gesture
 
         private bool InputStart()
         {
-#if UNITY_EDITOR
-            return Input.GetMouseButtonDown(0);
+#if !UNITY_IOS && !UNITY_ANDROID
+            return Input.GetMouseButtonDown(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);
             return touch.phase == TouchPhase.Began;
@@ -84,8 +100,8 @@ namespace XPlan.Gesture
 
         private bool InputFinish()
         {
-#if UNITY_EDITOR
-            return Input.GetMouseButton(0);
+#if !UNITY_IOS && !UNITY_ANDROID
+            return Input.GetMouseButton(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);
             return touch.phase == TouchPhase.Moved;

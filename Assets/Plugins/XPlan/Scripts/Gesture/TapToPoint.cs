@@ -74,7 +74,7 @@ namespace XPlan.Gesture
 
         private Vector2 GetInputPos()
         {
-#if UNITY_EDITOR
+#if !UNITY_IOS && !UNITY_ANDROID
             return Input.mousePosition;
 #else
             Touch touch = Input.GetTouch(0);
@@ -86,7 +86,7 @@ namespace XPlan.Gesture
 
         private bool CheckInput()
         {
-#if UNITY_EDITOR
+#if !UNITY_IOS && !UNITY_ANDROID
             return Input.GetMouseButton(0);
 #else
             return Input.touchCount == 1;
@@ -95,7 +95,7 @@ namespace XPlan.Gesture
 
         private bool InputStart()
         {
-#if UNITY_EDITOR
+#if !UNITY_IOS && !UNITY_ANDROID
             return Input.GetMouseButtonDown(0);
 #else
             Touch touch = Input.GetTouch(0);

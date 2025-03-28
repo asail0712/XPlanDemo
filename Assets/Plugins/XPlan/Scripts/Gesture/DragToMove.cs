@@ -7,7 +7,10 @@ namespace XPlan.Gesture
 {
     public class DragToMove : MonoBehaviour
     {
-        [SerializeField] private bool bAllowPassThroughUI = false;
+#if !UNITY_IOS && !UNITY_ANDROID
+        [SerializeField] private MouseTrigger mouseTrigger  = MouseTrigger.LeftMouseKey;
+#endif
+        [SerializeField] private bool bAllowPassThroughUI   = false;
 
         private float zOffset               = -999f;
         private Vector3 relativeDistance    = Vector3.zero;
@@ -54,9 +57,23 @@ namespace XPlan.Gesture
             }
         }
 
+        private int MouseKey()
+        {
+            switch (mouseTrigger)
+            {
+                case MouseTrigger.LeftMouseKey:
+                    return 0;
+                case MouseTrigger.MiddleMouseKey:
+                    return 2;
+                case MouseTrigger.RightMouseKey:
+                    return 1;
+            }
+            return 0;
+        }
+
         private Vector3 GetScreenPos()
 		{
-#if UNITY_EDITOR
+#if !UNITY_IOS && !UNITY_ANDROID
             return new Vector3(Input.mousePosition.x, Input.mousePosition.y, zOffset);
 #else
             Touch touch = Input.GetTouch(0);
@@ -67,8 +84,8 @@ namespace XPlan.Gesture
 
         private bool CheckInput()
 		{
-#if UNITY_EDITOR
-            return Input.GetMouseButton(0);
+#if !UNITY_IOS && !UNITY_ANDROID
+            return Input.GetMouseButton(MouseKey());
 #else
             return Input.touchCount == 1;
 #endif
@@ -76,8 +93,8 @@ namespace XPlan.Gesture
 
         private bool InputStart()
 		{
-#if UNITY_EDITOR
-            return Input.GetMouseButtonDown(0);
+#if !UNITY_IOS && !UNITY_ANDROID
+            return Input.GetMouseButtonDown(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);
             return touch.phase == TouchPhase.Began;
@@ -86,8 +103,8 @@ namespace XPlan.Gesture
 
         private bool InputFinish()
         {
-#if UNITY_EDITOR
-            return Input.GetMouseButton(0);
+#if !UNITY_IOS && !UNITY_ANDROID
+            return Input.GetMouseButton(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);
             return touch.phase == TouchPhase.Moved;
