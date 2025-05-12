@@ -88,15 +88,12 @@ namespace XPlan.Utility
 			}
 		}
 
-		public string GetStr(string keyStr, bool bShowWarning = false)
+		public string GetStr(string keyStr)
 		{
 			if (!stringTable.ContainsKey(keyStr))
 			{
-				if (bShowWarning)
-				{
-					Debug.LogWarning("字表中沒有此關鍵字 !!");
-				}
-
+				//Debug.LogWarning("字表中沒有此關鍵字 !!");
+			
 				// 使用原本的字串
 				return keyStr;
 			}
@@ -119,6 +116,40 @@ namespace XPlan.Utility
 
 			// 使用第一個語系的字
 			return strList[0];
+		}
+
+		public string ReplaceStr(string keyStr, params string[] paramList)
+		{
+			if (!stringTable.ContainsKey(keyStr))
+			{
+				// 使用原本的字串
+				return keyStr;
+			}
+
+			List<string> strList = stringTable[keyStr];
+
+			if (strList.Count == 0)
+			{
+				// 使用原本的字串
+				return keyStr;
+			}
+
+			if (currLang < 0 && strList.Count <= currLang)
+			{
+				// 使用原本的字串
+				return keyStr;
+			}
+
+			string originStr	= strList[currLang];
+			string processedStr = originStr.Replace("\\n", "\n");
+
+			for (int i = 0; i < paramList.Length; ++i)
+			{
+				string replaceStr	= $"[Param{i}]";
+				processedStr		= processedStr.Replace(replaceStr, paramList[i]);
+			}
+
+			return processedStr;
 		}
 
 		private void RefreshUILang()

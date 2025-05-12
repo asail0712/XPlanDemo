@@ -156,7 +156,7 @@ namespace XPlan.UI
 					// 初始化所有的 ui base
 					UIBase[] newUIList = uiIns.GetComponents<UIBase>();
 
-					if (newUIList == null || newUIList.Length == 9)
+					if (newUIList == null)
 					{
 						LogSystem.Record("uiBase is null !", LogType.Error);
 
@@ -393,9 +393,14 @@ namespace XPlan.UI
 		/**************************************
 		 * String Table
 		 * ************************************/
-		public string GetStr(string keyStr, bool bShowWarning = false)
+		public string GetStr(string keyStr)
 		{
-			return stringTable.GetStr(keyStr, bShowWarning);
+			return stringTable.GetStr(keyStr);
+		}
+
+		public string ReplaceStr(string keyStr, params string[] paramList)
+		{
+			return stringTable.ReplaceStr(keyStr, paramList);
 		}
 
 		public List<GameObject> GetAllVisibleUI()

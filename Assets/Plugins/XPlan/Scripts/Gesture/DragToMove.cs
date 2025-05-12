@@ -7,9 +7,9 @@ namespace XPlan.Gesture
 {
     public class DragToMove : MonoBehaviour
     {
-#if !UNITY_IOS && !UNITY_ANDROID
-        [SerializeField] private MouseTrigger mouseTrigger  = MouseTrigger.LeftMouseKey;
-#endif
+#if UNITY_EDITOR
+        [SerializeField] private MouseTrigger mouseTrigger  = MouseTrigger.LeftMouse;
+#endif //UNITY_EDITOR
         [SerializeField] private bool bAllowPassThroughUI   = false;
 
         private float zOffset               = -999f;
@@ -57,23 +57,25 @@ namespace XPlan.Gesture
             }
         }
 
+#if UNITY_EDITOR
         private int MouseKey()
         {
             switch (mouseTrigger)
             {
-                case MouseTrigger.LeftMouseKey:
+                case MouseTrigger.LeftMouse:
                     return 0;
-                case MouseTrigger.MiddleMouseKey:
+                case MouseTrigger.MiddleMouse:
                     return 2;
-                case MouseTrigger.RightMouseKey:
+                case MouseTrigger.RightMouse:
                     return 1;
             }
             return 0;
         }
+#endif //UNITY_EDITOR
 
         private Vector3 GetScreenPos()
 		{
-#if !UNITY_IOS && !UNITY_ANDROID
+#if UNITY_EDITOR
             return new Vector3(Input.mousePosition.x, Input.mousePosition.y, zOffset);
 #else
             Touch touch = Input.GetTouch(0);
@@ -84,7 +86,7 @@ namespace XPlan.Gesture
 
         private bool CheckInput()
 		{
-#if !UNITY_IOS && !UNITY_ANDROID
+#if UNITY_EDITOR
             return Input.GetMouseButton(MouseKey());
 #else
             return Input.touchCount == 1;
@@ -93,7 +95,7 @@ namespace XPlan.Gesture
 
         private bool InputStart()
 		{
-#if !UNITY_IOS && !UNITY_ANDROID
+#if UNITY_EDITOR
             return Input.GetMouseButtonDown(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);
@@ -103,7 +105,7 @@ namespace XPlan.Gesture
 
         private bool InputFinish()
         {
-#if !UNITY_IOS && !UNITY_ANDROID
+#if UNITY_EDITOR
             return Input.GetMouseButton(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);

@@ -87,13 +87,13 @@ namespace XPlan.UI
 			RegisterButton("", confirmBtn, () =>
 			{
 				clickAction?.Invoke(DialogResult.Confirm);
-				gameObject.SetActive(false);
+				ToggleUI(gameObject, false);
 			});
 
 			RegisterButton("", cancelBtn, () =>
 			{
 				clickAction?.Invoke(DialogResult.Cancal);
-				gameObject.SetActive(false);
+				ToggleUI(gameObject, false);
 			});
 
 			ListenCall<ShowDialogue>(DialogMessage.ConfirmMessage, (info)=> 
@@ -112,7 +112,7 @@ namespace XPlan.UI
 
 				cancelBtn.gameObject.SetActive(info.dialogType == DialogType.DualButton);
 
-				gameObject.SetActive(true);
+				ToggleUI(gameObject, true);
 			});
 		}
 	}

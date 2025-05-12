@@ -65,12 +65,12 @@ namespace XPlan.Utility
             }
 
             Debug.Log("判斷Android是否有權限");
-            bool bHasCameraPermission = Permission.HasUserAuthorizedPermission(permission);
+            bool bHasPermission = Permission.HasUserAuthorizedPermission(permission);
 
-            if (!bHasCameraPermission)
+            if (!bHasPermission)
             {
                 Debug.Log("開始要求Android權限");
-                // 如果沒有相機使用權限，則索取權限
+                // 如果沒有使用權限，則索取權限
                 RequestPermission(permission, finishAction);
             }
             else

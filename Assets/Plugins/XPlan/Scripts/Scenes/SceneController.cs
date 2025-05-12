@@ -32,18 +32,19 @@ namespace XPlan.Scenes
 		}
 	}
 
-	public class ChangeInfo
+	public class SceneChangeInfo
 	{
 		public int sceneIdx;
 
-		public ChangeInfo(int sceneIdx)
+		public SceneChangeInfo(int sceneIdx)
 		{
 			this.sceneIdx = sceneIdx;
 		}
 	}
 
-	public class LoadInfo : ChangeInfo
+	public class LoadInfo : SceneChangeInfo
 	{
+		// 設定活動場景 影響天空盒 光源 NavMesh 等
 		public bool bActiveScene;
 		public Action finishAction;
 
@@ -55,7 +56,7 @@ namespace XPlan.Scenes
 		}
 	}
 
-	public class UnloadInfo : ChangeInfo
+	public class UnloadInfo : SceneChangeInfo
 	{
 		public UnloadInfo(int sceneIdx)
 			: base(sceneIdx)
@@ -71,11 +72,10 @@ namespace XPlan.Scenes
 		static private List<SceneInfo> sceneInfoList	= new List<SceneInfo>();
 		private List<int> currSceneStack				= new List<int>();
 
-		private List<ChangeInfo> changeQueue			= new List<ChangeInfo>();
+		private List<SceneChangeInfo> changeQueue		= new List<SceneChangeInfo>();
 
 		private Coroutine loadRoutine					= null;
 		private Coroutine unloadRoutine					= null;
-		private int loadingSceneIdx						= -1;
 
 		/************************************
 		* 初始化
@@ -151,16 +151,23 @@ namespace XPlan.Scenes
 				return false;
 			}
 
-			ChangeTo(currSceneStack[currSceneStack.Count - 2]);
+			int stackIdx = currSceneStack.Count - 2;
+
+			while (currSceneStack[stackIdx] == -1)
+            {
+				--stackIdx;
+			}
+
+			ChangeTo(currSceneStack[stackIdx]);
 
 			return true;
 		}
 
-		public bool ChangeTo(string sceneName, Action finishAction = null, bool bActiveScene = true)
+		public bool ChangeTo(string sceneName, bool bActiveScene = true, Action finishAction = null)
 		{
 			int buildIndex = GetBuildIndexByName(sceneName);
 
-			return ChangeTo(buildIndex, finishAction, bActiveScene);
+			return ChangeTo(buildIndex, bActiveScene, finishAction);
 		}
 
 		private void AddSceneStack(int sceneIdx)
@@ -169,7 +176,16 @@ namespace XPlan.Scenes
 
 			while(currSceneStack.Count < scenelevel)
 			{
-				currSceneStack.Add(-1);
+				if(currSceneStack.Count == 0)
+                {
+					// stack的第一層一定為-999
+					currSceneStack.Add(-999);
+				}
+				else
+                {
+					// 新添加的場景與stack階層有落差時，使用-1來填補
+					currSceneStack.Add(-1);
+				}				
 			}
 
 			currSceneStack.Add(sceneIdx);
@@ -177,7 +193,9 @@ namespace XPlan.Scenes
 
 		private void RemoveSceneStack(int sceneIdx)
 		{			
-			if(currSceneStack[currSceneStack.Count - 1] == sceneIdx)
+			// 移除scene時，要連同-1一起移除
+			while(currSceneStack[currSceneStack.Count - 1] == sceneIdx
+				|| currSceneStack[currSceneStack.Count - 1] == -1)
 			{
 				currSceneStack.RemoveAt(currSceneStack.Count - 1);
 			}
@@ -188,13 +206,13 @@ namespace XPlan.Scenes
 			currSceneStack[scenelevel] = sceneIdx;
 		}
 
-		public bool ChangeTo(int buildIndex, Action finishAction = null, bool bActiveScene = true)
+		public bool ChangeTo(int buildIndex, bool bActiveScene = true, Action finishAction = null)
 		{
 			if (currSceneStack.Count == 0)
 			{
 				// 立刻加載
 				AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(buildIndex, LoadSceneMode.Additive);
-				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, buildIndex, bActiveScene, finishAction));
+				loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, new LoadInfo(buildIndex, bActiveScene, finishAction)));
 
 				AddSceneStack(buildIndex);
 				return true;
@@ -202,6 +220,11 @@ namespace XPlan.Scenes
 
 			for (int i = currSceneStack.Count - 1; i >= 0; --i)
 			{
+				if(i >= currSceneStack.Count)
+                {
+					continue;
+                }
+
 				int currSceneIndex	= currSceneStack[i];
 				int currScenelevel	= GetLevel(currSceneIndex);
 				int newScenelevel	= GetLevel(buildIndex);
@@ -258,7 +281,7 @@ namespace XPlan.Scenes
 				return;
 			}
 
-			ChangeInfo info = changeQueue[0];
+			SceneChangeInfo info = changeQueue[0];
 
 			if(info is LoadInfo)
 			{
@@ -269,7 +292,7 @@ namespace XPlan.Scenes
 				{
 					Debug.Log($"載入關卡 {info.sceneIdx}");
 					AsyncOperation loadOperation	= SceneManager.LoadSceneAsync(loadInfo.sceneIdx, LoadSceneMode.Additive);
-					loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, loadInfo.sceneIdx, loadInfo.bActiveScene, loadInfo.finishAction));
+					loadRoutine						= StartCoroutine(WaitLoadingScene(loadOperation, loadInfo));
 				}
 			}
 			else if(info is UnloadInfo)
@@ -310,19 +333,19 @@ namespace XPlan.Scenes
 			changeQueue.Add(new UnloadInfo(sceneIdx));
 		}
 
-		private IEnumerator WaitLoadingScene(AsyncOperation asyncOperation, int sceneIdx, bool bActiveScene, Action finishAction)
+		private IEnumerator WaitLoadingScene(AsyncOperation asyncOperation, LoadInfo loadinfo)// int sceneIdx, bool bActiveScene, Action finishAction)
 		{
-			loadingSceneIdx = sceneIdx;
-
 			yield return new WaitUntil(() => asyncOperation.isDone);
 
-			if(bActiveScene)
+			if(loadinfo.bActiveScene)
 			{
-				Scene scene = SceneManager.GetSceneByBuildIndex(sceneIdx);
+				// 設定活動場景 影響天空盒 光源 NavMesh 等
+
+				Scene scene = SceneManager.GetSceneByBuildIndex(loadinfo.sceneIdx);
 				SceneManager.SetActiveScene(scene);
 			}
 
-			finishAction?.Invoke();
+			loadinfo.finishAction?.Invoke();
 
 			loadRoutine = null;
 		}

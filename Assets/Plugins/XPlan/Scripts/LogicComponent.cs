@@ -47,7 +47,10 @@ namespace XPlan
 
 			MonoBehaviourHelper.MonoBehavourInstance coroutine = coroutineDict[serialNum];
 
-			coroutine.StopCoroutine();
+			if(coroutine != null)
+            {
+				coroutine.StopCoroutine();
+			}
 
 			coroutineDict.Remove(serialNum);
 		}

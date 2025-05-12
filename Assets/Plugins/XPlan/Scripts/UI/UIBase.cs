@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 using XPlan.Interface;
 using XPlan.Scenes;
-using XPlan.UI.Component;
+using XPlan.UI.Fade;
 
 namespace XPlan.UI
 {
@@ -24,23 +24,20 @@ namespace XPlan.UI
 
 	public class UIBase : MonoBehaviour, IUIListener
 	{
-		// 判斷是否由UILoader仔入
-		private bool bSpawnByLoader = false;
-
-		/********************************
+        /********************************
 		* Listen Handler Call
 		* *****************************/
-		public void ListenCall(string id, ListenOption option, Action<UIParam[]> paramAction)
+        private void Awake()
+        {
+		}
+
+        /********************************
+		* Listen Handler Call
+		* *****************************/
+        public void ListenCall(string id, ListenOption option, Action<UIParam[]> paramAction)
 		{
 			UISystem.ListenCall(id, this, option, (paramList) =>
 			{
-				if (bSpawnByLoader &&
-					UIController.IsInstance()
-					&& !UIController.Instance.IsWorkingUI(this))
-				{
-					return;
-				}
-
 				paramAction?.Invoke(paramList);
 			});
 		}
@@ -49,13 +46,6 @@ namespace XPlan.UI
 		{
 			UISystem.ListenCall(id, this, option, (paramList) =>
 			{
-				if (bSpawnByLoader &&
-					UIController.IsInstance()
-					&& !UIController.Instance.IsWorkingUI(this))
-				{
-					return;
-				}
-
 				paramAction?.Invoke(paramList[0].GetValue<T>());
 			});
 		}
@@ -64,13 +54,6 @@ namespace XPlan.UI
 		{
 			UISystem.ListenCall(id, this, option, (paramList) =>
 			{
-				if (bSpawnByLoader &&
-					UIController.IsInstance()
-					&& !UIController.Instance.IsWorkingUI(this))
-				{
-					return;
-				}
-
 				noParamAction?.Invoke();
 			});
 		}
@@ -308,20 +291,18 @@ namespace XPlan.UI
 
 		public void InitialUI(int idx)
 		{
-			this.sortIdx		= idx;
-			this.bSpawnByLoader = idx != -1;
-
+			this.sortIdx = idx;
 			OnInitialUI();
 		}
 
 		public int SortIdx { get => sortIdx; set => sortIdx = value; }
-		
+
 		/********************************
 		 * 其他
 		 * *****************************/
-		public string GetStr(string keyStr, bool bShowWarning = false)
+		protected string GetStr(string keyStr)
 		{
-			return UIController.Instance.GetStr(keyStr, bShowWarning);
+			return UIController.Instance.GetStr(keyStr);
 		}
 
 		/***************************************
@@ -337,6 +318,55 @@ namespace XPlan.UI
 		protected virtual void OnRefreshText()
 		{
 
+		}
+
+		/***************************************
+		 * UI文字調整
+		 * *************************************/
+		public void ToggleUI(GameObject ui, bool bEnabled)
+		{
+			FadeBase[] fadeList = ui.GetComponents<FadeBase>();
+
+			if (fadeList == null || fadeList.Length == 0)
+			{
+				ui.SetActive(bEnabled);
+				return;
+			}
+
+			if (bEnabled)
+			{
+				ui.SetActive(true);
+
+				Array.ForEach<FadeBase>(fadeList, (fadeComp) =>
+				{
+					if (fadeComp == null)
+					{
+						return;
+					}
+
+					fadeComp.PleaseStartYourPerformance(true, null);
+				});
+			}
+			else
+			{
+				int finishCounter = 0;
+
+				Array.ForEach<FadeBase>(fadeList, (fadeComp) =>
+				{
+					if (fadeComp == null)
+					{
+						return;
+					}
+
+					fadeComp.PleaseStartYourPerformance(false, () =>
+					{
+						if (++finishCounter == fadeList.Length)
+						{
+							ui.SetActive(false);
+						}
+					});
+				});
+			}
 		}
 	}
 }
