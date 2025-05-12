@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +7,7 @@ namespace XPlan.Net
     public static class WebRequestHelper
     {
         /*****************************
-         * µ¥«İAPI¦^À³
+         * ç­‰å¾…APIå›æ‡‰
          * ***************************/
         static private int numOfWaiting = 0;
 
@@ -27,7 +27,7 @@ namespace XPlan.Net
         }
 
         /*****************************
-         * APIµo¥Í¿ù»~ªº¬ÛÃö³B²z
+         * APIç™¼ç”ŸéŒ¯èª¤çš„ç›¸é—œè™•ç†
          * ***************************/
         static private List<Action<string, string>> errorActions = new List<Action<string, string>>();
 
