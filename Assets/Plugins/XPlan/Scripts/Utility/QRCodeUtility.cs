@@ -45,10 +45,10 @@ namespace XPlan.Utility
             IBarcodeReader barcodeReader = new BarcodeReader
             {
                 AutoRotate  = true,
-                TryInverted = true,
                 Options     = new DecodingOptions
                 {
-                    PossibleFormats = new[] { BarcodeFormat.QR_CODE }
+                    PossibleFormats = new[] { BarcodeFormat.QR_CODE },
+                    TryInverted     = true
                 }
             };
 
@@ -85,10 +85,10 @@ namespace XPlan.Utility
             barcodeReader = new BarcodeReader
             {
                 AutoRotate  = true,
-                TryInverted = true,
                 Options     = new DecodingOptions
                 {
-                    PossibleFormats = new[] { BarcodeFormat.QR_CODE }
+                    PossibleFormats = new[] { BarcodeFormat.QR_CODE },
+                    TryInverted     = true
                 }
             };
         }
