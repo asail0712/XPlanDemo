@@ -6,7 +6,7 @@ namespace XPlan
 {
     public static class XPlanCommon
     {
-        public const string Version = "2.2.4";
+        public const string Version = "2.2.5";
     }
 
     public enum MouseTrigger
@@ -14,5 +14,11 @@ namespace XPlan
         LeftMouse,
         MiddleMouse,
         RightMouse,
+    }
+
+    public enum InputFingerMode
+    {
+        OneFinger,
+        TwoFingers
     }
 }
