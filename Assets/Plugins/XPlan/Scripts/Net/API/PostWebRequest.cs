@@ -11,18 +11,17 @@ namespace XPlan.Net
     public class PostWebRequest
 	{
         private string apiUrl;
-
 		private Dictionary<string, string> headers;
-
 		private byte[] bodyRaw;
-
 		private bool bWaitingNet;
+		private bool bIgnoreError;
 
 		public PostWebRequest()
         {
-			headers		= new Dictionary<string, string>();
-			bodyRaw		= null;
-			bWaitingNet = true;
+			headers			= new Dictionary<string, string>();
+			bodyRaw			= null;
+			bWaitingNet		= true;
+			bIgnoreError	= false;
 		}
 
 		protected void SetUrl(string url)
@@ -54,6 +53,11 @@ namespace XPlan.Net
 			AddHeader("Content-Type", "application/json");
 
 			bodyRaw = System.Text.Encoding.UTF8.GetBytes(text);
+		}
+
+		public void IgnoreError()
+        {
+			bIgnoreError = true;
 		}
 
 		public void SendWebRequest(Action<object> finishAction)
@@ -94,7 +98,7 @@ namespace XPlan.Net
 					WebRequestHelper.DecreaseWaitingNum();
 				}
 
-				if (request.result == UnityWebRequest.Result.Success)
+				if (request.result == UnityWebRequest.Result.Success || bIgnoreError)
 				{
 					string contentType = request.GetResponseHeader("Content-Type");
 

@@ -11,16 +11,16 @@ namespace XPlan.Net
     public class GetWebRequest
 	{
         private string apiUrl;
-
 		private Dictionary<string, string> headers;
 		private Dictionary<string, string> urlParams;
-
 		private bool bWaitingNet;
+		private bool bIgnoreError;
 
 		public GetWebRequest()
         {
-			headers		= new Dictionary<string, string>();
-			urlParams	= new Dictionary<string, string>();
+			headers			= new Dictionary<string, string>();
+			urlParams		= new Dictionary<string, string>();
+			bIgnoreError	= false;
 		}
 
 		protected void SetUrl(string url)
@@ -52,6 +52,11 @@ namespace XPlan.Net
 			{
 				urlParams.Add(key, value);
 			}
+		}
+
+		public void IgnoreError()
+		{
+			bIgnoreError = true;
 		}
 
 		public void SendWebRequest(Action<object> finishAction)
@@ -104,7 +109,7 @@ namespace XPlan.Net
 					WebRequestHelper.DecreaseWaitingNum();
 				}
 
-				if (request.result == UnityWebRequest.Result.Success)
+				if (request.result == UnityWebRequest.Result.Success || bIgnoreError)
 				{
 					string contentType = request.GetResponseHeader("Content-Type");
 
