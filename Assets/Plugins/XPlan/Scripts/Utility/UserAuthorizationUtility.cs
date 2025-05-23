@@ -124,18 +124,21 @@ namespace XPlan.Utility
 
                 finishAction.Invoke(true);
             };
+
             callbacks.PermissionDenied                  += (permissionName) => 
             {
-                Debug.Log($"{permissionName} PermissionCallbacks_PermissionDenied");
+                if (!Permission.HasUserAuthorizedPermission(permission) &&
+                    !Permission.ShouldShowRequestPermissionRationale(permission))
+                {
+                    Debug.Log("Permission denied and don't ask again: " + permission);
+                }
+                else
+                {
+                    Debug.Log("Permission denied: " + permission);
+                }
 
                 finishAction.Invoke(false);
             };
-            callbacks.PermissionDeniedAndDontAskAgain   += (permissionName) =>
-            {
-                Debug.Log($"{permissionName} PermissionDeniedAndDontAskAgain");
-
-                finishAction.Invoke(false);
-            }; 
 
             // 索取相機使用權限
             Permission.RequestUserPermission(permission, callbacks);
