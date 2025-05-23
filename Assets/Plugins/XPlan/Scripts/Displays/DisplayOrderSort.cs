@@ -32,7 +32,7 @@ namespace XPlan.Displays
 		public DisplayOrderSort(string orderFilePath, List<CameraOrderData> cameraList, bool bAdjustCanvas = false)
         {
 			orderGroupList	= new List<OrderGroup>();
-			allCanvases		= GameObject.FindObjectsOfType<Canvas>();
+			allCanvases		= GameObject.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
 
 			StartCoroutine(AllCamera(orderFilePath, cameraList, bAdjustCanvas));
 		}
