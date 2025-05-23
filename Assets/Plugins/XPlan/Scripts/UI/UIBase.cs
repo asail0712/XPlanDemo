@@ -1,13 +1,16 @@
 ﻿using TMPro;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 using XPlan.Interface;
 using XPlan.Scenes;
 using XPlan.UI.Fade;
+using XPlan.Utility;
 
 namespace XPlan.UI
 {
@@ -305,6 +308,79 @@ namespace XPlan.UI
 			return UIController.Instance.GetStr(keyStr);
 		}
 
+		protected void DefaultToggleBtns(Button[] btns)
+        {
+			for(int i = 0; i < btns.Length; ++i)
+            {
+				btns[i].gameObject.SetActive(i == 0);
+            }
+        }
+
+		/********************************
+		 * 工具
+		 * *****************************/
+		public void LoadImageFromUrl(Image targetImage, string url)
+		{
+			MonoBehaviourHelper.StartCoroutine(LoadImageFromUrl_Internal(targetImage, url));
+		}
+
+		private IEnumerator LoadImageFromUrl_Internal(Image targetImage, string url)
+		{
+			UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+
+			yield return request.SendWebRequest();
+
+#if UNITY_2020_1_OR_NEWER
+			if (request.result != UnityWebRequest.Result.Success)
+#else
+            if (request.isNetworkError || request.isHttpError)
+#endif
+			{
+				LogSystem.Record("載入圖片失敗: " + request.error, LogType.Error);
+			}
+			else
+			{
+				Texture2D texture	= DownloadHandlerTexture.GetContent(request);
+				Sprite sprite		= Sprite.Create(
+					texture,
+					new Rect(0, 0, texture.width, texture.height),
+					new Vector2(0.5f, 0.5f)
+				);
+
+				targetImage.sprite = sprite;
+
+				// 自動調整 Image 尺寸符合原始圖片
+				RectTransform rt = targetImage.GetComponent<RectTransform>();
+				if (rt != null)
+				{
+					rt.sizeDelta = new Vector2(texture.width, texture.height);
+				}
+			}
+		}
+
+		public void FadeInOutAlpha(CanvasGroup canvasGroup, float targetAlpha, float duration, Action finishAction = null)
+		{
+			MonoBehaviourHelper.StartCoroutine(FadeInOutAlpha_Internal(canvasGroup, targetAlpha, duration, finishAction));
+		}
+
+		private IEnumerator FadeInOutAlpha_Internal(CanvasGroup canvasGroup, float targetAlpha, float duration, Action finishAction = null)
+		{
+			float elapsedTime	= 0f;
+			float startAlpha	= canvasGroup.alpha;
+
+			while (elapsedTime < duration)
+			{
+				yield return null;
+				elapsedTime			+= Time.deltaTime;
+				float newAlpha		= Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / duration);
+				canvasGroup.alpha	= newAlpha;
+			}
+
+			canvasGroup.alpha		= targetAlpha;
+
+			finishAction?.Invoke();
+		}
+
 		/***************************************
 		 * UI文字調整
 		 * *************************************/
@@ -321,7 +397,7 @@ namespace XPlan.UI
 		}
 
 		/***************************************
-		 * UI文字調整
+		 * UI Visible
 		 * *************************************/
 		public void ToggleUI(GameObject ui, bool bEnabled)
 		{
