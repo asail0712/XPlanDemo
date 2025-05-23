@@ -37,6 +37,16 @@ namespace XPlan.Utility
 			}
 		}
 
+		public static T Last<T>(this List<T> list)
+		{
+			if(list == null || list.Count == 0)
+            {
+				return default(T);
+            }
+
+			return list[list.Count - 1];
+		}
+
 		public static List<T> Shuffled<T>(this List<T> list)
         {
 			List<T> copy	= new List<T>(list);
