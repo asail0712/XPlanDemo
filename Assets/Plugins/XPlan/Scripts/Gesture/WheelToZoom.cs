@@ -1,25 +1,25 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 namespace XPlan.Gesture
 {
     public class WheelToZoom : MonoBehaviour
     {
-        [SerializeField] private float scaleSpeed   = 1.0f; // ±±¨îÁY©ñ³t«×ªºÅÜ¼Æ
-        [SerializeField] public float minScale      = 0.5f; // ³Ì¤pÁY©ñ­­¨î
-        [SerializeField] public float maxScale      = 3.0f; // ³Ì¤jÁY©ñ­­¨î
+        [SerializeField] private float scaleSpeed   = 1.0f; // æ§åˆ¶ç¸®æ”¾é€Ÿåº¦çš„è®Šæ•¸
+        [SerializeField] public float minScale      = 0.5f; // æœ€å°ç¸®æ”¾é™åˆ¶
+        [SerializeField] public float maxScale      = 3.0f; // æœ€å¤§ç¸®æ”¾é™åˆ¶
 
         void Update()
         {
-            // ¨ú±o·Æ¹«ºu½üªº¿é¤J­È
+            // å–å¾—æ»‘é¼ æ»¾è¼ªçš„è¼¸å…¥å€¼
             float scroll            = Input.GetAxis("Mouse ScrollWheel");
 
-            // ­pºâ·sªºÁY©ñ­È
+            // è¨ˆç®—æ–°çš„ç¸®æ”¾å€¼
             float newScale          = transform.localScale.x + scroll * scaleSpeed;
 
-            // ­­¨îÁY©ñ­È¦b³Ì¤p©M³Ì¤j½d³ò¤º
+            // é™åˆ¶ç¸®æ”¾å€¼åœ¨æœ€å°å’Œæœ€å¤§ç¯„åœå…§
             newScale                = Mathf.Clamp(newScale, minScale, maxScale);
 
-            // ³]©wª«¥óªº·sÁY©ñ­È
+            // è¨­å®šç‰©ä»¶çš„æ–°ç¸®æ”¾å€¼
             transform.localScale    = new Vector3(newScale, newScale, newScale);
         }
     }

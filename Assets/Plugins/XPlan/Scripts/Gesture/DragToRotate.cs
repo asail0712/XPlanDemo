@@ -14,6 +14,13 @@ namespace XPlan.Gesture
         [SerializeField] private bool bOnlyRotateY          = true;
         [SerializeField] public bool bLocalRotate           = false;
         [SerializeField] public float rotationSpeed         = 0.05f; // 控制旋转速度
+        [SerializeField] public bool bInverseX              = false;
+        [SerializeField] public bool bInverseY              = false;
+
+        [SerializeField] private float minRotationX         = -90f;
+        [SerializeField] private float maxRotationX         = 90f;
+        [SerializeField] private float minRotationY         = -135f;
+        [SerializeField] private float maxRotationY         = 135f;
 
         private Vector2 previousTouchPosition;
 
@@ -37,35 +44,72 @@ namespace XPlan.Gesture
                     // 计算触控位置的变化
                     Vector2 touchDelta      = GetInputPos() - previousTouchPosition;
 
-                    // 根据触控移动量旋转对象
-                    float rotationX         = touchDelta.y * rotationSpeed;
-                    float rotationY         = -touchDelta.x * rotationSpeed;
+                    float deltaX            = bInverseX ? touchDelta.y : -touchDelta.y;
+                    float deltaY            = bInverseY ? touchDelta.x : -touchDelta.x;
 
-                    if(!bOnlyRotateY)
+                    float rotationX         = deltaX * rotationSpeed;
+                    float rotationY         = deltaY * rotationSpeed;
+
+                    // 選擇用 local 或 world space 旋轉
+                    if(bLocalRotate)
                     {
-                        if(bLocalRotate)
+                        // Clamp 現有 rotation
+                        Vector3 euler   = transform.localEulerAngles;
+
+                        // 因為 euler 角度範圍是 0~360，要轉成 -180~180 處理 clamp 比較準
+                        float currentX  = NormalizeAngle(euler.x);
+                        float currentY  = NormalizeAngle(euler.y);
+
+                        // Y軸旋轉
+                        if (rotationY != 0)
                         {
-                            transform.Rotate(transform.right, rotationX, Space.World);
+                            currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
                         }
-                        else
-                        {
-                            transform.Rotate(Vector3.right, rotationX, Space.World);
-                        }                        
-                    }
 
-                    if (bLocalRotate)
-                    {
-                        transform.Rotate(transform.up, rotationY, Space.World);
+                        // X軸旋轉（如果允許）
+                        if (!bOnlyRotateY && rotationX != 0)
+                        {
+                            currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                        }
+
+                        transform.localEulerAngles = new Vector3(currentX, currentY, euler.z);
                     }
                     else
-                    { 
-                        transform.Rotate(Vector3.up, rotationY, Space.World);
+                    {
+                        // World space clamp
+                        Vector3 worldEuler  = transform.rotation.eulerAngles;
+                        float currentX      = NormalizeAngle(worldEuler.x);
+                        float currentY      = NormalizeAngle(worldEuler.y);
+
+                        if (rotationY != 0)
+                        { 
+                            currentY        = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
+                        }
+
+                        if (!bOnlyRotateY && rotationX != 0)
+                        { 
+                            currentX        = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                        }
+
+                        Quaternion clampedRotation  = Quaternion.Euler(currentX, currentY, worldEuler.z);
+                        transform.rotation          = clampedRotation;
                     }
 
-                    // 更新之前的触控位置
-                    previousTouchPosition   = GetInputPos();
+                    previousTouchPosition = GetInputPos();
                 }
             }
+        }
+
+        private float NormalizeAngle(float angle)
+        {
+            angle %= 360f;
+
+            if (angle > 180f)
+            {
+                angle -= 360f;
+            }
+
+            return angle;
         }
 
 #if UNITY_EDITOR
