@@ -321,6 +321,13 @@ namespace XPlan.UI
 		 * *****************************/
 		public void LoadImageFromUrl(Image targetImage, string url)
 		{
+			if(string.IsNullOrEmpty(url))
+            {
+				LogSystem.Record("避免使用空字串下載圖片", LogType.Warning);
+
+				return;
+            }
+
 			MonoBehaviourHelper.StartCoroutine(LoadImageFromUrl_Internal(targetImage, url));
 		}
 
