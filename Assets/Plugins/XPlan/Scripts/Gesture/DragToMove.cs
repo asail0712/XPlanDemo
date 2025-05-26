@@ -18,42 +18,53 @@ namespace XPlan.Gesture
         [SerializeField] private bool bClampMove            = false;
         [SerializeField] public Vector3 minPosition         = new Vector3(-10, -10, -10);
         [SerializeField] public Vector3 maxPosition         = new Vector3(10, 10, 10);
-        [SerializeField] private Vector2 screenDragRange    = Vector2.zero;
+        [SerializeField] private float screenToWorldRatio   = 0.01f;
 
         private float offsetZ               = -999f;
         private Vector3 defaultPos          = Vector3.zero;
         private Vector3 relativeDistance    = Vector3.zero;
 
+        private Vector3 startWorldPos       = Vector3.zero;
+        private Vector2 startScreenPos      = Vector2.zero;
+
         // 避免跟兩指縮放混淆
         private float lastTouchDistance     = 0;
+        private bool bInputStart            = false;
 
         private void Awake()
 		{
             if (Camera.main != null)
 			{
-                defaultPos          = transform.position;
-                offsetZ             = Vector3.Distance(Camera.main.transform.position, transform.position);
-                screenDragRange.x   = Mathf.Clamp(screenDragRange.x, 100f, Screen.width);
-                screenDragRange.y   = Mathf.Clamp(screenDragRange.y, 100f, Screen.height);
+                defaultPos      = transform.position;
+                offsetZ         = Vector3.Distance(Camera.main.transform.position, transform.position);
+                bInputStart     = false;
             }            
         }
 
 		void Update()
         {
+            bool bInterrupt = false;
+
             if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
             {
                 //Debug.Log("點擊到了 UI 元素");
-                return;
+                bInterrupt = true;
             }
 
             // 检查是否有手指触摸屏幕
             if (!CheckInput() || !Camera.main)
             {
-                return;
+                bInterrupt = true;
             }
 
             if (fingerMode == InputFingerMode.TwoFingers && !IsTwoFingerDrag())
-            { 
+            {
+                bInterrupt = true;
+            }
+
+            if(bInterrupt)
+            {
+                bInputStart = false;
                 return;
             }
 
@@ -67,31 +78,48 @@ namespace XPlan.Gesture
 
             Debug.DrawLine(worldPosition, transform.position, Color.red, Time.deltaTime);
 
+            //LogSystem.Record($"World Pos {worldPosition}");
+
+            // 在一次移動中 InputStart觸發一次 但是InputFinish要觸發很多次
             if (InputStart())
 			{
-                // 計算點擊座標與物體的相對距離
-                relativeDistance = transform.position - worldPosition;
+                bInputStart         = true;
 
-                if (Input.touchCount >= 2 && fingerMode == InputFingerMode.TwoFingers)
+                // 計算點擊座標與物體的相對距離
+                relativeDistance    = transform.position - worldPosition;
+                startWorldPos       = transform.position;
+                startScreenPos      = GetScreenPos();
+
+                //LogSystem.Record($"World Pos {worldPosition}", LogType.Warning);
+                //LogSystem.Record($"Relative Distance {relativeDistance}", LogType.Warning);
+                //LogSystem.Record($"Input Start", LogType.Warning);
+
+                if (Input.touchCount >= 2)
                 {
-                    lastTouchDistance = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
+                    lastTouchDistance   = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
                 }
             }
             else if (InputFinish())
             {
+                //LogSystem.Record($"Input Finish", LogType.Warning);
+
                 Vector3 targetPos;
 
                 if (bClampMove)
                 {
-                    // 使用螢幕範圍做比例計算
-                    float normalizedX   = GetScreenPos().x / Screen.width;  // 0 左 → 1 右
-                    float normalizedY   = GetScreenPos().y / Screen.height; // 0 下 → 1 上
+                    Vector2 currentScreenPos    = GetScreenPos();
+                    Vector2 dragDelta           = currentScreenPos - startScreenPos;
 
-                    float mappedX       = Mathf.Lerp(defaultPos.x + maxPosition.x, defaultPos.x + minPosition.x, normalizedX);
-                    float mappedY       = Mathf.Lerp(defaultPos.y + minPosition.y, defaultPos.y + maxPosition.y, normalizedY);
-                    float mappedZ       = Mathf.Clamp(transform.position.z, defaultPos.z + minPosition.z, defaultPos.z + maxPosition.z); // z 不處理比例（一般不會用來滑動）
+                    dragDelta.x                 = Mathf.Clamp(dragDelta.x, -1000f, 1000f);
+                    dragDelta.y                 = Mathf.Clamp(dragDelta.y, -1000f, 1000f);
 
-                    targetPos = new Vector3(mappedX, mappedY, mappedZ);
+                    Vector3 offsetWorld         = new Vector3(-dragDelta.x * screenToWorldRatio, dragDelta.y * screenToWorldRatio, 0);
+
+                    targetPos                   = startWorldPos + offsetWorld;
+
+                    targetPos.x                 = Mathf.Clamp(targetPos.x, defaultPos.x + minPosition.x, defaultPos.x + maxPosition.x);
+                    targetPos.y                 = Mathf.Clamp(targetPos.y, defaultPos.y + minPosition.y, defaultPos.y + maxPosition.y);
+                    targetPos.z                 = Mathf.Clamp(targetPos.z, defaultPos.z + minPosition.z, defaultPos.z + maxPosition.z);
                 }
                 else
                 {
@@ -123,8 +151,7 @@ namespace XPlan.Gesture
 		{
 #if UNITY_EDITOR
             return new Vector3(Input.mousePosition.x, Input.mousePosition.y, offsetZ);
-#else
-        
+#else        
             float x = 0f;
             float y = 0f;
 
@@ -151,18 +178,21 @@ namespace XPlan.Gesture
 
         private bool InputStart()
 		{
-#if UNITY_EDITOR
-            return Input.GetMouseButtonDown(MouseKey());
-#else
-            int fingerIndex = fingerMode == InputFingerMode.TwoFingers ? 1 : 0;
-            Touch touch     = Input.GetTouch(fingerIndex);
+            if (bInputStart)
+            {
+                return false;
+            }
 
-            return touch.phase == TouchPhase.Began;
-#endif
+            return CheckInput();
         }
 
         private bool InputFinish()
         {
+            if(!bInputStart)
+            {
+                return false;
+            }
+
 #if UNITY_EDITOR
             return Input.GetMouseButton(MouseKey());
 #else
