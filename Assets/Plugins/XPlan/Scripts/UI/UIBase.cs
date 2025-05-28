@@ -321,12 +321,12 @@ namespace XPlan.UI
 		 * *****************************/
 		public void LoadImageFromUrl(Image targetImage, string url)
 		{
-			if(string.IsNullOrEmpty(url))
-            {
+			if (string.IsNullOrEmpty(url))
+			{
 				LogSystem.Record("避免使用空字串下載圖片", LogType.Warning);
 
 				return;
-            }
+			}
 
 			MonoBehaviourHelper.StartCoroutine(LoadImageFromUrl_Internal(targetImage, url));
 		}
@@ -408,6 +408,12 @@ namespace XPlan.UI
 		 * *************************************/
 		public void ToggleUI(GameObject ui, bool bEnabled)
 		{
+			// 狀態一致 不需要改變
+			if(ui.activeSelf == bEnabled)
+            {
+				return;
+            }
+
 			FadeBase[] fadeList = ui.GetComponents<FadeBase>();
 
 			if (fadeList == null || fadeList.Length == 0)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 
@@ -10,25 +10,59 @@ namespace XPlan.UI.Fade
         [SerializeField] private float maxAlpha = 1f;
         [SerializeField] private float fadeTime = 0.1f;
 
+        private Coroutine fadeCoroutine;
+
         protected override void FadeIn(Action finishAction)
         {
-            CanvasGroup cg  = gameObject.AddComponent<CanvasGroup>();
-
-            StartCoroutine(FadeAlpha(cg, minAlpha, maxAlpha, fadeTime, () => 
+            if(fadeCoroutine != null)
             {
-                GameObject.DestroyImmediate(cg);
+                StopCoroutine(fadeCoroutine);
+                fadeCoroutine = null;
+            }
 
+            bool bAddNewComponent   = false;
+            CanvasGroup cg          = null;
+
+            if(!gameObject.TryGetComponent<CanvasGroup>(out cg))
+            {
+                cg                  = gameObject.AddComponent<CanvasGroup>();
+                bAddNewComponent    = true;
+            }
+
+            fadeCoroutine = StartCoroutine(FadeAlpha(cg, minAlpha, maxAlpha, fadeTime, () => 
+            {
+                if(bAddNewComponent)
+                {
+                    GameObject.DestroyImmediate(cg);
+                }
+                
                 finishAction?.Invoke();
             }));
         }
 
         protected override void FadeOut(Action finishAction)
         {
-            CanvasGroup cg = gameObject.AddComponent<CanvasGroup>();
+            if (fadeCoroutine != null)
+            {
+                StopCoroutine(fadeCoroutine);
+                fadeCoroutine = null;
+            }
+
+            bool bAddNewComponent   = false;
+            CanvasGroup cg          = null;
+
+            if (!gameObject.TryGetComponent<CanvasGroup>(out cg))
+            {
+                cg                  = gameObject.AddComponent<CanvasGroup>();
+                bAddNewComponent    = true;
+            }
 
             StartCoroutine(FadeAlpha(cg, maxAlpha, minAlpha, fadeTime, () =>
             {
-                GameObject.DestroyImmediate(cg);
+                if (bAddNewComponent)
+                {
+                    GameObject.DestroyImmediate(cg);
+                }
 
                 finishAction?.Invoke();
             }));
