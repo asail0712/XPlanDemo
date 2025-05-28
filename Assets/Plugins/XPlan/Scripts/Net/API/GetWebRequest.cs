@@ -20,6 +20,7 @@ namespace XPlan.Net
         {
 			headers			= new Dictionary<string, string>();
 			urlParams		= new Dictionary<string, string>();
+			bWaitingNet		= true;
 			bIgnoreError	= false;
 		}
 
