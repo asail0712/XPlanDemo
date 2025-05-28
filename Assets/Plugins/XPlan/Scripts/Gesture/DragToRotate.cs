@@ -7,8 +7,8 @@ namespace XPlan.Gesture
 {
     public class DragToRotate : MonoBehaviour
     {
-#if UNITY_EDITOR
-        [SerializeField] private MouseTrigger mouseTrigger  = MouseTrigger.LeftMouse;
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
+        [SerializeField] public MouseTrigger mouseTrigger   = MouseTrigger.LeftMouse;
 #endif //UNITY_EDITOR
         [SerializeField] private bool bAllowPassThroughUI   = false;
         [SerializeField] private bool bOnlyRotateY          = true;
@@ -17,6 +17,8 @@ namespace XPlan.Gesture
         [SerializeField] public bool bInverseX              = false;
         [SerializeField] public bool bInverseY              = false;
 
+        [Header("Clamp Settings")]
+        [SerializeField] private bool bClampRotation        = false;
         [SerializeField] private float minRotationX         = -90f;
         [SerializeField] private float maxRotationX         = 90f;
         [SerializeField] private float minRotationY         = -135f;
@@ -63,13 +65,27 @@ namespace XPlan.Gesture
                         // Y軸旋轉
                         if (rotationY != 0)
                         {
-                            currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
+                            if(bClampRotation)
+                            {
+                                currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
+                            }
+                            else
+                            {
+                                currentY = currentY + rotationY;
+                            }                            
                         }
 
                         // X軸旋轉（如果允許）
                         if (!bOnlyRotateY && rotationX != 0)
                         {
-                            currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                            if (bClampRotation)
+                            {
+                                currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                            }
+                            else
+                            {
+                                currentX = currentX + rotationX;
+                            }   
                         }
 
                         transform.localEulerAngles = new Vector3(currentX, currentY, euler.z);
@@ -82,13 +98,27 @@ namespace XPlan.Gesture
                         float currentY      = NormalizeAngle(worldEuler.y);
 
                         if (rotationY != 0)
-                        { 
-                            currentY        = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
+                        {
+                            if (bClampRotation)
+                            {
+                                currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
+                            }
+                            else
+                            {
+                                currentY = currentY + rotationY;
+                            }
                         }
 
                         if (!bOnlyRotateY && rotationX != 0)
-                        { 
-                            currentX        = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                        {
+                            if (bClampRotation)
+                            {
+                                currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                            }
+                            else
+                            {
+                                currentX = currentX + rotationX;
+                            }
                         }
 
                         Quaternion clampedRotation  = Quaternion.Euler(currentX, currentY, worldEuler.z);
@@ -112,7 +142,7 @@ namespace XPlan.Gesture
             return angle;
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
         private int MouseKey()
         {
             switch (mouseTrigger)
@@ -129,7 +159,7 @@ namespace XPlan.Gesture
 #endif //UNITY_EDITOR
         private Vector2 GetInputPos()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return Input.mousePosition;
 #else
             Touch touch = Input.GetTouch(0);
@@ -141,7 +171,7 @@ namespace XPlan.Gesture
 
         private bool CheckInput()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return Input.GetMouseButton(MouseKey());
 #else
             return Input.touchCount == 1;
@@ -150,7 +180,7 @@ namespace XPlan.Gesture
 
         private bool InputStart()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return Input.GetMouseButtonDown(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);
@@ -160,7 +190,7 @@ namespace XPlan.Gesture
 
         private bool InputFinish()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return Input.GetMouseButton(MouseKey());
 #else
             Touch touch = Input.GetTouch(0);

@@ -9,7 +9,7 @@ namespace XPlan.Gesture
     {
         [Header("Drag Settings")]
         [SerializeField] private InputFingerMode fingerMode = InputFingerMode.OneFinger;
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
         [SerializeField] private MouseTrigger mouseTrigger  = MouseTrigger.LeftMouse;
 #endif //UNITY_EDITOR
         [SerializeField] private bool bAllowPassThroughUI   = false;
@@ -131,7 +131,7 @@ namespace XPlan.Gesture
             }
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
         private int MouseKey()
         {
             switch (mouseTrigger)
@@ -149,7 +149,7 @@ namespace XPlan.Gesture
 
         private Vector3 GetScreenPos()
 		{
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return new Vector3(Input.mousePosition.x, Input.mousePosition.y, offsetZ);
 #else        
             float x = 0f;
@@ -169,7 +169,7 @@ namespace XPlan.Gesture
 
         private bool CheckInput()
 		{
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return Input.GetMouseButton(MouseKey());
 #else
             return fingerMode == InputFingerMode.OneFinger ? Input.touchCount == 1 : Input.touchCount >= 2;
@@ -193,7 +193,7 @@ namespace XPlan.Gesture
                 return false;
             }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return Input.GetMouseButton(MouseKey());
 #else
             int fingerIndex = fingerMode == InputFingerMode.TwoFingers ? 1 : 0;
@@ -205,7 +205,7 @@ namespace XPlan.Gesture
 
         private bool IsTwoFingerDrag()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             return true;
 #else
             if (Input.touchCount < 2) 

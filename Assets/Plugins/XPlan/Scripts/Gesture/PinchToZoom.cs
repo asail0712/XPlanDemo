@@ -12,15 +12,15 @@ namespace XPlan.Gesture
         [SerializeField] public float zoomOutRatio          = 0.25f;
         [SerializeField] public float editorZoomSpeed       = 0.05f; // 滾輪在Editor的縮放倍率
 
-        [SerializeField] private float minScale             = 0.1f;
-        [SerializeField] private float maxScale             = 5.0f;
+        [SerializeField] public float minScale              = 0.1f;
+        [SerializeField] public float maxScale              = 5.0f;
 
         private float lastDist;
         private Vector3 lastScale;
 
         void Update()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             HandleMouseZoom();
 #else
             HandleTouchZoom();
