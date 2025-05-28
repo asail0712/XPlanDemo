@@ -245,7 +245,7 @@ namespace XPlan.UI.Component
 			gridLayoutGroup.childAlignment = anchor;
 		}
 
-		public void Refresh(bool bRefreshAnchorSize = true)//, bool bRefreshAnchorPos = true)
+		public void Refresh(bool bRefreshAnchorSize = true, bool bRefreshScrollPosition = true)//, bool bRefreshAnchorPos = true)
 		{
 			/**********************************
 			 * 依照Page來決定設定進Item的資料
@@ -302,10 +302,10 @@ namespace XPlan.UI.Component
 				pageChange.RefershPageInfo();
 			}
 
-            /**********************************
+			/**********************************
 			 * 刷新content
 			 * *******************************/
-            if (bRefreshAnchorSize)
+			if (bRefreshAnchorSize)
             {
                 int currCol				= 1;
                 int currRow				= 1;
@@ -316,16 +316,18 @@ namespace XPlan.UI.Component
 
 				if (gridLayoutGroup.startAxis == GridLayoutGroup.Axis.Horizontal)
                 {
-					// 只需要計算Content有多長
-                    //currCol = Mathf.Min(infoCount, col);
-                    currRow = Mathf.Min(infoCount, row);
-                }
+					// 計算Content的長寬                    
+					currCol = Mathf.Min(infoCount, col);
+					currRow = Mathf.Min(infoCount, row);
+					currRow = Mathf.CeilToInt((float)currRow / (float)currCol);
+				}
                 else
                 {
-					// 只需要計算Content有多寬
-					//currRow = Mathf.Min(infoCount, row);
-                    currCol = Mathf.Min(infoCount, col);
-                }
+					// 計算Content的長寬
+					currRow = Mathf.Min(infoCount, row);
+					currCol = Mathf.Min(infoCount, col);
+					currCol = Mathf.CeilToInt((float)currCol / (float)currRow);
+				}
 
                 float sizeDeltaX	= currCol * gridLayoutGroup.cellSize.x + (currCol - 1) * spaceX;
                 float sizeDeltaY	= currRow * gridLayoutGroup.cellSize.y + (currRow - 1) * spaceY;
@@ -333,7 +335,18 @@ namespace XPlan.UI.Component
                 rectTF.sizeDelta	= new Vector2(sizeDeltaX, sizeDeltaY);
             }
 
-   //         if (bRefreshAnchorPos)
+
+			/**********************************
+			 * 刷新Scroll
+			 * *******************************/
+			if(!bRefreshScrollPosition)
+            {
+				return;
+            }
+
+			RefreshScroll();
+
+			//         if (bRefreshAnchorPos)
 			//{
 			//	RectTransform rectTF = (RectTransform)anchor.transform;
 
@@ -346,6 +359,44 @@ namespace XPlan.UI.Component
 			//		rectTF.localPosition = new Vector3(0f, rectTF.localPosition.y, rectTF.localPosition.z);
 			//	}
 			//}
+		}
+
+		private void RefreshScroll()
+        {
+			if (anchor != null)
+			{
+				Transform parent = anchor.transform.parent;
+
+				if (parent == null)
+				{
+					return;
+				}
+
+				Transform grandParent = parent.parent;
+
+				if (grandParent == null)
+				{
+					return;
+				}
+
+				ScrollRect scrollRect = grandParent.gameObject.GetComponent<ScrollRect>();
+
+				if (scrollRect == null)
+				{
+					return;
+				}
+
+				if (gridLayoutGroup.startAxis == GridLayoutGroup.Axis.Horizontal)
+				{
+					// scroll移到最上面
+					scrollRect.verticalNormalizedPosition = 1f;
+				}
+				else
+                {
+					// scroll移到最左邊
+					scrollRect.horizontalNormalizedPosition = 1f;
+				}
+			}
 		}
 	}
 }
