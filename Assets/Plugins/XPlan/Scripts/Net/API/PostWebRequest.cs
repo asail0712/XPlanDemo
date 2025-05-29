@@ -102,7 +102,12 @@ namespace XPlan.Net
 				{
 					string contentType = request.GetResponseHeader("Content-Type");
 
-					if (contentType.Contains("application/json") || contentType.Contains("text/"))
+					if (string.IsNullOrEmpty(contentType))
+                    {
+						LogSystem.Record($"發生錯誤但忽略 並傳回空字串");
+						finishAction?.Invoke("");
+					}
+					else if (contentType.Contains("application/json") || contentType.Contains("text/"))
 					{
 						// 處理文字資料
 						string text = request.downloadHandler.text;
