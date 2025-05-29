@@ -37,6 +37,16 @@ namespace XPlan.Utility
 			}
 		}
 
+		public static T First<T>(this List<T> list)
+		{
+			if (list == null || list.Count == 0)
+			{
+				return default(T);
+			}
+
+			return list[0];
+		}
+
 		public static T Last<T>(this List<T> list)
 		{
 			if(list == null || list.Count == 0)
