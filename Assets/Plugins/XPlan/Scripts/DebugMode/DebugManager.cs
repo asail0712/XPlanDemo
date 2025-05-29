@@ -24,11 +24,18 @@ namespace XPlan.DebugMode
             gameSpeedRatio  = 1;
             currGameSpeed   = 1;
             bIsInitial      = true;
-#if DEBUG
+
+            if(debugConsole != null)
+            {
+                debugConsole.SetActive(false);
+            }
+
+#if !BUILD_PRODUCTION && !BUILD_STAGING
             RegisterLogic(new DebugHandler(debugConsole));
 #endif //DEBUG
         }
-#if DEBUG
+
+#if !BUILD_PRODUCTION && !BUILD_STAGING
         protected override void OnPostUpdate(float deltaTime)
 		{
 			if(gameSpeedRatio != currGameSpeed)
