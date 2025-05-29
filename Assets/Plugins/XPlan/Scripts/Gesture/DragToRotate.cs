@@ -28,17 +28,9 @@ namespace XPlan.Gesture
 
         void Update()
         {
-            bool bInterrupt = false;
-
-            if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
-            {
-                //Debug.Log("點擊到了 UI 元素");
-                bInterrupt = true;
-            }
-
             if (!CheckInput())
             {
-                bInterrupt = true;
+                return;
             }
 
             Vector3 touchPos = GetInputPos();
@@ -52,11 +44,12 @@ namespace XPlan.Gesture
             if (bIsOutOfScreen)
             {
                 Debug.Log("Out Of Screen！");
-                bInterrupt = true;
+                return;
             }
 
-            if (bInterrupt)
+            if (!bAllowPassThroughUI && IsPointerOverUI())
             {
+                Debug.Log("點擊到了 UI 元素");
                 return;
             }
 
@@ -151,6 +144,22 @@ namespace XPlan.Gesture
 
                 previousTouchPosition = GetInputPos();
             }
+        }
+
+        bool IsPointerOverUI()
+        {
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
+            return EventSystem.current.IsPointerOverGameObject();
+#else
+            if (Input.touchCount > 0)
+            {
+                return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            }
+            else
+            {
+                return false;
+            }
+#endif
         }
 
         private float NormalizeAngle(float angle)

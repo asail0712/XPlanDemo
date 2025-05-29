@@ -43,23 +43,10 @@ namespace XPlan.Gesture
 
 		void Update()
         {
-            bool bInterrupt = false;
-
-            if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
-            {
-                //Debug.Log("點擊到了 UI 元素");
-                bInterrupt = true;
-            }
-
             // 检查是否有手指触摸屏幕
             if (!CheckInput() || !Camera.main)
             {
-                bInterrupt = true;
-            }
-
-            if (fingerMode == InputFingerMode.TwoFingers && !IsTwoFingerDrag())
-            {
-                bInterrupt = true;
+                return;
             }
 
             Vector3 touchPos = GetScreenPos();
@@ -73,12 +60,17 @@ namespace XPlan.Gesture
             if (bIsOutOfScreen)
             {
                 Debug.Log("Out Of Screen！");
-                bInterrupt = true;
+                return;
             }
 
-            if (bInterrupt)
+            if (!bAllowPassThroughUI && IsPointerOverUI())
             {
-                bInputStart = false;
+                Debug.Log("點擊到了 UI 元素");
+                return;
+            }
+
+            if (fingerMode == InputFingerMode.TwoFingers && !IsTwoFingerDrag())
+            {
                 return;
             }
 
@@ -143,6 +135,22 @@ namespace XPlan.Gesture
 
                 transform.position  = targetPos;
             }
+        }
+
+        bool IsPointerOverUI()
+        {
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
+            return EventSystem.current.IsPointerOverGameObject();
+#else
+            if (Input.touchCount > 0)
+            {
+                return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            }
+            else
+            {
+                return false;
+            }
+#endif
         }
 
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
