@@ -28,105 +28,128 @@ namespace XPlan.Gesture
 
         void Update()
         {
+            bool bInterrupt = false;
+
             if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
             {
                 //Debug.Log("點擊到了 UI 元素");
+                bInterrupt = true;
+            }
+
+            if (!CheckInput())
+            {
+                bInterrupt = true;
+            }
+
+            Vector3 touchPos = GetInputPos();
+
+            bool bIsOutOfScreen =
+                touchPos.x < 0 ||
+                touchPos.x > Screen.width ||
+                touchPos.y < 0 ||
+                touchPos.y > Screen.height;
+
+            if (bIsOutOfScreen)
+            {
+                Debug.Log("Out Of Screen！");
+                bInterrupt = true;
+            }
+
+            if (bInterrupt)
+            {
                 return;
             }
 
-            if (CheckInput())
+            if (InputStart())
             {
-                if (InputStart())
+                // 记录初始触控位置
+                previousTouchPosition = GetInputPos();
+            }
+            else if (InputFinish())
+            {
+                // 计算触控位置的变化
+                Vector2 touchDelta      = GetInputPos() - previousTouchPosition;
+
+                float deltaX            = bInverseX ? touchDelta.y : -touchDelta.y;
+                float deltaY            = bInverseY ? touchDelta.x : -touchDelta.x;
+
+                float rotationX         = deltaX * rotationSpeed;
+                float rotationY         = deltaY * rotationSpeed;
+
+                // 選擇用 local 或 world space 旋轉
+                if(bLocalRotate)
                 {
-                    // 记录初始触控位置
-                    previousTouchPosition = GetInputPos();
-                }
-                else if (InputFinish())
-                {
-                    // 计算触控位置的变化
-                    Vector2 touchDelta      = GetInputPos() - previousTouchPosition;
+                    // Clamp 現有 rotation
+                    Vector3 euler   = transform.localEulerAngles;
 
-                    float deltaX            = bInverseX ? touchDelta.y : -touchDelta.y;
-                    float deltaY            = bInverseY ? touchDelta.x : -touchDelta.x;
+                    // 因為 euler 角度範圍是 0~360，要轉成 -180~180 處理 clamp 比較準
+                    float currentX  = NormalizeAngle(euler.x);
+                    float currentY  = NormalizeAngle(euler.y);
 
-                    float rotationX         = deltaX * rotationSpeed;
-                    float rotationY         = deltaY * rotationSpeed;
-
-                    // 選擇用 local 或 world space 旋轉
-                    if(bLocalRotate)
+                    // Y軸旋轉
+                    if (rotationY != 0)
                     {
-                        // Clamp 現有 rotation
-                        Vector3 euler   = transform.localEulerAngles;
-
-                        // 因為 euler 角度範圍是 0~360，要轉成 -180~180 處理 clamp 比較準
-                        float currentX  = NormalizeAngle(euler.x);
-                        float currentY  = NormalizeAngle(euler.y);
-
-                        // Y軸旋轉
-                        if (rotationY != 0)
+                        if(bClampRotation)
                         {
-                            if(bClampRotation)
-                            {
-                                currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
-                            }
-                            else
-                            {
-                                currentY = currentY + rotationY;
-                            }                            
+                            currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
                         }
-
-                        // X軸旋轉（如果允許）
-                        if (!bOnlyRotateY && rotationX != 0)
+                        else
                         {
-                            if (bClampRotation)
-                            {
-                                currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
-                            }
-                            else
-                            {
-                                currentX = currentX + rotationX;
-                            }   
-                        }
-
-                        transform.localEulerAngles = new Vector3(currentX, currentY, euler.z);
-                    }
-                    else
-                    {
-                        // World space clamp
-                        Vector3 worldEuler  = transform.rotation.eulerAngles;
-                        float currentX      = NormalizeAngle(worldEuler.x);
-                        float currentY      = NormalizeAngle(worldEuler.y);
-
-                        if (rotationY != 0)
-                        {
-                            if (bClampRotation)
-                            {
-                                currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
-                            }
-                            else
-                            {
-                                currentY = currentY + rotationY;
-                            }
-                        }
-
-                        if (!bOnlyRotateY && rotationX != 0)
-                        {
-                            if (bClampRotation)
-                            {
-                                currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
-                            }
-                            else
-                            {
-                                currentX = currentX + rotationX;
-                            }
-                        }
-
-                        Quaternion clampedRotation  = Quaternion.Euler(currentX, currentY, worldEuler.z);
-                        transform.rotation          = clampedRotation;
+                            currentY = currentY + rotationY;
+                        }                            
                     }
 
-                    previousTouchPosition = GetInputPos();
+                    // X軸旋轉（如果允許）
+                    if (!bOnlyRotateY && rotationX != 0)
+                    {
+                        if (bClampRotation)
+                        {
+                            currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                        }
+                        else
+                        {
+                            currentX = currentX + rotationX;
+                        }   
+                    }
+
+                    transform.localEulerAngles = new Vector3(currentX, currentY, euler.z);
                 }
+                else
+                {
+                    // World space clamp
+                    Vector3 worldEuler  = transform.rotation.eulerAngles;
+                    float currentX      = NormalizeAngle(worldEuler.x);
+                    float currentY      = NormalizeAngle(worldEuler.y);
+
+                    if (rotationY != 0)
+                    {
+                        if (bClampRotation)
+                        {
+                            currentY = Mathf.Clamp(currentY + rotationY, minRotationY, maxRotationY);
+                        }
+                        else
+                        {
+                            currentY = currentY + rotationY;
+                        }
+                    }
+
+                    if (!bOnlyRotateY && rotationX != 0)
+                    {
+                        if (bClampRotation)
+                        {
+                            currentX = Mathf.Clamp(currentX + rotationX, minRotationX, maxRotationX);
+                        }
+                        else
+                        {
+                            currentX = currentX + rotationX;
+                        }
+                    }
+
+                    Quaternion clampedRotation  = Quaternion.Euler(currentX, currentY, worldEuler.z);
+                    transform.rotation          = clampedRotation;
+                }
+
+                previousTouchPosition = GetInputPos();
             }
         }
 

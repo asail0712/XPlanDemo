@@ -62,7 +62,21 @@ namespace XPlan.Gesture
                 bInterrupt = true;
             }
 
-            if(bInterrupt)
+            Vector3 touchPos = GetScreenPos();
+
+            bool bIsOutOfScreen =
+                touchPos.x < 0 ||
+                touchPos.x > Screen.width ||
+                touchPos.y < 0 ||
+                touchPos.y > Screen.height;
+
+            if (bIsOutOfScreen)
+            {
+                Debug.Log("Out Of Screen！");
+                bInterrupt = true;
+            }
+
+            if (bInterrupt)
             {
                 bInputStart = false;
                 return;
