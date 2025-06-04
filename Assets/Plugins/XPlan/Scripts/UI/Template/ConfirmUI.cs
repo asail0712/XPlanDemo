@@ -113,6 +113,12 @@ namespace XPlan.UI
 				cancelBtn.gameObject.SetActive(info.dialogType == DialogType.DualButton);
 
 				ToggleUI(gameObject, true);
+
+				// 通常跳出單按鈕確認視窗 為發生異常
+				if(info.dialogType == DialogType.SingleButton)
+				{ 
+					LogSystem.Record($"Dialog Message : {titleStr}", LogType.Warning);
+				}
 			});
 		}
 	}
