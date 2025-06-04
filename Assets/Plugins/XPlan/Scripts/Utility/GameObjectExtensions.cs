@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace XPlan.Utility
 {
@@ -65,6 +66,24 @@ namespace XPlan.Utility
 
         //    childGO.transform.SetParent(gameObject.transform);
         //}
+
+        public static void MoveToMainRoot(this GameObject gameObject)
+        {
+            if(gameObject == null)
+            {
+                return;
+            }
+
+            // 不在根目錄的GameObject 不能使用 MoveGameObjectToScene
+            gameObject.transform.parent = null;
+
+            Scene mainScene = SceneManager.GetSceneAt(0);
+
+            if (mainScene.IsValid())
+            {
+                SceneManager.MoveGameObjectToScene(gameObject, mainScene);
+            }
+        }
 
         public static void AddChild(this GameObject gameObject, GameObject childGO
             , Vector3 locPos        = default(Vector3)
