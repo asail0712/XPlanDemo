@@ -7,7 +7,7 @@ namespace XPlan.Gesture
 { 
     public class PinchToZoom : MonoBehaviour
     {
-        [SerializeField] private bool bAllowPassThroughUI   = false;
+        [SerializeField] public bool bAllowPassThroughUI    = false;
         [SerializeField] public float zoomInRatio           = 0.15f;
         [SerializeField] public float zoomOutRatio          = 0.25f;
         [SerializeField] public float editorZoomSpeed       = 0.05f; // 滾輪在Editor的縮放倍率

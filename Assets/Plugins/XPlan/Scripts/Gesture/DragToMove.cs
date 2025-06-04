@@ -8,17 +8,17 @@ namespace XPlan.Gesture
     public class DragToMove : MonoBehaviour
     {
         [Header("Drag Settings")]
-        [SerializeField] private InputFingerMode fingerMode = InputFingerMode.OneFinger;
+        [SerializeField] public InputFingerMode fingerMode  = InputFingerMode.OneFinger;
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
-        [SerializeField] private MouseTrigger mouseTrigger  = MouseTrigger.LeftMouse;
+        [SerializeField] public MouseTrigger mouseTrigger   = MouseTrigger.LeftMouse;
 #endif //UNITY_EDITOR
-        [SerializeField] private bool bAllowPassThroughUI   = false;
+        [SerializeField] public bool bAllowPassThroughUI    = false;
 
         [Header("Clamp Settings")]
-        [SerializeField] private bool bClampMove            = false;
+        [SerializeField] public bool bClampMove             = false;
         [SerializeField] public Vector3 minPosition         = new Vector3(-10, -10, -10);
         [SerializeField] public Vector3 maxPosition         = new Vector3(10, 10, 10);
-        [SerializeField] private float screenToWorldRatio   = 0.01f;
+        [SerializeField] public float screenToWorldRatio    = 0.01f;
 
         private float offsetZ               = -999f;
         private Vector3 defaultPos          = Vector3.zero;

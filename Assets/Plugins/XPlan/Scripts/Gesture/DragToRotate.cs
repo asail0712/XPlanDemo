@@ -10,19 +10,19 @@ namespace XPlan.Gesture
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
         [SerializeField] public MouseTrigger mouseTrigger   = MouseTrigger.LeftMouse;
 #endif //UNITY_EDITOR
-        [SerializeField] private bool bAllowPassThroughUI   = false;
-        [SerializeField] private bool bOnlyRotateY          = true;
+        [SerializeField] public bool bAllowPassThroughUI    = false;
+        [SerializeField] public bool bOnlyRotateY           = true;
         [SerializeField] public bool bLocalRotate           = false;
         [SerializeField] public float rotationSpeed         = 0.05f; // 控制旋转速度
         [SerializeField] public bool bInverseX              = false;
         [SerializeField] public bool bInverseY              = false;
 
         [Header("Clamp Settings")]
-        [SerializeField] private bool bClampRotation        = false;
-        [SerializeField] private float minRotationX         = -90f;
-        [SerializeField] private float maxRotationX         = 90f;
-        [SerializeField] private float minRotationY         = -135f;
-        [SerializeField] private float maxRotationY         = 135f;
+        [SerializeField] public bool bClampRotation         = false;
+        [SerializeField] public float minRotationX          = -90f;
+        [SerializeField] public float maxRotationX          = 90f;
+        [SerializeField] public float minRotationY          = -135f;
+        [SerializeField] public float maxRotationY          = 135f;
 
         private Vector2 previousTouchPosition;
 
