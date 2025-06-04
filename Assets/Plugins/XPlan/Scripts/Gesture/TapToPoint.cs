@@ -39,7 +39,7 @@ namespace XPlan.Gesture
 
 		void Update()
         {
-            if (!bAllowPassThroughUI && EventSystem.current.IsPointerOverGameObject())
+            if (!bAllowPassThroughUI && GestureTools.IsPointerOverUI())
             {
                 //Debug.Log("點擊到了 UI 元素");
                 return;

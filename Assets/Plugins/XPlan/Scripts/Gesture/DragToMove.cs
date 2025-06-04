@@ -63,7 +63,7 @@ namespace XPlan.Gesture
                 return;
             }
 
-            if (!bAllowPassThroughUI && IsPointerOverUI())
+            if (!bAllowPassThroughUI && GestureTools.IsPointerOverUI())
             {
                 Debug.Log("點擊到了 UI 元素");
                 return;
@@ -137,38 +137,6 @@ namespace XPlan.Gesture
             }
         }
 
-        bool IsPointerOverUI()
-        {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return EventSystem.current.IsPointerOverGameObject();
-#else
-            if (Input.touchCount > 0)
-            {
-                return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
-            }
-            else
-            {
-                return false;
-            }
-#endif
-        }
-
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-        private int MouseKey()
-        {
-            switch (mouseTrigger)
-            {
-                case MouseTrigger.LeftMouse:
-                    return 0;
-                case MouseTrigger.MiddleMouse:
-                    return 2;
-                case MouseTrigger.RightMouse:
-                    return 1;
-            }
-            return 0;
-        }
-#endif //UNITY_EDITOR
-
         private Vector3 GetScreenPos()
 		{
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
@@ -192,7 +160,7 @@ namespace XPlan.Gesture
         private bool CheckInput()
 		{
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return Input.GetMouseButton(MouseKey());
+            return Input.GetMouseButton(GestureTools.MouseKey(mouseTrigger));
 #else
             return fingerMode == InputFingerMode.OneFinger ? Input.touchCount == 1 : Input.touchCount >= 2;
 #endif
@@ -216,7 +184,7 @@ namespace XPlan.Gesture
             }
 
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return Input.GetMouseButton(MouseKey());
+            return Input.GetMouseButton(GestureTools.MouseKey(mouseTrigger));
 #else
             int fingerIndex = fingerMode == InputFingerMode.TwoFingers ? 1 : 0;
             Touch touch     = Input.GetTouch(fingerIndex);

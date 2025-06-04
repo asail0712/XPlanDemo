@@ -29,7 +29,7 @@ namespace XPlan.Gesture
 
         private void HandleTouchZoom()
         {
-            if (!bAllowPassThroughUI && IsPointerOverUI())
+            if (!bAllowPassThroughUI && GestureTools.IsPointerOverUI())
             {
                 return;
             }
@@ -68,7 +68,7 @@ namespace XPlan.Gesture
 
         private void HandleMouseZoom()
         {
-            if (!bAllowPassThroughUI && IsPointerOverUI())
+            if (!bAllowPassThroughUI && GestureTools.IsPointerOverUI())
             {
                 return;
             }
@@ -87,22 +87,6 @@ namespace XPlan.Gesture
 
                 transform.localScale    = new Vector3(clampedX, clampedY, clampedZ);
             }
-        }
-
-        bool IsPointerOverUI()
-        {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return EventSystem.current.IsPointerOverGameObject();
-#else
-            if (Input.touchCount > 0)
-            {
-                return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
-            }
-            else
-            {
-                return false;
-            }
-#endif
         }
     }
 }

@@ -47,7 +47,7 @@ namespace XPlan.Gesture
                 return;
             }
 
-            if (!bAllowPassThroughUI && IsPointerOverUI())
+            if (!bAllowPassThroughUI && GestureTools.IsPointerOverUI())
             {
                 Debug.Log("點擊到了 UI 元素");
                 return;
@@ -146,22 +146,6 @@ namespace XPlan.Gesture
             }
         }
 
-        bool IsPointerOverUI()
-        {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return EventSystem.current.IsPointerOverGameObject();
-#else
-            if (Input.touchCount > 0)
-            {
-                return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
-            }
-            else
-            {
-                return false;
-            }
-#endif
-        }
-
         private float NormalizeAngle(float angle)
         {
             angle %= 360f;
@@ -174,21 +158,6 @@ namespace XPlan.Gesture
             return angle;
         }
 
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-        private int MouseKey()
-        {
-            switch (mouseTrigger)
-            {
-                case MouseTrigger.LeftMouse:
-                    return 0;
-                case MouseTrigger.MiddleMouse:
-                    return 2;
-                case MouseTrigger.RightMouse:
-                    return 1;
-            }
-            return 0;
-        }
-#endif //UNITY_EDITOR
         private Vector2 GetInputPos()
         {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
@@ -204,7 +173,7 @@ namespace XPlan.Gesture
         private bool CheckInput()
         {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return Input.GetMouseButton(MouseKey());
+            return Input.GetMouseButton(GestureTools.MouseKey(mouseTrigger));
 #else
             return Input.touchCount == 1;
 #endif
@@ -213,7 +182,7 @@ namespace XPlan.Gesture
         private bool InputStart()
         {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return Input.GetMouseButtonDown(MouseKey());
+            return Input.GetMouseButtonDown(GestureTools.MouseKey(mouseTrigger));
 #else
             Touch touch = Input.GetTouch(0);
             return touch.phase == TouchPhase.Began;
@@ -223,7 +192,7 @@ namespace XPlan.Gesture
         private bool InputFinish()
         {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            return Input.GetMouseButton(MouseKey());
+            return Input.GetMouseButton(GestureTools.MouseKey(mouseTrigger));
 #else
             Touch touch = Input.GetTouch(0);
             return touch.phase == TouchPhase.Moved;
