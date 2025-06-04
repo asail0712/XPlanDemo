@@ -27,15 +27,15 @@ namespace XPlan.DebugMode
 
             if(debugConsole != null)
             {
+                // 預設先關閉
                 debugConsole.SetActive(false);
             }
 
-#if !BUILD_PRODUCTION && !BUILD_STAGING
+#if !BUILD_PRODUCTION
             RegisterLogic(new DebugHandler(debugConsole));
-#endif //DEBUG
+#endif //!BUILD_PRODUCTION
         }
-
-#if !BUILD_PRODUCTION && !BUILD_STAGING
+#if UNITY_EDITOR
         protected override void OnPostUpdate(float deltaTime)
 		{
 			if(gameSpeedRatio != currGameSpeed)
@@ -46,7 +46,7 @@ namespace XPlan.DebugMode
                 LogSystem.Record($"Game Speed Change To {currGameSpeed}");
 			}
 		}
-#endif //DEBUG
+#endif //UNITY_EDITOR
         static public bool IsInitial()
         {
             return bIsInitial;
