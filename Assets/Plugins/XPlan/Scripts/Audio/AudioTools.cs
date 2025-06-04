@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using UnityEngine;
 
@@ -84,7 +84,7 @@ namespace XPlan.Audio
                     return null;
             }
 
-            // �Y�ݭn�A�i�歫����
+            // 若需要，進行重取樣
             float[] outputSamples;
             if (inputSampleRate != outputSampleRate)
             {
@@ -102,6 +102,54 @@ namespace XPlan.Audio
             audioClip.SetData(outputSamples, 0);
 
             return audioClip;
+        }
+
+        public static bool IsAudioValid(this AudioClip clip, float volumeThreshold = 0.5f)
+        {
+            if (clip == null)
+            {
+                return false;
+            }
+
+            float[] samples = new float[clip.samples * clip.channels];
+            clip.GetData(samples, 0);
+
+            const int windowSize    = 1024; // 每段樣本數，對 44100Hz 約等於 23ms
+            int soundCount          = 0;
+
+            for (int i = 0; i < samples.Length; i += windowSize)
+            {
+                int length  = Mathf.Min(windowSize, samples.Length - i);
+                float sum   = 0f;
+                float max   = 0f;
+
+                for (int j = 0; j < length; j++)
+                {
+                    float s = samples[i + j];
+                    float v = s * s;
+                    sum     += v;
+
+                    if(v > max)
+                    {
+                        max = v;
+                    }
+                }
+
+                float rms = Mathf.Sqrt(sum / length);
+
+                // 你可以用 rms 做判斷：是否超過門檻，當作「有聲音」
+                if (rms > Mathf.Sqrt(max) * volumeThreshold)
+                {
+                    Debug.Log($"第 {i / windowSize} 段 有聲音，RMS: {rms}");
+                    ++soundCount;
+                }
+                else
+                {
+                    Debug.Log($"第 {i / windowSize} 段 無聲音，RMS: {rms}");
+                }
+            }
+
+            return (float)soundCount / (float)(samples.Length / windowSize) > 0.3f;
         }
 
         private static float[] TrimSilence(float[] data, int channels, float threshold = 0.01f)

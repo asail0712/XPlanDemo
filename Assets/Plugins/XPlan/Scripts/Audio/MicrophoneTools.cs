@@ -8,7 +8,7 @@ using XPlan.Utility;
 // 參考資料
 // https://blog.csdn.net/Mediary/article/details/118333666
 
-namespace XPlan.audio
+namespace XPlan.Audio
 {
     // 使用develop build 有機會在手機會有延遲
     // 生成的AudioClip要手動釋放
@@ -51,17 +51,14 @@ namespace XPlan.audio
 
             while (!bIsFinished)
             {
-                if(bSaveFirstHalf)
+                if (bSaveFirstHalf)
                 {
-                    // 保存前半
-                    micPos = Microphone.GetPosition(selectedDevice);
-
-                    while (micPos >= 0 && micPos < length * 0.5f)                        
+                    // 保存前半                    
+                    yield return new WaitUntil(() =>
                     {
-                        yield return new WaitForSeconds(0.5f);
-
                         micPos = Microphone.GetPosition(selectedDevice);
-                    }
+                        return micPos < length / 2;
+                    });
 
                     micClip.GetData(micDataTemp, 0);
                     micDataList.AddRange(micDataTemp);
@@ -70,14 +67,11 @@ namespace XPlan.audio
                 else
                 {
                     // 保存後半
-                    micPos = Microphone.GetPosition(selectedDevice);
-
-                    while (micPos >= length * 0.5f && micPos < length)
+                    yield return new WaitUntil(() =>
                     {
-                        yield return new WaitForSeconds(0.5f);
-
                         micPos = Microphone.GetPosition(selectedDevice);
-                    }
+                        return micPos < length && micPos >= length / 2;
+                    });
 
                     micClip.GetData(micDataTemp, length / 2);
                     micDataList.AddRange(micDataTemp);
