@@ -6,7 +6,7 @@ XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點�
   
 ### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 2.2.4
+- Version 2.2.6
 # 3.安裝指南
 ### 系統要求
 - Unity 2022.3.33f1 或更高版本
