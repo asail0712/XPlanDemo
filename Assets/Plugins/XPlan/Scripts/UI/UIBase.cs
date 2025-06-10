@@ -319,7 +319,7 @@ namespace XPlan.UI
 		/********************************
 		 * 工具
 		 * *****************************/
-		public void LoadImageFromUrl(Image targetImage, string url)
+		public void LoadImageFromUrl(RawImage targetImage, string url)
 		{
 			if (string.IsNullOrEmpty(url))
 			{
@@ -328,12 +328,46 @@ namespace XPlan.UI
 				return;
 			}
 
-			MonoBehaviourHelper.StartCoroutine(LoadImageFromUrl_Internal(targetImage, url));
+			MonoBehaviourHelper.StartCoroutine(LoadImageFromUrl_Internal(url, (texture) => 
+			{
+				targetImage.texture = texture;
+			}));
 		}
 
-		private IEnumerator LoadImageFromUrl_Internal(Image targetImage, string url)
+		public void LoadImageFromUrl(Image targetImage, string url, bool bResize = true)
+		{
+			if (string.IsNullOrEmpty(url))
+			{
+				LogSystem.Record("避免使用空字串下載圖片", LogType.Warning);
+
+				return;
+			}
+
+			MonoBehaviourHelper.StartCoroutine(LoadImageFromUrl_Internal(url, (texture) => 
+			{
+				Sprite sprite = Sprite.Create(
+									texture,
+									new Rect(0, 0, texture.width, texture.height),
+									new Vector2(0.5f, 0.5f));
+
+				targetImage.sprite = sprite;
+
+				if (bResize)
+				{
+					// 自動調整 Image 尺寸符合原始圖片
+					RectTransform rt = targetImage.GetComponent<RectTransform>();
+					if (rt != null)
+					{
+						rt.sizeDelta = new Vector2(texture.width, texture.height);
+					}
+				}
+			}));
+		}
+
+		private IEnumerator LoadImageFromUrl_Internal(string url, Action<Texture2D> finishAction)
 		{
 			UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+			Texture2D texture		= null;
 
 			yield return request.SendWebRequest();
 
@@ -344,25 +378,15 @@ namespace XPlan.UI
 #endif
 			{
 				LogSystem.Record("載入圖片失敗: " + request.error, LogType.Error);
+
+				texture = null;
 			}
 			else
 			{
-				Texture2D texture	= DownloadHandlerTexture.GetContent(request);
-				Sprite sprite		= Sprite.Create(
-					texture,
-					new Rect(0, 0, texture.width, texture.height),
-					new Vector2(0.5f, 0.5f)
-				);
-
-				targetImage.sprite = sprite;
-
-				// 自動調整 Image 尺寸符合原始圖片
-				RectTransform rt = targetImage.GetComponent<RectTransform>();
-				if (rt != null)
-				{
-					rt.sizeDelta = new Vector2(texture.width, texture.height);
-				}
+				texture	= DownloadHandlerTexture.GetContent(request);
 			}
+
+			finishAction?.Invoke(texture);
 		}
 
 		public void FadeInOutAlpha(CanvasGroup canvasGroup, float targetAlpha, float duration, Action finishAction = null)
