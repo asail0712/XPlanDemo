@@ -18,7 +18,7 @@ namespace XPlan.Demo.Recycle
 				ball.transform.position = ballEmitter.transform.TransformPoint(Random.insideUnitSphere * 0.5f);
 				Rigidbody2D rigi		= ball.GetComponent<Rigidbody2D>();
 				// 避免速度累積太多
-				rigi.velocity			= Vector2.zero;
+				rigi.linearVelocity			= Vector2.zero;
 			}
 		}
 	}
