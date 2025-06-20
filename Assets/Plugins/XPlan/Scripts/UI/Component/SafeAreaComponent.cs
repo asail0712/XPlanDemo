@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 namespace XPlan.UI.Component
 {
@@ -30,15 +30,15 @@ namespace XPlan.UI.Component
         }
 
 #if UNITY_EDITOR
-        // iPhone 14 Pro ¼ÒÀÀ¥Îªº Safe Area ¸ê®Æ¡]°ÊºA®q¡^
+        // iPhone 14 Pro æ¨¡æ“¬ç”¨çš„ Safe Area è³‡æ–™ï¼ˆå‹•æ…‹å³¶ï¼‰
         private Rect SimulatedSafeArea()
         {
-            // ³]©w¸ÑªR«×¹ïÀ³ªº Safe Area (¥H 1179x2556 ¿Ã¹õ¬°¨Ò)
+            // è¨­å®šè§£æåº¦å°æ‡‰çš„ Safe Area (ä»¥ 1179x2556 è¢å¹•ç‚ºä¾‹)
             float screenWidth   = Screen.width;
             float screenHeight  = Screen.height;
 
             float safeX = 0f;
-            float safeY = 0f; // Ãş¦ü°ÊºA®qªº°ª«×
+            float safeY = 0f; // é¡ä¼¼å‹•æ…‹å³¶çš„é«˜åº¦
             float safeW = screenWidth - safeX;
             float safeH = screenHeight - simulatedSafeAreaTop;
 
