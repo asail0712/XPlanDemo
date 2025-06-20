@@ -79,16 +79,13 @@ namespace XPlan.Audio
                 }
             }
 
-            micPos = Microphone.GetPosition(selectedDevice);
-
-            if(micPos <= length / 2)
+            // 依照中斷的地方 決定剩下的要從哪邊開始添加data
+            if(bSaveFirstHalf)
             {
-                micDataTemp = new float[micPos];
                 micClip.GetData(micDataTemp, 0);
             }
             else
             {
-                micDataTemp = new float[micPos - length / 2];
                 micClip.GetData(micDataTemp, length / 2);
             }
 
