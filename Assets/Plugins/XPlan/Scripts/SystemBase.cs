@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
+using XPlan.UI;
 
 // MonoBehaviour 函數的執行先後順序
 // https://home.gamer.com.tw/creationDetail.php?sn=2491667
@@ -41,14 +45,34 @@ namespace XPlan
 		}
 
 		// Start is called before the first frame update
-		void Start()
+		IEnumerator Start()
         {
 			OnInitialGameObject();
 
-			OnInitialLogic();
+            List<UILoader> allUILoaders = GetAllUILoader();
+
+			yield return new WaitUntil(() => allUILoaders.All(loader => loader.IsDone));
+
+            OnInitialLogic();
 
 			StartCoroutine(PostInitial());
 		}
+
+		private List<UILoader> GetAllUILoader()
+		{
+            // 取得場景中所有的根物件
+            Scene currScene				= gameObject.scene;
+            GameObject[] rootObjects	= currScene.GetRootGameObjects();
+            List<UILoader> results		= new List<UILoader>();
+
+            foreach (GameObject root in rootObjects)
+            {
+                List<UILoader> loaders = root.GetComponents<UILoader>().ToList();
+                results.AddRange(loaders);
+            }
+
+			return results;
+        }
 
 		private IEnumerator PostInitial()
 		{

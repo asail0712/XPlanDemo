@@ -198,7 +198,9 @@ namespace XPlan.UI
 					uiIns.SetActive(loadingInfo.bVisible);
 					uiIns.transform.localScale = Vector3.one;
 				}
-			}
+
+				loader.IsDone = true;
+            }
 
 			/********************************
 			 * 判斷是否有UI需要移除
