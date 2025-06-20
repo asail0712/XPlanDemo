@@ -1,12 +1,13 @@
 # 1.簡介
 XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點如下:
-- 掌握EDA的優勢來給予代碼足夠的靈活性與擴展度，同時也鬆綁使用者對設計模式的過多依賴。
-- 配套的UI系統，簡單套用MVVM解構UI與前端邏輯
-- 提供聲音、網路、UI、Camera、物件管理與Debug功能等功能的套件，以加速開發
+- 掌握EDA的優勢來給予代碼足夠的靈活性與擴展度，同時鬆綁使用者對設計模式的過多依賴。
+- 降低專案的維護成本與提高開發速度。
+- 配套的UI系統，簡單套用MVVM解構UI與前端邏輯。
+- 提供聲音、網路、UI、Camera、物件管理與Debug功能等功能的套件。
   
-### [投影片介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
+### [XPlan框架介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 2.2.4
+- Version 2.2.6
 # 3.安裝指南
 ### 系統要求
 - Unity 2022.3.33f1 或更高版本
