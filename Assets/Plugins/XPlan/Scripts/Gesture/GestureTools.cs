@@ -1,5 +1,6 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 
@@ -20,7 +21,6 @@ namespace XPlan.Gesture
 
     public static class GestureTools
     {
-
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
         static public int MouseKey(MouseTrigger mouseTrigger)
         {
