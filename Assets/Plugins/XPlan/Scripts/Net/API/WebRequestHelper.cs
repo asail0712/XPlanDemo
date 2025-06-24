@@ -29,14 +29,14 @@ namespace XPlan.Net
         /*****************************
          * API發生錯誤的相關處理
          * ***************************/
-        static private List<Action<string, string>> errorActions = new List<Action<string, string>>();
+        static private List<Action<string, string, string>> errorActions = new List<Action<string, string, string>>();
 
-        static public void AddErrorDelegate(Action<string, string> errorAction)
+        static public void AddErrorDelegate(Action<string, string, string> errorAction)
         {
             errorActions.Add(errorAction);
         }
 
-        static public void RemoveErrorDelegate(Action<string, string> errorAction)
+        static public void RemoveErrorDelegate(Action<string, string, string> errorAction)
         {
             errorActions.Remove(errorAction);
         }
@@ -46,11 +46,11 @@ namespace XPlan.Net
             errorActions.Clear();
         }
 
-        static internal void TriggerError(string apiName, string errorMsg)
+        static internal void TriggerError(string apiName, string errorType, string errorMsg)
         {
-            foreach(Action<string, string> errorAction in errorActions)
+            foreach(Action<string, string, string> errorAction in errorActions)
             {
-                errorAction?.Invoke(apiName, errorMsg);
+                errorAction?.Invoke(apiName, errorType, errorMsg);
             }
         }
     }
