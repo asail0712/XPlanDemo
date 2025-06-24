@@ -17,6 +17,7 @@ namespace XPlan.Audio
     {
         static private bool bIsFinished;
         static private MonoBehaviourHelper.MonoBehavourInstance coroutine;
+        static private AudioClip newAudioClip = null;
 
         static public void StartRecording(int idx = 0, Action<AudioClip> finishAction = null)
         {
@@ -92,7 +93,13 @@ namespace XPlan.Audio
             micDataList.AddRange(micDataTemp);
             Microphone.End(selectedDevice);
 
-            AudioClip newAudioClip = AudioClip.Create("Record", micDataList.Count, 1, AudioSettings.outputSampleRate, false);
+            if (newAudioClip != null)
+            {
+                GameObject.DestroyImmediate(newAudioClip);
+                newAudioClip = null;
+            }
+
+            newAudioClip = AudioClip.Create("Record", micDataList.Count, 1, AudioSettings.outputSampleRate, false);
             newAudioClip.SetData(micDataList.ToArray(), 0);
 
             finishAction?.Invoke(newAudioClip);
