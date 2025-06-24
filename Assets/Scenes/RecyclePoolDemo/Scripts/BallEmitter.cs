@@ -45,8 +45,12 @@ namespace XPlan.Demo.Recycle
 
             if (Input.GetKeyDown(KeyCode.D))
             {
-                Ball ball = GameObject.FindObjectOfType<Ball>();
-                RecyclePool<Ball>.Recycle(ball);
+                Ball ball = GameObject.FindFirstObjectByType<Ball>();
+
+                if(ball != null)
+                {
+                    RecyclePool<Ball>.Recycle(ball);
+                }                
             }
         }
 	}

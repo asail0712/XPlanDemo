@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,7 +22,7 @@ namespace XPlan.Demo.Recycle
 		void Update()
 		{
 			string str = "Press 'A' to Spawn a Ball \nPress 'D' to Destroy a Ball";
-			str += $"\nNum Of Ball is {RecyclePool<Ball>.GetTotalNum()}";
+			str += $"\nNum Of Ball In Pool is {RecyclePool<Ball>.GetTotalNum()}";
 			str += $"\nNum Of Ball In Scene is {emitter.GetNumInCamera()}";
 			
 			displayTxt.text = str;

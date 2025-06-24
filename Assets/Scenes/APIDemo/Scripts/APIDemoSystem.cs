@@ -93,9 +93,9 @@ namespace XPlan.Demo.APIDemo
             showStrTxt.text = resultStr;
         }
 
-        private void ErrorFadeback(string key, string content)
+        private void ErrorFadeback(string key, string errorBecuz, string errorContent)
         {
-            Fadeback(false, content);
+            Fadeback(false, errorContent);
         }
 	}
 }
