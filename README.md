@@ -7,10 +7,10 @@ XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點�
   
 ### [XPlan框架介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 2.2.6
+- Version 2.3.6
 # 3.安裝指南
 ### 系統要求
-- Unity 2022.3.33f1 或更高版本
+- Unity 6 或更高版本
 ### 安裝指南
 - 將XPlan資料夾放進專案中的Assets/Plugins即可
 - 不需要使用的DLL可以刪除，請參照"其他"的說明
