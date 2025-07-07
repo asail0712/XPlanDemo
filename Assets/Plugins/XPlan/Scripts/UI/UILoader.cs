@@ -79,7 +79,7 @@ namespace XPlan.UI
             }
         }
 
-		void OnApplicationQuit()
+        private void OnApplicationQuit()
 		{
 			bCancalUnload = true;
 		}
