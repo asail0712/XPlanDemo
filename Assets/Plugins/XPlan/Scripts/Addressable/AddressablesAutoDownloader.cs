@@ -82,18 +82,17 @@ namespace XPlan.Addressable
         {
 #if ADDRESSABLES_EXISTS
             var checkHandle = Addressables.CheckForCatalogUpdates();
+
             yield return checkHandle;
 
             if (checkHandle.Result.Count > 0)
             {
                 var updateHandle = Addressables.UpdateCatalogs(checkHandle.Result);
                 yield return updateHandle;
-#endif //ADDRESSABLES_EXISTS
 
                 Debug.Log("Catalog 已更新");
 
                 finishAction?.Invoke(true);
-#if ADDRESSABLES_EXISTS
             }
             else
             {
@@ -107,17 +106,13 @@ namespace XPlan.Addressable
 
         private IEnumerator DownloadAllRoutine_Internal(float delay)
         {
-#if ADDRESSABLES_EXISTS
-            yield return Addressables.InitializeAsync();
-#endif //ADDRESSABLES_EXISTS
-
             yield return new WaitForSeconds(delay);
 
-#if UNITY_EDITOR && ADDRESSABLES_EXISTS
+#if ADDRESSABLES_EXISTS
+#if UNITY_EDITOR
             Addressables.ClearDependencyCacheAsync(keys.ToArray());
 #endif //UNITY_EDITOR
 
-#if ADDRESSABLES_EXISTS
             // Step 1: 取得所有資源 key
             var locHandle = Addressables.LoadResourceLocationsAsync(keys.ToArray(), Addressables.MergeMode.Union);
             yield return locHandle;
