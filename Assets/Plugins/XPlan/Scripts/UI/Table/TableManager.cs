@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.Interface;
+using XPlan.Utility;
 
 namespace XPlan.UI.Component
 {
@@ -307,32 +308,9 @@ namespace XPlan.UI.Component
 			 * *******************************/
 			if (bRefreshAnchorSize)
             {
-                int currCol				= 1;
-                int currRow				= 1;
-                int infoCount			= itemInfoList.Count;
-				RectTransform rectTF	= (RectTransform)anchor.transform;
-				float spaceX			= gridLayoutGroup.spacing.x;
-				float spaceY			= gridLayoutGroup.spacing.y;
-
-				if (gridLayoutGroup.startAxis == GridLayoutGroup.Axis.Horizontal)
-                {
-					// 計算Content的長寬                    
-					currCol = Mathf.Min(infoCount, col);
-					currRow = Mathf.Min(infoCount, row);
-					currRow = Mathf.CeilToInt((float)currRow / (float)currCol);
-				}
-                else
-                {
-					// 計算Content的長寬
-					currRow = Mathf.Min(infoCount, row);
-					currCol = Mathf.Min(infoCount, col);
-					currCol = Mathf.CeilToInt((float)currCol / (float)currRow);
-				}
-
-                float sizeDeltaX	= currCol * gridLayoutGroup.cellSize.x + (currCol - 1) * spaceX;
-                float sizeDeltaY	= currRow * gridLayoutGroup.cellSize.y + (currRow - 1) * spaceY;
-
-                rectTF.sizeDelta	= new Vector2(sizeDeltaX, sizeDeltaY);
+                ContentSizeFitter fitter	= anchor.AddOrFindComponent<ContentSizeFitter>();
+                fitter.verticalFit			= ContentSizeFitter.FitMode.PreferredSize;
+				fitter.horizontalFit		= ContentSizeFitter.FitMode.PreferredSize;
             }
 
 
