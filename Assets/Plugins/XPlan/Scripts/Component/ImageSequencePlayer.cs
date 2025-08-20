@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 
-namespace XPlan.Component
+namespace XPlan.Components
 {
     public class ImageSequencePlayer : MonoBehaviour
     {

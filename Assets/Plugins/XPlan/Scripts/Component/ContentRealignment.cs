@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace XPlan.Component
+namespace XPlan.Components
 {
     // 將Content居中
     public class ContentRealignment : MonoBehaviour

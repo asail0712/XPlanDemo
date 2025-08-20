@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace XPlan.Component
+namespace XPlan.Components
 {
     public class DontDestroyOnLoad : MonoBehaviour
     {

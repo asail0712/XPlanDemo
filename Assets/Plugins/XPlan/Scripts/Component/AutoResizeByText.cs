@@ -1,7 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace XPlan.Component
+namespace XPlan.Components
 {
     [RequireComponent(typeof(Text))]
     [ExecuteAlways]

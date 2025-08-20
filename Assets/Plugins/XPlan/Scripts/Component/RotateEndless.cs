@@ -1,8 +1,8 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace XPlan.Component
+namespace XPlan.Components
 {
     public class RotateEndless : MonoBehaviour
     {

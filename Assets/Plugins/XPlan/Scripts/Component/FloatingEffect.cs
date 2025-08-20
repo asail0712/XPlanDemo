@@ -2,7 +2,7 @@
 
 using XPlan.Utility;
 
-namespace XPlan.Component
+namespace XPlan.Components
 { 
     public class FloatingEffect : MonoBehaviour
     {

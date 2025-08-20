@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace XPlan.Component
+namespace XPlan.Components
 {
 	public class RotateByMouse : MonoBehaviour
 	{

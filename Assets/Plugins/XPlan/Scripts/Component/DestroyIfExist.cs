@@ -1,6 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace XPlan.Component
+namespace XPlan.Components
 { 
     public class DestroyIfExist : MonoBehaviour
     {
