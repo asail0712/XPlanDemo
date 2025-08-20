@@ -8,7 +8,7 @@ namespace XPlan.Utility
     public static class GameObjectExtensions
     {
         public static List<GameObject> GetAllChildren(this GameObject gameObject, Func<GameObject, bool> filter = null, bool bRecursive = true)
-		{
+        {
             List<GameObject> allChildren = new List<GameObject>();
 
             // 遞迴函數，遍歷子物件
@@ -23,10 +23,10 @@ namespace XPlan.Utility
                     }
 
                     // 遞迴調用，檢查這個子物件的子物件
-                    if(bRecursive)
+                    if (bRecursive)
                     {
                         GetChildrenRecursive(child);
-                    }                    
+                    }
                 }
             }
 
@@ -37,7 +37,7 @@ namespace XPlan.Utility
         }
 
         public static void ClearAllChildren(this GameObject gameObject, float delayTime = 0f)
-		{
+        {
             // 取得父物件的Transform
             Transform parentTransform = gameObject.transform;
 
@@ -46,12 +46,12 @@ namespace XPlan.Utility
             {
                 Transform childTransform = parentTransform.GetChild(i);
 
-                if(delayTime == 0f)
-				{
+                if (delayTime == 0f)
+                {
                     GameObject.DestroyImmediate(childTransform.gameObject);
                 }
                 else
-				{
+                {
                     GameObject.Destroy(childTransform.gameObject, delayTime);
                 }
             }
@@ -69,7 +69,7 @@ namespace XPlan.Utility
 
         public static void MoveToMainRoot(this GameObject gameObject)
         {
-            if(gameObject == null)
+            if (gameObject == null)
             {
                 return;
             }
@@ -89,31 +89,42 @@ namespace XPlan.Utility
             , Vector3 locPos        = default(Vector3)
             , Vector3 eulerAngles   = default(Vector3)
             , float ratio           = 1.0f)
-		{
-            if(childGO == null)
-			{
+        {
+            if (childGO == null)
+            {
                 return;
-			}
+            }
 
             childGO.transform.SetParent(gameObject.transform);
             childGO.transform.localPosition     = locPos;
-			childGO.transform.localEulerAngles  = eulerAngles;
-			childGO.transform.localScale        = new Vector3(ratio, ratio, ratio);
+            childGO.transform.localEulerAngles  = eulerAngles;
+            childGO.transform.localScale        = new Vector3(ratio, ratio, ratio);
         }
 
         public static void SetLayer(this GameObject gameObject, string layer, bool bContainChild = true)
         {
             gameObject.layer = LayerMask.NameToLayer(layer);
 
-            if(bContainChild)
-			{
+            if (bContainChild)
+            {
                 int count = gameObject.transform.childCount;
 
-                for(int i = 0; i < count; ++i)
-				{
+                for (int i = 0; i < count; ++i)
+                {
                     SetLayer(gameObject.transform.GetChild(i).gameObject, layer, bContainChild);
                 }
             }
+        }
+        public static T AddOrFindComponent<T>(this GameObject gameObject) where T : Component
+        {
+            T comp = gameObject.GetComponent<T>();
+
+            if(comp == null)
+            {
+                comp = gameObject.AddComponent<T>();
+            }
+            
+            return comp;
         }
     }
 }
