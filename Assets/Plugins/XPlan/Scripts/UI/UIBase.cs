@@ -102,19 +102,29 @@ namespace XPlan.UI
 				DirectTrigger(uniqueID, onPress);
 			});
 		}
-		protected void RegisterText(string uniqueID, TMP_InputField inputTxt, Action<string> onPress = null)
+		protected void RegisterText(string uniqueID, TMP_InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
 		{
-			inputTxt.onValueChanged.AddListener((str) =>
+			inputTxt.onSubmit.AddListener((str) =>
 			{
+				if(bClearWhenPress)
+				{
+					inputTxt.text = "";
+                }
+
 				DirectTrigger<string>(uniqueID, str, onPress);
 			});
 		}
 
-		protected void RegisterText(string uniqueID, InputField inputTxt, Action<string> onPress = null)
+		protected void RegisterText(string uniqueID, InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
 		{
-			inputTxt.onValueChanged.AddListener((str) =>
+			inputTxt.onSubmit.AddListener((str) =>
 			{
-				DirectTrigger<string>(uniqueID, str, onPress);
+                if (bClearWhenPress)
+                {
+                    inputTxt.text = "";
+                }
+
+                DirectTrigger<string>(uniqueID, str, onPress);
 			});
 		}
 
@@ -308,7 +318,12 @@ namespace XPlan.UI
 			return UIController.Instance.GetStr(keyStr);
 		}
 
-		protected void DefaultToggleBtns(Button[] btns)
+        protected string ReplaceStr(string keyStr, params string[] paramList)
+        {
+            return UIController.Instance.ReplaceStr(keyStr, paramList);
+        }
+
+        protected void DefaultToggleBtns(Button[] btns)
         {
 			for(int i = 0; i < btns.Length; ++i)
             {

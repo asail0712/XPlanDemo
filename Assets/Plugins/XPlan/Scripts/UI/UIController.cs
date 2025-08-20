@@ -69,8 +69,10 @@ namespace XPlan.UI
 
 		protected override void InitSingleton()
 		{
+			// 設定多語言字串表
 			stringTable.InitialStringTable(csvAssetList);
 
+			// 初始化靜態UI
 			InitialStaticUI();
 		}
 
