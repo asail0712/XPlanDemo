@@ -59,7 +59,7 @@ namespace XPlan.Addressable
         private void Awake()
         {
             DontDestroyOnLoad(this);
-
+#if ADDRESSABLES_EXISTS  
             // 將Catalog裡面的badge由latest更換成指定的badge
             Addressables.ResourceManager.InternalIdTransformFunc = (location) =>
             {            
@@ -74,6 +74,7 @@ namespace XPlan.Addressable
                 // 若你過去打包時用的是固定 release_id，也可以在這裡做對應改寫（選擇性）
                 return id;
             };
+#endif //ADDRESSABLES_EXISTS  
         }
 
         private void Start()
@@ -126,6 +127,7 @@ namespace XPlan.Addressable
                 finishAction?.Invoke(false);
             }
 #endif
+            yield return null;
         }
 
         private string GetCatalogUrl(string projectId, string bucketId, string badge)
