@@ -7,7 +7,12 @@ using UnityEngine;
 
 #if ADDRESSABLES_EXISTS
 using UnityEngine.AddressableAssets;
+using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.ResourceManagement;
+
 #endif //ADDRESSABLES_EXISTS
 
 using XPlan.Utility;
@@ -27,6 +32,22 @@ namespace XPlan.Addressable
         [SerializeField] public bool bAutoStart     = true;
         [SerializeField] public List<string> keys   = new List<string>();
 
+        [Header("CCD 設定")]
+        [Tooltip("設定 badge 名稱，如 stable、latest、review，空字串表示不使用動態 badge")]
+        [SerializeField] public string ccdBadge     = "<你的Badge設定>";    // 空字串表示不用動態 badge
+
+        [Tooltip("CCD 環境")]
+        [SerializeField] public string ccdEnvirment = "<你的CCD環境>";
+
+        [Tooltip("CCD 專案 ID")]
+        [SerializeField] public string ccdProjectId = "<你的CCD專案ID>";
+
+        [Tooltip("CCD Bucket ID")]
+        [SerializeField] public string ccdBucketId  = "<你的BucketID>";
+
+        [Tooltip("是否指定Badge")]
+        [SerializeField] public bool bUsedBadge     = false;
+
         public Action<string, float> OnEachProgress;    // 資源名稱, 進度
         public Action<string> OnEachDone;               // 資源名稱
         public Action OnAllDone;
@@ -38,6 +59,21 @@ namespace XPlan.Addressable
         private void Awake()
         {
             DontDestroyOnLoad(this);
+
+            // 將Catalog裡面的badge由latest更換成指定的badge
+            Addressables.ResourceManager.InternalIdTransformFunc = (location) =>
+            {            
+                var id = location.InternalId;
+                
+                if (bUsedBadge)
+                {
+                    // 覆蓋 2 種常見寫法：release_by_badge/latest 以及 release_by_badge/<任一值>
+                    id = id.Replace("/release_by_badge/latest/", $"/release_by_badge/{ccdBadge}/");
+                }
+                
+                // 若你過去打包時用的是固定 release_id，也可以在這裡做對應改寫（選擇性）
+                return id;
+            };
         }
 
         private void Start()
@@ -46,6 +82,11 @@ namespace XPlan.Addressable
             {
                 CheckAndUpdateCatalog((b) => 
                 {
+                    if(!b)
+                    {
+                        return;
+                    }
+
                     DownloadAllAssets();
                 });                
             }
@@ -53,7 +94,45 @@ namespace XPlan.Addressable
 
         public void CheckAndUpdateCatalog(Action<bool> finishAction)
         {
-            StartCoroutine(CheckAndUpdateCatalog_Internal(finishAction));
+            if (bUsedBadge)
+            {
+                // 有設定 badge，走動態載入指定 badge catalog 流程
+                StartCoroutine(LoadCatalogByBadgeAndStart(finishAction));
+            }
+            else
+            {
+                // 沒設定 badge，走原本 CCD 自動檢查更新流程
+                StartCoroutine(CheckAndUpdateLatestCatalog(finishAction));
+            }
+        }
+
+        private IEnumerator LoadCatalogByBadgeAndStart(Action<bool> finishAction)
+        {
+#if ADDRESSABLES_EXISTS            
+            string catalogUrl = GetCatalogUrl(ccdProjectId, ccdBucketId, ccdBadge);
+            Debug.Log($"📥 載入 CCD catalog（badge: {ccdBadge}）: {catalogUrl}");
+
+            var handle = Addressables.LoadContentCatalogAsync(catalogUrl, true);
+            yield return handle;
+
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                Debug.Log($"✅ Catalog 載入成功：{ccdBadge}");
+                finishAction?.Invoke(true);
+            }
+            else
+            {
+                Debug.LogError($"❌ Catalog 載入失敗：{catalogUrl}");
+                finishAction?.Invoke(false);
+            }
+#endif
+        }
+
+        private string GetCatalogUrl(string projectId, string bucketId, string badge)
+        {
+            string catalogFileName = "catalog_" + Application.version + ".hash";
+
+            return $"https://{projectId}.client-api.unity3dusercontent.com/client_api/v1/environments/{ccdEnvirment}/buckets/{bucketId}/release_by_badge/{badge}/entry_by_path/content/?path=" + catalogFileName;
         }
 
         public void DownloadAllAssets(float delay = 0f)
@@ -78,18 +157,27 @@ namespace XPlan.Addressable
             return bLoadingFinish;
         }
 
-        private IEnumerator CheckAndUpdateCatalog_Internal(Action<bool> finishAction)
+        private IEnumerator CheckAndUpdateLatestCatalog(Action<bool> finishAction)
         {
 #if ADDRESSABLES_EXISTS
             var checkHandle = Addressables.CheckForCatalogUpdates();
 
             yield return checkHandle;
 
+            if (checkHandle.Status == AsyncOperationStatus.Failed)
+            {
+                Debug.LogError($"❌ Catalog 檢查失敗：{checkHandle.OperationException}");                
+                finishAction?.Invoke(false);
+
+                yield break;
+            }
+
             if (checkHandle.Result.Count > 0)
             {
                 var updateHandle = Addressables.UpdateCatalogs(checkHandle.Result);
                 yield return updateHandle;
 
+                Addressables.Release(updateHandle);
                 Debug.Log("Catalog 已更新");
 
                 finishAction?.Invoke(true);
@@ -98,7 +186,7 @@ namespace XPlan.Addressable
             {
                 Debug.Log("Catalog 無需更新");
 
-                finishAction?.Invoke(false);
+                finishAction?.Invoke(true);
             }
 #endif //ADDRESSABLES_EXISTS
             yield return null;
@@ -122,6 +210,8 @@ namespace XPlan.Addressable
                 OnError?.Invoke("❌ 無法取得資源清單");
                 yield break;
             }
+
+            Debug.Log($"✅ 成功取得清單");
 
             var locations = locHandle.Result;
             foreach (var loc in locations)
