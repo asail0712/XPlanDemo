@@ -104,7 +104,7 @@ namespace XPlan.UI
 		}
 		protected void RegisterText(string uniqueID, TMP_InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
 		{
-			inputTxt.onSubmit.AddListener((str) =>
+			inputTxt.onValueChanged.AddListener((str) =>
 			{
 				if(bClearWhenPress)
 				{
@@ -117,7 +117,7 @@ namespace XPlan.UI
 
 		protected void RegisterText(string uniqueID, InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
 		{
-			inputTxt.onSubmit.AddListener((str) =>
+			inputTxt.onValueChanged.AddListener((str) =>
 			{
                 if (bClearWhenPress)
                 {
@@ -128,7 +128,33 @@ namespace XPlan.UI
 			});
 		}
 
-		protected void RegisterSlider(string uniqueID, Slider slider, Action<float> onPress = null)
+        protected void RegisterTextSubmit(string uniqueID, TMP_InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
+        {
+            inputTxt.onSubmit.AddListener((str) =>
+            {
+                if (bClearWhenPress)
+                {
+                    inputTxt.text = "";
+                }
+
+                DirectTrigger<string>(uniqueID, str, onPress);
+            });
+        }
+
+        protected void RegisterTextSubmit(string uniqueID, InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
+        {
+            inputTxt.onSubmit.AddListener((str) =>
+            {
+                if (bClearWhenPress)
+                {
+                    inputTxt.text = "";
+                }
+
+                DirectTrigger<string>(uniqueID, str, onPress);
+            });
+        }
+
+        protected void RegisterSlider(string uniqueID, Slider slider, Action<float> onPress = null)
 		{
 			slider.onValueChanged.AddListener((value) =>
 			{
