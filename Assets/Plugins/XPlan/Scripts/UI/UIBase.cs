@@ -102,28 +102,18 @@ namespace XPlan.UI
 				DirectTrigger(uniqueID, onPress);
 			});
 		}
-		protected void RegisterText(string uniqueID, TMP_InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
+		protected void RegisterText(string uniqueID, TMP_InputField inputTxt, Action<string> onPress = null)
 		{
 			inputTxt.onValueChanged.AddListener((str) =>
 			{
-				if(bClearWhenPress)
-				{
-					inputTxt.text = "";
-                }
-
 				DirectTrigger<string>(uniqueID, str, onPress);
 			});
 		}
 
-		protected void RegisterText(string uniqueID, InputField inputTxt, Action<string> onPress = null, bool bClearWhenPress = true)
+		protected void RegisterText(string uniqueID, InputField inputTxt, Action<string> onPress = null)
 		{
 			inputTxt.onValueChanged.AddListener((str) =>
 			{
-                if (bClearWhenPress)
-                {
-                    inputTxt.text = "";
-                }
-
                 DirectTrigger<string>(uniqueID, str, onPress);
 			});
 		}
