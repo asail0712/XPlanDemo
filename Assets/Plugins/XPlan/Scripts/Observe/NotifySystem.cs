@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,11 +10,18 @@ namespace XPlan.Observe
 {
 	public class MessageBase
 	{
-		public void Send(string zoneID = "")
+		public void Send(string zoneID = "", bool bAsync = false)
 		{
 			MessageSender sender = new MessageSender(this);
 
-			sender.SendMessage(zoneID);
+            if(bAsync)
+            {
+                sender.SendMessageAsync(zoneID);
+            }
+            else
+            {
+                sender.SendMessage(zoneID);
+            }                
 		}
 	}
 
@@ -24,7 +31,7 @@ namespace XPlan.Observe
 		public List<Type> dependOnList;
 	}
 
-	public class ActionInfo
+	public class ReceiverInfo
 	{
 		public INotifyReceiver notifyReceiver;
 		public ReceiveOption receiveOption;
@@ -88,7 +95,12 @@ namespace XPlan.Observe
 			NotifySystem.Instance.SendMsg(this, zoneID);
 		}
 
-		public Type GetMsgType()
+        public void SendMessageAsync(string zoneID)
+        {
+            NotifySystem.Instance.SendMsgAsync(this, zoneID);
+        }
+
+        public Type GetMsgType()
 		{
 			return msg.GetType();
 		}
@@ -97,13 +109,13 @@ namespace XPlan.Observe
 	public class NotifyInfo
 	{
 		public INotifyReceiver notifyReceiver;
-		public Dictionary<Type, ActionInfo> actionInfoMap;
+		public Dictionary<Type, ReceiverInfo> receiveInfoMap;
 		public Func<string> LazyZoneID;
 
 		public NotifyInfo(INotifyReceiver notifyReceiver)
 		{
 			this.notifyReceiver = notifyReceiver;
-			this.actionInfoMap	= new Dictionary<Type, ActionInfo>();
+			this.receiveInfoMap = new Dictionary<Type, ReceiverInfo>();
 			this.LazyZoneID	= () => notifyReceiver.GetLazyZoneID?.Invoke();
 		}
 
@@ -112,7 +124,7 @@ namespace XPlan.Observe
 			string lazyZoneID		= this.LazyZoneID?.Invoke();
 
 			bool bZoneMatch		= zoneID == "" || zoneID == lazyZoneID;
-			bool bTypeCorrespond	= actionInfoMap.ContainsKey(type);
+			bool bTypeCorrespond	= receiveInfoMap.ContainsKey(type);
 
 			return bZoneMatch && bTypeCorrespond;
 		}
@@ -120,12 +132,16 @@ namespace XPlan.Observe
 
     public class NotifySystem : CreateSingleton<NotifySystem>
     {
-		List<NotifyInfo> notifyInfoList;
+		private List<NotifyInfo> notifyInfoList;
+
+        private Queue<(MessageSender, string)> senderQueue;
 
 		protected override void InitSingleton()
 	    {
-			notifyInfoList = new List<NotifyInfo>();
-		}
+			notifyInfoList  = new List<NotifyInfo>();
+            senderQueue     = new Queue<(MessageSender, string)>();
+
+        }
 
 		public void RegisterNotify<T>(INotifyReceiver notifyReceiver, Action<MessageReceiver> notifyAction)
 		{
@@ -160,13 +176,13 @@ namespace XPlan.Observe
 				notifyInfoList.Add(notifyInfo);
 			}
 
-			if(notifyInfo.actionInfoMap.ContainsKey(type))
+			if(notifyInfo.receiveInfoMap.ContainsKey(type))
 			{
 				Debug.LogError($"{notifyInfo.notifyReceiver} 重複註冊同一個message {type} 囉");
 				return;
 			}
 
-			notifyInfo.actionInfoMap.Add(type, new ActionInfo()
+			notifyInfo.receiveInfoMap.Add(type, new ReceiverInfo()
 			{
 				notifyReceiver	= notifyInfo.notifyReceiver,
 				receiveOption	= option,
@@ -196,19 +212,19 @@ namespace XPlan.Observe
 
 		public void SendMsg(MessageSender msgSender, string zoneID)
 		{
-			Type type					= msgSender.GetMsgType();
-			Queue<ActionInfo> infoQueue = new Queue<ActionInfo>();
+			Type type					    = msgSender.GetMsgType();
+			Queue<ReceiverInfo> infoQueue   = new Queue<ReceiverInfo>();
 
 			foreach (NotifyInfo currInfo in notifyInfoList)
 			{
 				if(currInfo.CheckCondition(type, zoneID))
 				{
-					ActionInfo actionInfo = currInfo.actionInfoMap[type];
+                    ReceiverInfo receiveInfo = currInfo.receiveInfoMap[type];
 
 					// 先將符合的action記錄起來，讓option處理
-					if (actionInfo != null)
+					if (receiveInfo != null)
 					{
-						infoQueue.Enqueue(actionInfo);
+						infoQueue.Enqueue(receiveInfo);
 					}					
 				}
 			}
@@ -216,32 +232,49 @@ namespace XPlan.Observe
 			// 實際執行action的地方
 			while (infoQueue.Count > 0)
 			{
-				ActionInfo actionInfo = infoQueue.Dequeue();
+                ReceiverInfo receiveInfo = infoQueue.Dequeue();
 
 				// 判斷是否有相依性問題
-				if(NeedToWait(actionInfo, infoQueue))
+				if(NeedToWait(receiveInfo, infoQueue))
 				{
-					infoQueue.Enqueue(actionInfo);
+					infoQueue.Enqueue(receiveInfo);
 
 					continue;
 				}
 
-				actionInfo.receiverAction?.Invoke(new MessageReceiver(msgSender));
+                receiveInfo.receiverAction?.Invoke(new MessageReceiver(msgSender));
 			}
 		}
 
-		private bool NeedToWait(ActionInfo actionInfo, Queue<ActionInfo> infoQueue)
+        public void SendMsgAsync(MessageSender msgSender, string zoneID)
+        {
+            senderQueue.Enqueue((msgSender, zoneID));
+        }
+
+        public void Update()
+        {
+            while(senderQueue.Count > 0)
+            {
+                var senderInfo          = senderQueue.Dequeue();
+                MessageSender msgSender = senderInfo.Item1;
+                string zoneID           = senderInfo.Item2;
+
+                SendMsg(msgSender, zoneID);
+            }
+        }
+
+        private bool NeedToWait(ReceiverInfo receiveInfo, Queue<ReceiverInfo> infoQueue)
 		{
-			if(actionInfo.receiveOption == null)
+			if(receiveInfo.receiveOption == null)
 			{
 				// 沒有option 就不用設定Wait
 				return false;
 			}
 
 			bool bResult		= false;
-			List<Type> typeList = actionInfo.receiveOption.dependOnList;
+			List<Type> typeList = receiveInfo.receiveOption.dependOnList;
 
-			foreach (ActionInfo info in infoQueue)
+			foreach (ReceiverInfo info in infoQueue)
 			{
 				INotifyReceiver notifyReceiver = info.notifyReceiver;
 
