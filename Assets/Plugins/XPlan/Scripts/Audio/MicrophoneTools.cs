@@ -17,14 +17,14 @@ namespace XPlan.Audio
     {
         static private bool bIsFinished;
         static private MonoBehaviourHelper.MonoBehavourInstance coroutine;
-        static private AudioClip newAudioClip = null;
+        static private AudioClip recordedClip;
 
-        static public void StartRecording(int idx = 0, Action<AudioClip> finishAction = null)
+        static public void StartRecording(int idx = 0, Action<AudioClip> finishAction = null, int bufferSec = 10)
         {
             string[] devices = Microphone.devices;
-            if (devices.Length == 0 || idx >= devices.Length)
+            if (devices.Length == 0 || idx >= devices.Length || idx < 0 || idx >= devices.Length)
             {
-                Debug.LogWarning("未檢測到麥克風設備。");
+                Debug.LogWarning("未檢測到麥克風設備或 index 超出範圍。");
                 return;
             }
 
@@ -36,73 +36,126 @@ namespace XPlan.Audio
                 coroutine = null;
             }
 
-            coroutine = MonoBehaviourHelper.StartCoroutine(StartRecord_Internal(selectedDevice, finishAction));
+            // 選擇合適取樣率：若裝置不回報（0,0），就用當前輸出取樣率
+            Microphone.GetDeviceCaps(selectedDevice, out int minFreq, out int maxFreq);
+            
+            int sampleRate = (minFreq == 0 && maxFreq == 0)
+                                ? AudioSettings.outputSampleRate
+                                : Mathf.Clamp(44100, minFreq == 0 ? 8000 : minFreq, maxFreq == 0 ? 48000 : maxFreq);
+
+
+            coroutine = MonoBehaviourHelper.StartCoroutine(StartRecord_Internal(selectedDevice, finishAction, bufferSec, sampleRate));
         }
 
-        static private IEnumerator StartRecord_Internal(string selectedDevice, Action<AudioClip> finishAction)
+        static private IEnumerator StartRecord_Internal(string selectedDevice, Action<AudioClip> finishAction, int bufferSec, int sampleRate)
         {
-            List<float> micDataList = new List<float>();
-            AudioClip micClip       = Microphone.Start(selectedDevice, true, 1, AudioSettings.outputSampleRate);
+            AudioClip micClip           = Microphone.Start(selectedDevice, true, bufferSec, sampleRate);
 
+            // 等待裝置就緒（位置 > 0）
+            const double startTimeout   = 2.0;
+            double startTime            = AudioSettings.dspTime;
+
+            // 等待裝置就緒（位置 > 0）
+            while (Microphone.GetPosition(selectedDevice) <= 0)
+            {
+                if (AudioSettings.dspTime - startTime > startTimeout)
+                {
+                    Debug.LogError("麥克風啟動逾時。");
+                    Microphone.End(selectedDevice);
+
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+
+            int channels            = micClip.channels;
+            int clipSamples         = micClip.samples;              // 單聲道樣本數
+            int interleavedLength   = clipSamples * channels;       // 交錯後總長度
+
+            var buffer              = new List<float>(interleavedLength * 2);
+            int prevPos             = 0; // 單位：樣本（非 float 長度），且是單聲道樣本數
             bIsFinished             = false;
-            int length              = micClip.channels * micClip.samples;
-            bool bSaveFirstHalf     = true;            
-            float[] micDataTemp     = new float[length / 2];
-            int micPos;
 
             while (!bIsFinished)
             {
-                if (bSaveFirstHalf)
+                int curPos = Microphone.GetPosition(selectedDevice); // 單位：樣本（單聲道）
+                if (curPos < 0) curPos = 0;
+
+                if (curPos != prevPos)
                 {
-                    // 保存前半                    
-                    yield return new WaitUntil(() =>
+                    if (curPos > prevPos)
                     {
-                        micPos = Microphone.GetPosition(selectedDevice);
-                        return micPos < length / 2;
-                    });
+                        AppendRange(micClip, prevPos, curPos - prevPos, channels, buffer);
+                    }
+                    else
+                    {
+                        // wrap：先拿 prevPos -> clipEnd
+                        AppendRange(micClip, prevPos, clipSamples - prevPos, channels, buffer);
 
-                    micClip.GetData(micDataTemp, 0);
-                    micDataList.AddRange(micDataTemp);
-                    bSaveFirstHalf = !bSaveFirstHalf;
+                        // 再拿 0 -> curPos
+                        if (curPos > 0)
+                        {
+                            AppendRange(micClip, 0, curPos, channels, buffer);
+                        }
+                    }
+
+                    prevPos = curPos;
                 }
-                else
+
+                yield return null;
+            }
+
+            // 停止前再把尾段補齊
+            {
+                int curPos = Microphone.GetPosition(selectedDevice);
+                if (curPos < 0) curPos = 0;
+
+                if (curPos != prevPos)
                 {
-                    // 保存後半
-                    yield return new WaitUntil(() =>
+                    if (curPos > prevPos)
                     {
-                        micPos = Microphone.GetPosition(selectedDevice);
-                        return micPos < length && micPos >= length / 2;
-                    });
+                        AppendRange(micClip, prevPos, curPos - prevPos, channels, buffer);
+                    }
+                    else
+                    {
+                        AppendRange(micClip, prevPos, clipSamples - prevPos, channels, buffer);
 
-                    micClip.GetData(micDataTemp, length / 2);
-                    micDataList.AddRange(micDataTemp);
-                    bSaveFirstHalf = !bSaveFirstHalf;
+                        if (curPos > 0)
+                        {
+                            AppendRange(micClip, 0, curPos, channels, buffer);
+                        }
+                    }
                 }
             }
 
-            // 依照中斷的地方 決定剩下的要從哪邊開始添加data
-            if(bSaveFirstHalf)
-            {
-                micClip.GetData(micDataTemp, 0);
-            }
-            else
-            {
-                micClip.GetData(micDataTemp, length / 2);
-            }
-
-            micDataList.AddRange(micDataTemp);
             Microphone.End(selectedDevice);
 
-            if (newAudioClip != null)
+            // 建立成品（保留原通道數與取樣率，不強制單聲道）
+            if (recordedClip != null)
             {
-                GameObject.DestroyImmediate(newAudioClip);
-                newAudioClip = null;
+                GameObject.Destroy(recordedClip);
+                recordedClip = null;
             }
 
-            newAudioClip = AudioClip.Create("Record", micDataList.Count, 1, AudioSettings.outputSampleRate, false);
-            newAudioClip.SetData(micDataList.ToArray(), 0);
+            recordedClip = AudioClip.Create("MicrophoneRecord", buffer.Count / channels, channels, sampleRate, false);
+            recordedClip.SetData(buffer.ToArray(), 0);
 
-            finishAction?.Invoke(newAudioClip);
+            finishAction?.Invoke(recordedClip);
+        }
+
+        /// <summary>
+        /// 將 micClip 中 [start, count)（單位：樣本/每聲道）複製到 buffer（輸出為交錯格式）
+        /// </summary>
+        static private void AppendRange(AudioClip micClip, int startSample, int sampleCount, int channels, List<float> outBuffer)
+        {
+            if (sampleCount <= 0) return;
+
+            int floatsNeeded = sampleCount * channels;
+            var temp = new float[floatsNeeded];
+            micClip.GetData(temp, startSample);
+            outBuffer.AddRange(temp);
         }
 
         static public void EndRecording()
