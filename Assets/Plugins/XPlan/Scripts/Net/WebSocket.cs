@@ -140,7 +140,7 @@ namespace XPlan.Net
             });
         }
 
-        public void Interruptconnect()
+        public void InterruptConnect()
         {
             bInterruptConnect = true;
         }

@@ -23,16 +23,16 @@ namespace XPlan.Demo.Websocket
         // Start is called before the first frame update
         void Start()
 		{
-            webSocket = new WebSocket(Url.ToString(), new ConnectionRecovery(this, this));
+            webSocket = new WebSocket(Url.ToString(), new ConnectionRecovery(this));
             webSocket.Connect();            
         }
 
-        public void Open(IEventHandler eventHandler)
+        public void Open(IConnectHandler connectHandler)
         {
             Debug.Log("WebSocket opened");
         }
 
-        public void Message(IEventHandler eventHandler, string dataStr)
+        public void Message(IConnectHandler connectHandler, string dataStr)
         {
             if (dataStr == null || dataStr == "")
             {
@@ -59,19 +59,14 @@ namespace XPlan.Demo.Websocket
             }            
         }
 
-        public void Error(IEventHandler eventHandler, string errorTxt)
+        public void Error(IConnectHandler connectHandler, string errorTxt)
         {
             Debug.LogWarning("WebSocket error: " + errorTxt);
         }
 
-        public void Close(IEventHandler eventHandler, bool bErrorHappen)
+        public void Close(IConnectHandler connectHandler, bool bErrorHappen)
         {
-            Debug.Log("WebSocket closed with Url Is " + webSocket.Url);
-
-            if (webSocket != null)
-            {
-                Reconnect();
-            }
+            Debug.Log("WebSocket closed with Url Is " + connectHandler.Url);
         }
 
         public void PressBtn()
@@ -119,7 +114,7 @@ namespace XPlan.Demo.Websocket
             webSocket.Connect();
         }
 
-        public void Reconnect()
+        public void InterruptConnect()
 		{
             StartCoroutine(Reconnect(webSocket));
         }
