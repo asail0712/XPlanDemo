@@ -6,7 +6,7 @@ namespace XPlan.Net
     {
         Uri Url { get; }
         void Connect();
-        void Reconnect();
+        void Interruptconnect();
         void CloseConnect();
     }
 }

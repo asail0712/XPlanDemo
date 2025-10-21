@@ -140,7 +140,7 @@ namespace XPlan.Net
             });
         }
 
-        public void Reconnect()
+        public void Interruptconnect()
         {
             bInterruptConnect = true;
         }
@@ -260,22 +260,22 @@ namespace XPlan.Net
         /********************************************
          * 實作 IStatefulConnection
          * *****************************************/
-        public void Open(IEventHandler handler)
+        public void Open(IConnectHandler handler)
 		{
             eventHandler?.Open(handler);
 		}
 
-        public void Close(IEventHandler handler, bool bErrorHappen)
+        public void Close(IConnectHandler handler, bool bErrorHappen)
 		{
             eventHandler?.Close(handler, bErrorHappen);
         }
 
-        public void Error(IEventHandler handler, string errorTxt)
+        public void Error(IConnectHandler handler, string errorTxt)
 		{
             eventHandler?.Error(handler, errorTxt);
         }
 
-        public void Message(IEventHandler handler, string msgTxt)
+        public void Message(IConnectHandler handler, string msgTxt)
 		{
             eventHandler?.Message(handler, msgTxt);
         }

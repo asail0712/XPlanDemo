@@ -13,37 +13,26 @@ namespace XPlan.Net
         private int timesToCurrReconnect                = 0;
         private float timeToWait                        = 5f;
         private IEventHandler eventHandler              = null;
-        private Lazy<IConnectHandler> connectLazyGetter = null;
         private IConnectHandler connectHandler          = null;
 
         private MonoBehaviourHelper.MonoBehavourInstance reconnectCoroutine;
 
         // Start is called before the first frame update
-        public ConnectionRecovery(Lazy<IConnectHandler> connectLazyGetter, IEventHandler handler = null, int numOfReconnect = 30, float timeToWait = 4f)
+        public ConnectionRecovery(IEventHandler handler = null, int numOfReconnect = 30, float timeToWait = 4f)
         {
             this.eventHandler           = handler;
-            this.connectLazyGetter      = connectLazyGetter;
             this.timeToWait             = timeToWait;
             this.timesToCurrReconnect   = 0;
             this.timesToMaxReconnect    = numOfReconnect;            
         }
 
-        public ConnectionRecovery(IConnectHandler connectHandler, IEventHandler handler = null, int numOfReconnect = 30, float timeToWait = 4f)
-        {
-            this.eventHandler           = handler;
-            this.connectHandler         = connectHandler;
-            this.timeToWait             = timeToWait;
-            this.timesToCurrReconnect   = 0;
-            this.timesToMaxReconnect    = numOfReconnect;
-        }
-
-        public void Open(IEventHandler handler)
+        public void Open(IConnectHandler handler)
 		{
             timesToCurrReconnect    = 0;
 
             eventHandler?.Open(handler);
         }
-        public void Close(IEventHandler handler, bool bErrorHappen)
+        public void Close(IConnectHandler handler, bool bErrorHappen)
 		{
             // 判斷是否是使用者自行關閉
             if(!bErrorHappen)
@@ -66,13 +55,13 @@ namespace XPlan.Net
                 return;
 			}
 
-            reconnectCoroutine = MonoBehaviourHelper.StartCoroutine(Reconnect());
+            reconnectCoroutine = MonoBehaviourHelper.StartCoroutine(Reconnect(handler));
         }
-        public void Error(IEventHandler handler, string errorTxt)
+        public void Error(IConnectHandler handler, string errorTxt)
 		{
             eventHandler?.Error(handler, errorTxt);
         }
-        public void Message(IEventHandler handler, string msgTxt)
+        public void Message(IConnectHandler handler, string msgTxt)
 		{
             eventHandler?.Message(handler, msgTxt);
         }
@@ -80,18 +69,11 @@ namespace XPlan.Net
         /**********************************
          * 重連機制
          * *******************************/
-        private IEnumerator Reconnect()
+        private IEnumerator Reconnect(IConnectHandler connectHandler)
 		{
             yield return new WaitForSeconds(timeToWait);
 
-            if(connectHandler != null)
-			{
-                connectHandler?.Connect();
-            }
-            else
-			{
-                connectLazyGetter.Value?.Connect();
-            }
+            connectHandler?.Connect();
 
             reconnectCoroutine.StopCoroutine();
             reconnectCoroutine  = null;
