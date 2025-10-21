@@ -46,9 +46,10 @@ namespace XPlan.UI
 		private void Awake()
 		{
 			int sumOfLoading	= 0;
-            int currLoading		= 0;
 
 #if ADDRESSABLES_EXISTS
+            int currLoading		= 0;
+
             // 加上 addressable 的初始化
             foreach (UILoadingInfo uiLoadingInfo in loadingList)
 			{

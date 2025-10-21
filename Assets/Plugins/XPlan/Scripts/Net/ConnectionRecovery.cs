@@ -13,7 +13,6 @@ namespace XPlan.Net
         private int timesToCurrReconnect                = 0;
         private float timeToWait                        = 5f;
         private IEventHandler eventHandler              = null;
-        private IConnectHandler connectHandler          = null;
 
         private MonoBehaviourHelper.MonoBehavourInstance reconnectCoroutine;
 

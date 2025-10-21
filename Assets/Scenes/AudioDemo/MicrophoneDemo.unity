@@ -707,7 +707,11 @@ MonoBehaviour:
     m_LineSpacing: 1
   m_Text: 'Press "A" to Record Voice
 
-    Press "D" to Play Voice'
+    Press "S" to Play Voice
+
+
+    Press "D"
+    to Record Voice Streaming'
 --- !u!222 &1458844191
 CanvasRenderer:
   m_ObjectHideFlags: 0
