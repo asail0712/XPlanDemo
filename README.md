@@ -20,10 +20,10 @@ XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點�
   
 ### [XPlan框架介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 2.3.8
+- Version 2.4.8
 # 3.安裝指南
 ### 系統要求
-- Unity 6 或更高版本
+- Unity 6000.0.58f2 或更高版本
 ### 安裝指南
 - 將XPlan資料夾放進專案中的Assets/Plugins即可
 - 不需要使用的DLL可以刪除，請參照"其他"的說明
@@ -44,10 +44,15 @@ XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點�
 - Assets/Scenes/WebSocketDemoScene/WebSocketDemoScene.unity
   - 示範XPlan的強連線功能
   - 透過Websocket連線到公共測試Server，傳送並接收訊息
+- Assets/Scenes/AudioDemo/MicEchoDemo.unity
+  - 使用麥克風做音訊串流接收
+  - 使用Websocket做音訊串流傳輸與接收
 - Assets/Scenes/AudioDemo/AudioDemoScene.unity
   - 示範Audio的使用方式
   - 一個Channel同時只撥放一個聲音，後播放會強制結束前面撥放的聲音
   - 標示為BG的Channel在有其他聲音撥放時，會自動變小聲
+- Assets/Scenes/AudioDemo/MicrophoneDemo.unity
+  - 使用麥克風做音訊串流接收
 - Assets/Scenes/RecyclePoolDemo/RecyclePoolDemoScene.unity
   - 示範如何對GameObject使用RecyclePool
 - Assets/Scenes/UILocalizationDemo/LocalizationScene.unity
