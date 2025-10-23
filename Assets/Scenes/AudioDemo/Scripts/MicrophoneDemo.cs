@@ -99,12 +99,12 @@ namespace XPlan.Demo.Audio
         private void OnMicChunk(float[] micPcm, int micChannels, int micSampleRate)
         {
             // 1) 先 downmix 成 mono（若已 mono 則略過拷貝）
-            float[] mono = (micChannels == 1) ? micPcm : DownmixToMono(micPcm, micChannels);
+            float[] mono = (micChannels == 1) ? micPcm : MicrophoneTools.DownmixToMono(micPcm, micChannels);
 
             // 2) 取樣率不同就做線性重採樣；相同就直接用
             float[] toEnqueue = (micSampleRate == TARGET_SR)
                 ? mono
-                : ResampleLinear(mono, micSampleRate, TARGET_SR);
+                : MicrophoneTools.ResampleLinear(mono, micSampleRate, TARGET_SR);
 
             // 3) 塞到播放佇列；限制上限避免延遲累積
             lock (streamLock)
@@ -134,44 +134,6 @@ namespace XPlan.Demo.Audio
             // 不足的部分補 0，避免雜訊
             for (int i = filled; i < needed; i++)
                 data[i] = 0f;
-        }
-
-        // ========== 工具函式 ==========
-        private static float[] DownmixToMono(float[] interleaved, int channels)
-        {
-            int frames = interleaved.Length / channels;
-            var mono = new float[frames];
-            for (int f = 0; f < frames; f++)
-            {
-                float s = 0f;
-                int baseIdx = f * channels;
-                for (int c = 0; c < channels; c++)
-                    s += interleaved[baseIdx + c];
-                mono[f] = s / channels; // 平均
-            }
-            return mono;
-        }
-
-        private static float[] ResampleLinear(float[] src, int inRate, int outRate)
-        {
-            if (inRate <= 0 || outRate <= 0 || src.Length == 0) return Array.Empty<float>();
-            if (inRate == outRate) return (float[])src.Clone();
-
-            double ratio = (double)outRate / inRate;
-            int outLen = Mathf.Max(1, Mathf.RoundToInt((float)(src.Length * ratio)));
-            var dst = new float[outLen];
-
-            double pos = 0.0;
-            for (int i = 0; i < outLen; i++)
-            {
-                double idx = pos;
-                int i0 = (int)idx;
-                int i1 = Mathf.Min(i0 + 1, src.Length - 1);
-                float t = (float)(idx - i0);
-                dst[i] = Mathf.Lerp(src[i0], src[i1], t);
-                pos += 1.0 / ratio; // 反比前進（可等效為 pos += inRate / (double)outRate）
-            }
-            return dst;
         }
     }
 }

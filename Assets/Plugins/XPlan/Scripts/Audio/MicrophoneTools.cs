@@ -310,5 +310,50 @@ namespace XPlan.Audio
         {
             bIsFinished = true;
         }
+
+        // ========== 工具函式 ==========
+        /*************************************************************************
+         * 把多聲道（例如立體聲 stereo：2 channels）的音訊資料，轉成單聲道（mono）
+         * ***********************************************************************/
+        static public float[] DownmixToMono(float[] interleaved, int channels)
+        {
+            int frames  = interleaved.Length / channels;
+            var mono    = new float[frames];
+            for (int f = 0; f < frames; f++)
+            {
+                float s     = 0f;
+                int baseIdx = f * channels;
+                for (int c = 0; c < channels; c++)
+                    s += interleaved[baseIdx + c];
+                mono[f] = s / channels; // 平均
+            }
+            return mono;
+        }
+
+        /*************************************************************************
+         * 把音訊資料從原取樣率（inRate）轉換成新的取樣率（outRate），
+         * 例如從 48000Hz 轉到 16000Hz。
+         * ***********************************************************************/
+        static public float[] ResampleLinear(float[] src, int inRate, int outRate)
+        {
+            if (inRate <= 0 || outRate <= 0 || src.Length == 0) return Array.Empty<float>();
+            if (inRate == outRate) return (float[])src.Clone();
+
+            double ratio    = (double)outRate / inRate;
+            int outLen      = Mathf.Max(1, Mathf.RoundToInt((float)(src.Length * ratio)));
+            var dst         = new float[outLen];
+
+            double pos = 0.0;
+            for (int i = 0; i < outLen; i++)
+            {
+                double idx  = pos;
+                int i0      = (int)idx;
+                int i1      = Mathf.Min(i0 + 1, src.Length - 1);
+                float t     = (float)(idx - i0);
+                dst[i]      = Mathf.Lerp(src[i0], src[i1], t);
+                pos         += 1.0 / ratio; // 反比前進（可等效為 pos += inRate / (double)outRate）
+            }
+            return dst;
+        }
     }
 }
