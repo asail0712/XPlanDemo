@@ -64,6 +64,10 @@ namespace XPlan.Net
 		{
             eventHandler?.Message(handler, msgTxt);
         }
+        public void Binary(IConnectHandler handler, byte[] data)
+        {
+            eventHandler?.Binary(handler, data);
+        }
 
         /**********************************
          * 重連機制

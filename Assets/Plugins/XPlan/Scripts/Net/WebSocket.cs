@@ -1,41 +1,50 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-
+using UnityEngine.LightTransport;
 using XPlan.Utility;
 
 namespace XPlan.Net
 {
+    public readonly struct WsInboundMessage
+    {
+        public WebSocketMessageType Type { get; }
+        public byte[] Binary { get; }
+        public string Text { get => Encoding.UTF8.GetString(Binary, 0, Binary.Length);}
+        public WsInboundMessage(WebSocketMessageType type, byte[] byteArr)
+        {
+            Type    = type;
+            Binary  = byteArr;
+        }
+    }
+
     public class WebSocket: IConnectHandler, IEventHandler, ISendHandler
     {
-        private ClientWebSocket ws      = null;
-        private Uri uri                 = null;
-        private List<byte> bs           = null;
-        private byte[] buffer           = null;
-        private bool bIsUserClose       = false; // 判斷是否為使用者主動關閉
-        private bool bInterruptConnect  = false;
+        private ClientWebSocket ws                  = null;
+        private bool bIsUserClose                   = false; // 判斷是否為使用者主動關閉
+        private bool bInterruptConnect              = false;
 
-        private bool bTriggerOpen       = false;
-        private bool bTriggerClose      = false;
-        private Exception errorEx       = null;
-        private Queue<string> msgQueue  = null;
+        private bool bTriggerOpen                   = false;
+        private bool bTriggerClose                  = false;
+        private Exception errorEx                   = null;
+        private Queue<WsInboundMessage> msgQueue    = null;
 
         private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
         private IEventHandler eventHandler;
 
         public WebSocketState? State { get => ws?.State; }
-        public Uri Url { get => uri; }
+        public Uri Url { get; set; }
 
         public WebSocket(string wsUrl, IEventHandler handler)
         {
             // 初始化
-            uri             = new Uri(wsUrl);
+            Url             = new Uri(wsUrl);
             eventHandler    = handler;
         }
 
@@ -49,13 +58,9 @@ namespace XPlan.Net
                 return;
             }
 
-            msgQueue        = new Queue<string>();
+            msgQueue = new Queue<WsInboundMessage>();
 
-            // 緩衝區
-            bs              = new List<byte>();
-            buffer          = new byte[1024 * 4];
-
-            if(callbackRoutine != null)
+            if (callbackRoutine != null)
 			{
                 callbackRoutine.StopCoroutine();
             }
@@ -71,45 +76,39 @@ namespace XPlan.Net
                 errorEx         = null;
 
                 msgQueue.Clear();
-                bs.Clear();
-                Array.Clear(buffer, 0, buffer.Length);
 
                 // 這邊有loop，因此不使用StartCoroutine避免效能受到影響
                 try
                 {
-                    await ws.ConnectAsync(uri, CancellationToken.None);
+                    await ws.ConnectAsync(Url, CancellationToken.None);
 
                     // 等連線完成後觸發Connect
                     bTriggerOpen        = true;
                     bInterruptConnect   = false;
 
-                    WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);//监听Socket信息
+                    // 緩衝區
+                    using var ms                        = new MemoryStream();
+                    byte[] recvBuf                      = new byte[1024 * 4];
+                    WebSocketMessageType currentType    = WebSocketMessageType.Text;
                     
-                    while (!result.CloseStatus.HasValue)
+                    while (ws.State == WebSocketState.Open)
                     {
-                        if (bInterruptConnect)
+                        WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(recvBuf), CancellationToken.None);//监听Socket信息
+                    
+                        // 意外終止判斷
+                        if (bInterruptConnect) throw new Exception("強制觸發例外導致連線中斷");
+                        if (result.MessageType == WebSocketMessageType.Close) break;
+
+                        // 用於支援 分段訊息（fragmented message）
+                        if (ms.Length == 0) currentType = result.MessageType; // 記住這則訊息的型別
+                        if (result.Count > 0) ms.Write(recvBuf, 0, result.Count);
+
+                        if (result.EndOfMessage)
                         {
-                            bInterruptConnect = false;
-
-                            throw new Exception("強制觸發例外導致連線中斷");
+                            byte[] data = ms.ToArray(); // 複製出乾淨 byte[]
+                            msgQueue.Enqueue(new WsInboundMessage(currentType, data));
+                            ms.SetLength(0); // 清空，準備下一則訊息
                         }
-
-                        if (result.MessageType == WebSocketMessageType.Text)
-                        {
-                            bs.AddRange(buffer.Take(result.Count));
-
-                            if (result.EndOfMessage)
-                            {
-                                // 收到的消息
-                                string userMsg = Encoding.UTF8.GetString(bs.ToArray(), 0, bs.Count);
-
-                                msgQueue.Enqueue(userMsg);
-
-                                bs = new List<byte>();
-                            }
-                        }
-
-                        result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                     }
                 }
                 catch (Exception ex)
@@ -121,18 +120,8 @@ namespace XPlan.Net
                 {
                     if (!bIsUserClose)
                     {
-                        WebSocketCloseStatus status;
-
-                        if (ws.CloseStatus == null)
-                        {
-                            status = WebSocketCloseStatus.Empty;
-                        }
-                        else
-                        {
-                            status = ws.CloseStatus.Value;
-                        }
-
-                        string desc = ws.CloseStatusDescription == null ? "" : ws.CloseStatusDescription;
+                        WebSocketCloseStatus status = ws.CloseStatus ?? WebSocketCloseStatus.Empty;
+                        string desc                 = ws.CloseStatusDescription ?? "";
 
                         Close(status, desc + netErr);
                     }
@@ -183,7 +172,8 @@ namespace XPlan.Net
 
             Task.Run(async () =>
             {
-                await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, CancellationToken.None);
+                ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+                await ws.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None);
 
                 Debug.Log($"送出訊息 {bytes}!!");
             });
@@ -250,9 +240,16 @@ namespace XPlan.Net
                     }
                 }
 
-				while (msgQueue != null && msgQueue.Count > 0)
+				while (msgQueue != null && msgQueue.TryDequeue(out var item))
 				{
-					Message(this, msgQueue.Dequeue());
+                    if(item.Type == WebSocketMessageType.Text)
+                    {
+                        Message(this, item.Text);
+                    }
+                    else
+                    {
+                        Binary(this, item.Binary);
+                    }
 				}
             }
         }
@@ -275,9 +272,14 @@ namespace XPlan.Net
             eventHandler?.Error(handler, errorTxt);
         }
 
-        public void Message(IConnectHandler handler, string msgTxt)
+        public void Message(IConnectHandler handler, string text)
 		{
-            eventHandler?.Message(handler, msgTxt);
+            eventHandler?.Message(this, text);
+        }
+
+        public void Binary(IConnectHandler handler, byte[] data)
+        {
+            eventHandler?.Binary(handler, data);
         }
     }
 }

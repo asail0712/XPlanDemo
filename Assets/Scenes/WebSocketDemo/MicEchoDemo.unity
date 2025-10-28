@@ -189,7 +189,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u6309\u4E0BA\u958B\u59CB\u9304\u97F3\uFF0C\u653E\u958BA\u505C\u6B62\u9304\u97F3"
+  m_Text: "\u6309\u4E0BA\u958B\u59CB\u6536\u97F3\uFF0C\u653E\u958BA\u505C\u6B62\u6536\u97F3"
 --- !u!222 &203253926
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -761,8 +761,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 361005303f7dc5342bfb689a93ca3d08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speakBtn: {fileID: 0}
-  urlStr: wss://echo.websocket.org
+  urlStr: ws://localhost:5246/ws?uid=xxx
+  bBinaryType: 1
 --- !u!1 &1475696262
 GameObject:
   m_ObjectHideFlags: 0
@@ -833,7 +833,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u900F\u904Ewss://echo.websocket.org \u56DE\u50B3\u4F60\u7528\u9EA5\u514B\u98A8\u8F38\u5165\u7684\u97F3\u8A0A"
+  m_Text: "\u900F\u904EEcho Server \u56DE\u50B3\u4F60\u7528\u9EA5\u514B\u98A8\u8F38\u5165\u7684\u97F3\u8A0A"
 --- !u!222 &1475696265
 CanvasRenderer:
   m_ObjectHideFlags: 0

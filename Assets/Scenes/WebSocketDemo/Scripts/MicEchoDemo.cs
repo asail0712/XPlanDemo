@@ -15,8 +15,8 @@ namespace XPlan.Demo.Websocket
 
     public class MicEchoDemo : MonoBehaviour, IEventHandler, IConnectHandler
     {
-        [SerializeField] private Button speakBtn;
         [SerializeField] private string urlStr;
+        [SerializeField] private bool bBinaryType;
 
         // streaming相關
         private readonly Object streamLock  = new Object();
@@ -77,6 +77,35 @@ namespace XPlan.Demo.Websocket
         public void Open(IConnectHandler connectHandler)
         {
             Debug.Log("WebSocket opened");
+        }
+
+        public void Binary(IConnectHandler connectHandler, byte[] bytes)
+        {
+            float[] f32 = BytesToFloatArray(bytes);
+
+            // 收到的音訊若不是目標 SR / CH，做一次轉換
+            float[] toPlay = f32;
+            //if (frame.ch != TARGET_CHANNELS)
+            //{
+            //    // 只保留第一聲道（簡單處理）
+            //    toPlay = MicrophoneTools.DownmixToMono(toPlay, frame.ch);
+            //}
+            //if (frame.sr != TARGET_SR)
+            //{
+            //    toPlay = MicrophoneTools.ResampleLinear(toPlay, frame.sr, TARGET_SR);
+            //}
+
+            // 丟進播放 queue
+            lock (streamLock)
+            {
+                int maxFloats = TARGET_SR * TARGET_CHANNELS * 2; // 最多保留 2 秒，避免延遲無限增加
+                while (streamQueue.Count > maxFloats && streamQueue.Count > 0)
+                    streamQueue.Dequeue();
+
+                for (int i = 0; i < toPlay.Length; i++)
+                    streamQueue.Enqueue(toPlay[i]);
+            }
+            return;
         }
 
         public void Message(IConnectHandler connectHandler, string dataStr)
@@ -207,24 +236,30 @@ namespace XPlan.Demo.Websocket
 
             try
             {
-                byte[] bytes    = FloatArrayToBytes(samples); // float32 LE
-                string b64      = Convert.ToBase64String(bytes);
+                byte[] bytes = FloatArrayToBytes(samples); // float32 LE
 
-                var payload     = new AudioFrame
+                if (bBinaryType)
                 {
-                    sr      = sr,
-                    ch      = ch,
-                    data    = b64
-                };
+                    //  如果你的 WebSocket 類別支援二進位，可以直接送 bytes
+                    //  但多數「公開 echo」只會原樣回你一個「同型別」的一包資料
+                    webSocket.Send(bytes);
+                }
+                else
+                {
 
-                string json     = JsonConvert.SerializeObject(payload);
+                    string b64  = Convert.ToBase64String(bytes);
+                    var payload = new AudioFrame
+                    {
+                        sr      = sr,
+                        ch      = ch,
+                        data    = b64
+                    };
 
-                // 1) 文字訊息（跨平台 echo 最保險）
-                webSocket.Send(json);
+                    string json = JsonConvert.SerializeObject(payload);
 
-                // 2) 如果你的 WebSocket 類別支援二進位，可以直接送 bytes
-                //    但多數「公開 echo」只會原樣回你一個「同型別」的一包資料
-                //webSocket.Send(bytes);
+                    //  文字訊息（跨平台 echo 最保險）
+                    webSocket.Send(json);
+                }
             }
             catch (Exception e)
             {

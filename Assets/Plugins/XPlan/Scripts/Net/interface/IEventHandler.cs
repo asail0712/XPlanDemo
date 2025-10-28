@@ -8,5 +8,6 @@ namespace XPlan.Net
         void Close(IConnectHandler eventHandler, bool bErrorHappen);
         void Error(IConnectHandler eventHandler, string errorTxt);
         void Message(IConnectHandler eventHandler, string msgTxt);
+        void Binary(IConnectHandler eventHandler, byte[] byteArr);
     }
 }

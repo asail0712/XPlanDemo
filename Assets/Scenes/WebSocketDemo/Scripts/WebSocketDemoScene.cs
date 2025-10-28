@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.Net;
+using static UnityEngine.Video.VideoPlayer;
 
 namespace XPlan.Demo.Websocket
 {
@@ -57,6 +58,10 @@ namespace XPlan.Demo.Websocket
                 showMsgTxt.text += msgArr[i];
                 showMsgTxt.text += '\n';
             }            
+        }
+        public void Binary(IConnectHandler handler, byte[] data)
+        {
+            // nothing to do
         }
 
         public void Error(IConnectHandler connectHandler, string errorTxt)
