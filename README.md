@@ -15,7 +15,7 @@
 XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點如下:
 - 掌握EDA的優勢來給予代碼足夠的靈活性與擴展度，同時鬆綁使用者對設計模式的過多依賴。
 - 降低專案的維護成本與提高開發速度。
-- 配套的UI系統，簡單套用MVP解構UI與前端邏輯。
+- 使用事件導向MVP解構View與Presenter。
 - 提供聲音、網路、UI、Camera、物件管理與Debug功能等功能的套件。
   
 ### [XPlan框架介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
@@ -69,7 +69,7 @@ XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點�
 降低專案開發難度，並節省專案的開發時間。
 ### 功能
 - 使用簡化的EDA架構微系統建構的基礎
-- 使用MVP解構UI與Client的邏輯
+- 使用事件導向MVP解構View與Presenter。
 - 提供API與WebSocket的套件組
 - 提供聲音套件，支援多個聲音的播放與切換以及Fade In/Out
 - 建立場景間的關係，簡化場景管理與切換
