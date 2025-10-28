@@ -761,7 +761,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 361005303f7dc5342bfb689a93ca3d08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  urlStr: ws://localhost:5246/ws?uid=xxx
+  urlStr: wss://echo.websocket.org
   bBinaryType: 1
 --- !u!1 &1475696262
 GameObject:

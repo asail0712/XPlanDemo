@@ -81,10 +81,10 @@ namespace XPlan.Demo.Websocket
 
         public void Binary(IConnectHandler connectHandler, byte[] bytes)
         {
-            float[] f32 = BytesToFloatArray(bytes);
+            float[] f32     = BytesToFloatArray(bytes);
+            float[] toPlay  = f32;
 
             // 收到的音訊若不是目標 SR / CH，做一次轉換
-            float[] toPlay = f32;
             //if (frame.ch != TARGET_CHANNELS)
             //{
             //    // 只保留第一聲道（簡單處理）
