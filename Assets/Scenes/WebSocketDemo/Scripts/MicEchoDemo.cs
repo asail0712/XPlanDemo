@@ -58,6 +58,11 @@ namespace XPlan.Demo.Websocket
         // Start is called before the first frame update
         private void Start()
 		{
+            if(string.IsNullOrEmpty(urlStr))
+            {
+                urlStr = "wss://echo.websocket.org";
+            }
+
             webSocket = new WebSocket(Url.ToString(), new ConnectionRecovery(this));
             webSocket.Connect();            
         }

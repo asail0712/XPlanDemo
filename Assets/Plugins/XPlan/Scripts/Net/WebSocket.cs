@@ -38,6 +38,9 @@ namespace XPlan.Net
         private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
         private IEventHandler eventHandler;
 
+        // 避免多執行緒同時送出訊息
+        private readonly SemaphoreSlim _sendLock    = new(1, 1);
+
         public WebSocketState? State { get => ws?.State; }
         public Uri Url { get; set; }
 
@@ -123,7 +126,7 @@ namespace XPlan.Net
                         WebSocketCloseStatus status = ws.CloseStatus ?? WebSocketCloseStatus.Empty;
                         string desc                 = ws.CloseStatusDescription ?? "";
 
-                        Close(status, desc + netErr);
+                        _ = CloseAsync(status, desc + netErr);
                     }
                 }
             });
@@ -137,7 +140,7 @@ namespace XPlan.Net
         public void CloseConnect()
         {
             bIsUserClose = true;
-            Close(WebSocketCloseStatus.NormalClosure, "用户主動關閉");
+            _ = CloseAsync(WebSocketCloseStatus.NormalClosure, "用户主動關閉");
         }
 
         /***********************************
@@ -145,64 +148,62 @@ namespace XPlan.Net
          * ********************************/
         public bool Send(string mess)
         {
-            if (ws.State != WebSocketState.Open)
-            {
-                return false;
-            }
+            if (ws == null || ws.State != WebSocketState.Open) return false;
 
-            Task.Run(async () =>
-            {
-                byte[] buffer               = Encoding.UTF8.GetBytes(mess);
-                ArraySegment<byte> segment  = new ArraySegment<byte>(buffer);
-
-                await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
-
-                Debug.Log($"送出訊息 {mess}!!");
-            });
-
+            byte[] bytes = Encoding.UTF8.GetBytes(mess);
+            // 不要用 Task.Run 亂丟；改成 fire-and-forget，但內部會序列化 + 捕例外
+            _ = SendInternalAsync(bytes, WebSocketMessageType.Text);
             return true;
         }
 
         public bool Send(byte[] bytes)
         {
-            if (ws.State != WebSocketState.Open)
-            {
-                return false;
-            }
+            if (ws == null || ws.State != WebSocketState.Open) return false;
 
-            Task.Run(async () =>
-            {
-                ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
-                await ws.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None);
-
-                Debug.Log($"送出訊息 {bytes}!!");
-            });
-
+            _ = SendInternalAsync(bytes, WebSocketMessageType.Binary);
             return true;
         }
 
-        private void Close(WebSocketCloseStatus closeStatus, string statusDescription)
+        private async Task SendInternalAsync(byte[] bytes, WebSocketMessageType type)
         {
-            Task.Run(async () =>
+            var segment = new ArraySegment<byte>(bytes);
+
+            await _sendLock.WaitAsync().ConfigureAwait(false);
+            try
             {
-                if (bIsUserClose)
+                if (ws != null && ws.State == WebSocketState.Open)
                 {
-                    try
-                    {
-                        // 關閉WebSocket
-                        await ws.CloseAsync(closeStatus, statusDescription, CancellationToken.None);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogSystem.Record(ex.Message, LogType.Assert);
-                    }
+                    await ws.SendAsync(segment, type, true, CancellationToken.None).ConfigureAwait(false);
                 }
+            }
+            catch (Exception ex) { Debug.LogWarning($"Send(Binary) error: {ex.Message}"); }
+            finally
+            {
+                _sendLock.Release();
+            }
+        }
 
-                ws.Abort();
-                ws.Dispose();
-
+        private async Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription)
+        {
+            try
+            {
+                if (bIsUserClose && ws != null)
+                {
+                    await ws.CloseAsync(closeStatus, statusDescription, CancellationToken.None)
+                                 .ConfigureAwait(false);
+                
+                }
+            }
+            catch (Exception ex)
+            {
+                LogSystem.Record($"CloseAsync failed: {ex.Message}", LogType.Assert);
+            }
+            finally
+            {
+                ws?.Abort();
+                ws?.Dispose();
                 bTriggerClose = true;
-            });
+            }
         }
 
         private IEnumerator Tick()
