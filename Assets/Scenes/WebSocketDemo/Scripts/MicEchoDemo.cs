@@ -12,7 +12,6 @@ using Object = System.Object;
 
 namespace XPlan.Demo.Websocket
 {
-
     public class MicEchoDemo : MonoBehaviour, IEventHandler, IConnectHandler
     {
         [SerializeField] private string urlStr;

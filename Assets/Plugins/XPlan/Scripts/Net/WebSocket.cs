@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
@@ -12,28 +13,18 @@ using XPlan.Utility;
 
 namespace XPlan.Net
 {
-    public readonly struct WsInboundMessage
-    {
-        public WebSocketMessageType Type { get; }
-        public byte[] Binary { get; }
-        public string Text { get => Encoding.UTF8.GetString(Binary, 0, Binary.Length);}
-        public WsInboundMessage(WebSocketMessageType type, byte[] byteArr)
-        {
-            Type    = type;
-            Binary  = byteArr;
-        }
-    }
-
     public class WebSocket: IConnectHandler, IEventHandler, ISendHandler
     {
         private ClientWebSocket ws                  = null;
-        private bool bIsUserClose                   = false; // 判斷是否為使用者主動關閉
-        private bool bInterruptConnect              = false;
+        private CancellationTokenSource _cts        = null;
+        private Task _recvTask;
 
-        private bool bTriggerOpen                   = false;
-        private bool bTriggerClose                  = false;
+        private bool bIsUserClose                   = false; // 判斷是否為使用者主動關閉
+
         private Exception errorEx                   = null;
-        private Queue<WsInboundMessage> msgQueue    = null;
+
+        // 把背景執行緒事件丟回主執行緒
+        private readonly ConcurrentQueue<Action> mainThreadActions = new();
 
         private MonoBehaviourHelper.MonoBehavourInstance callbackRoutine;
         private IEventHandler eventHandler;
@@ -61,86 +52,101 @@ namespace XPlan.Net
                 return;
             }
 
-            msgQueue = new Queue<WsInboundMessage>();
-
             if (callbackRoutine != null)
 			{
                 callbackRoutine.StopCoroutine();
             }
 
-            callbackRoutine = MonoBehaviourHelper.StartCoroutine(Tick());
+            callbackRoutine = MonoBehaviourHelper.StartCoroutine(ProcessMainThreadActions());
 
-            Task.Run(async () =>
+            // 建立新 ws 與 CTS
+            ws              = new ClientWebSocket();
+            _cts?.Cancel();
+            _cts            = new CancellationTokenSource();
+
+            bIsUserClose    = false;
+            errorEx         = null;
+
+            // 直接啟動 async 任務（無 Task.Run）
+            _recvTask       = ConnectAndPumpAsync(_cts.Token); // fire-and-forget
+        }
+
+        private async Task ConnectAndPumpAsync(CancellationToken ct)
+        {            
+            // 這邊有loop，因此不使用StartCoroutine避免效能受到影響
+            try
             {
-                // reset數值
-                ws              = new ClientWebSocket();
-                string netErr   = string.Empty;
-                bIsUserClose    = false;
-                errorEx         = null;
+                await ws.ConnectAsync(Url, ct).ConfigureAwait(false);
 
-                msgQueue.Clear();
+                // 告知「已連線」
+                EmitOnMain(() => Open(this));
 
-                // 這邊有loop，因此不使用StartCoroutine避免效能受到影響
-                try
+                // 緩衝區
+                using var ms                        = new MemoryStream();
+                byte[] recvBuf                      = new byte[1024 * 64];
+                WebSocketMessageType currentType    = WebSocketMessageType.Text;
+                    
+                while (ws.State == WebSocketState.Open && !ct.IsCancellationRequested)
                 {
-                    await ws.ConnectAsync(Url, CancellationToken.None);
+                    WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(recvBuf), ct).ConfigureAwait(false);//监听Socket信息
 
-                    // 等連線完成後觸發Connect
-                    bTriggerOpen        = true;
-                    bInterruptConnect   = false;
+                    // 使用者中斷
+                    if (bIsUserClose) break;
 
-                    // 緩衝區
-                    using var ms                        = new MemoryStream();
-                    byte[] recvBuf                      = new byte[1024 * 4];
-                    WebSocketMessageType currentType    = WebSocketMessageType.Text;
-                    
-                    while (ws.State == WebSocketState.Open)
+                    // 意外終止判斷
+                    if (result.MessageType == WebSocketMessageType.Close) break;
+
+                    // 用於支援 分段訊息（fragmented message）
+                    if (ms.Length == 0) currentType = result.MessageType; // 記住這則訊息的型別
+                    if (result.Count > 0) ms.Write(recvBuf, 0, result.Count);
+
+                    if (result.EndOfMessage)
                     {
-                        WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(recvBuf), CancellationToken.None);//监听Socket信息
-                    
-                        // 意外終止判斷
-                        if (bInterruptConnect) throw new Exception("強制觸發例外導致連線中斷");
-                        if (result.MessageType == WebSocketMessageType.Close) break;
+                        byte[] data = ms.ToArray(); // 複製出乾淨 byte[]
+                        ms.SetLength(0); // 清空，準備下一則訊息
 
-                        // 用於支援 分段訊息（fragmented message）
-                        if (ms.Length == 0) currentType = result.MessageType; // 記住這則訊息的型別
-                        if (result.Count > 0) ms.Write(recvBuf, 0, result.Count);
-
-                        if (result.EndOfMessage)
+                        // 直接在主緒發事件（不累積旗標/佇列）
+                        if (currentType == WebSocketMessageType.Text)
                         {
-                            byte[] data = ms.ToArray(); // 複製出乾淨 byte[]
-                            msgQueue.Enqueue(new WsInboundMessage(currentType, data));
-                            ms.SetLength(0); // 清空，準備下一則訊息
+                            EmitOnMain(() => Message(this, Encoding.UTF8.GetString(data)));
+                        }
+                        else
+                        {
+                            EmitOnMain(() => Binary(this, data));
                         }
                     }
                 }
-                catch (Exception ex)
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常: 取消/關閉流程
+            }
+            catch (Exception ex)
+            {
+                errorEx = ex;
+                EmitOnMain(() => Error(this, ex.Message));
+            }
+            finally
+            {
+                if (!bIsUserClose)
                 {
-                    netErr  = " .Net发生错误" + ex.Message;
-                    errorEx = ex;
+                    WebSocketCloseStatus status = ws.CloseStatus ?? WebSocketCloseStatus.Empty;
+                    string desc                 = ws.CloseStatusDescription ?? "";
+
+                    await CloseAsync(status, desc + (errorEx != null ? $" .Net错误 {errorEx.Message}" : ""))
+                        .ConfigureAwait(false);
                 }
-                finally
+                else
                 {
-                    if (!bIsUserClose)
-                    {
-                        WebSocketCloseStatus status = ws.CloseStatus ?? WebSocketCloseStatus.Empty;
-                        string desc                 = ws.CloseStatusDescription ?? "";
-
-                        _ = CloseAsync(status, desc + netErr);
-                    }
+                    await CloseAsync(WebSocketCloseStatus.NormalClosure, "用户主動關閉")
+                        .ConfigureAwait(false);
                 }
-            });
-        }
-
-        public void InterruptConnect()
-        {
-            bInterruptConnect = true;
+            }
         }
 
         public void CloseConnect()
         {
             bIsUserClose = true;
-            _ = CloseAsync(WebSocketCloseStatus.NormalClosure, "用户主動關閉");
         }
 
         /***********************************
@@ -173,9 +179,10 @@ namespace XPlan.Net
             {
                 if (ws != null && ws.State == WebSocketState.Open)
                 {
-                    await ws.SendAsync(segment, type, true, CancellationToken.None).ConfigureAwait(false);
+                    await ws.SendAsync(segment, type, true, _cts.Token).ConfigureAwait(false);
                 }
             }
+            catch (OperationCanceledException) { /* 關閉中忽略 */ }
             catch (Exception ex) { Debug.LogWarning($"Send(Binary) error: {ex.Message}"); }
             finally
             {
@@ -187,11 +194,22 @@ namespace XPlan.Net
         {
             try
             {
-                if (bIsUserClose && ws != null)
+                // 先發取消，讓接收迴圈收斂
+                _cts?.Cancel();
+
+                if (ws != null && (ws.State == WebSocketState.Open || ws.State == WebSocketState.CloseReceived))
                 {
-                    await ws.CloseAsync(closeStatus, statusDescription, CancellationToken.None)
-                                 .ConfigureAwait(false);
-                
+                    using var closeCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    try
+                    {
+                        await ws.CloseAsync(closeStatus, statusDescription, closeCts.Token)
+                                .ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // 若 CloseAsync 卡住，最後保底 Abort
+                        ws.Abort();
+                    }
                 }
             }
             catch (Exception ex)
@@ -200,58 +218,38 @@ namespace XPlan.Net
             }
             finally
             {
-                ws?.Abort();
+                try { await (_recvTask ?? Task.CompletedTask).ConfigureAwait(false); } catch { }
                 ws?.Dispose();
-                bTriggerClose = true;
+                ws = null;
+
+                if (callbackRoutine != null)
+                {
+                    callbackRoutine.StopCoroutine();
+                }
+
+                bool bError = closeStatus != WebSocketCloseStatus.NormalClosure;
+                EmitOnMain(() => Close(this, bError));
             }
         }
 
-        private IEnumerator Tick()
+        private void EmitOnMain(Action action)
         {
-            // 為了讓call back 都由主執行序觸發
-            // 所以放在tick
+            if (action == null) return;
+
+            // 依你的工具替換這行即可
+            mainThreadActions.Enqueue(action);
+        }
+
+        private IEnumerator ProcessMainThreadActions()
+        {
             while (true)
             {
-                // 等Frame的末尾再執行
-                yield return new WaitForEndOfFrame();
+                yield return null;
 
-                if (bTriggerOpen)
+                while (mainThreadActions.TryDequeue(out var action))
                 {
-                    bTriggerOpen = false;
-
-                    Open(this);
+                    action?.Invoke();
                 }
-
-                if (errorEx != null)
-                {
-                    Error(this, errorEx.Message);                 
-                }
-
-                if (bTriggerClose)
-                {
-                    Close(this, errorEx != null);
-
-                    bTriggerClose   = false;
-                    errorEx         = null;
-
-                    if (callbackRoutine != null)
-                    {
-                        callbackRoutine.StopCoroutine();
-                        callbackRoutine = null;
-                    }
-                }
-
-				while (msgQueue != null && msgQueue.TryDequeue(out var item))
-				{
-                    if(item.Type == WebSocketMessageType.Text)
-                    {
-                        Message(this, item.Text);
-                    }
-                    else
-                    {
-                        Binary(this, item.Binary);
-                    }
-				}
             }
         }
 
