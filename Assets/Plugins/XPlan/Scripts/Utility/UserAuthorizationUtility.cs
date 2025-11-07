@@ -127,8 +127,11 @@ namespace XPlan.Utility
 
             callbacks.PermissionDenied                  += (permissionName) => 
             {
-                if (!Permission.HasUserAuthorizedPermission(permission) &&
-                    !Permission.ShouldShowRequestPermissionRationale(permission))
+                if (!Permission.HasUserAuthorizedPermission(permission)
+#if UNITY_6000_1_OR_NEWER
+                    &&!Permission.ShouldShowRequestPermissionRationale(permission)
+#endif
+                    )
                 {
                     Debug.Log("Permission denied and don't ask again: " + permission);
                 }
