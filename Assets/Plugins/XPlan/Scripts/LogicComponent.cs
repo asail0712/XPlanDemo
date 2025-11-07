@@ -308,10 +308,23 @@ namespace XPlan
 			UISystem.UnregisterAllCallback(this);
 		}
 
-		/*************************
+        /********************************
+		 * 其他
+		 * *****************************/
+        protected string GetStr(string keyStr)
+        {
+            return UIController.Instance.GetStr(keyStr);
+        }
+
+        protected string ReplaceStr(string keyStr, params string[] paramList)
+        {
+            return UIController.Instance.ReplaceStr(keyStr, paramList);
+        }
+
+        /*************************
 		 * 初始化與釋放
 		 * ***********************/
-		public LogicComponent()
+        public LogicComponent()
 		{
 			coroutineDict = new Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance>();
 		}
