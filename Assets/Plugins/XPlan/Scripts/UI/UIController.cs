@@ -50,7 +50,21 @@ namespace XPlan.UI
 		[SerializeField]
 		public TextAsset[] csvAssetList;
 
-		public int CurrLanguage
+		private int currQuality;
+        public int CurrQuality
+		{
+			get
+			{
+				return currQuality;
+			}
+			set
+			{
+				currQuality = value;
+				RefreshQuality();
+            }
+		}
+
+        public int CurrLanguage
 		{
 			get
 			{
@@ -155,8 +169,11 @@ namespace XPlan.UI
 					// 加上文字
 					stringTable.InitialUIText(uiIns);
 
-					// 初始化所有的 ui base
-					UIBase[] newUIList = uiIns.GetComponents<UIBase>();
+					// 處理Quality
+					RefreshQuality(uiIns);
+
+                    // 初始化所有的 ui base
+                    UIBase[] newUIList = uiIns.GetComponents<UIBase>();
 
 					if (newUIList == null)
 					{
@@ -423,6 +440,23 @@ namespace XPlan.UI
 
 			return result;
 		}
-	}
+
+        /**************************************
+		 * Quality
+		 * ************************************/
+        private void RefreshQuality()
+		{
+            List<GameObject> allVisibleUIs = UIController.Instance.GetAllVisibleUI();
+
+			allVisibleUIs.ForEach(e04 => RefreshQuality(e04));
+        }
+
+		private void RefreshQuality(GameObject uiGO)
+		{
+            QualitySpriteProvider qualityProvider = uiGO.AddOrFindComponent<QualitySpriteProvider>();
+
+            qualityProvider.RefreshImage();
+        }
+    }
 }
 
