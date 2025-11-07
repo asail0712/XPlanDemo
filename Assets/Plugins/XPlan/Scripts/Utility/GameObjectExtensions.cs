@@ -117,9 +117,9 @@ namespace XPlan.Utility
         }
         public static T AddOrFindComponent<T>(this GameObject gameObject) where T : Component
         {
-            T comp = gameObject.GetComponent<T>();
+            T comp = null;
 
-            if(comp == null)
+            if(!gameObject.TryGetComponent<T>(out comp))
             {
                 comp = gameObject.AddComponent<T>();
             }
