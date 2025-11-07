@@ -70,6 +70,9 @@ namespace XPlan.UI.Fade
 
         private IEnumerator FadeAlpha(CanvasGroup cg, float startAlpha, float targetAlpha, float fadeTime, Action finishAction)
         {
+            // 避免第一禎 fps暴衝
+            yield return null;
+
             float currTime  = 0f;
             cg.alpha        = startAlpha;
 

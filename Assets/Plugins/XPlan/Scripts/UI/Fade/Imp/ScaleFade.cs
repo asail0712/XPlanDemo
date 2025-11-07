@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 
@@ -26,6 +26,9 @@ namespace XPlan.UI.Fade
 
         private IEnumerator FadeScale(Transform transform, float startScale, float targetScale, float fadeTime, Action finishAction)
         {
+            // 避免第一禎 fps暴衝
+            yield return null;
+
             float currTime          = 0f;
             transform.localScale    = new Vector3(startScale, startScale, startScale);
 
