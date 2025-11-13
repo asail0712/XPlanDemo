@@ -113,8 +113,16 @@ namespace XPlan.Addressable
             string catalogUrl = GetCatalogUrl(ccdProjectId, ccdBucketId, ccdBadge);
             Debug.Log($"📥 載入 CCD catalog（badge: {ccdBadge}）: {catalogUrl}");
 
-            var handle = Addressables.LoadContentCatalogAsync(catalogUrl, true);
+            var handle = Addressables.LoadContentCatalogAsync(catalogUrl, false);
             yield return handle;
+
+            // 先檢查有效性
+            if (!handle.IsValid())
+            {
+                Debug.LogError("❌ Catalog handle 已失效（可能被提前釋放）");
+                finishAction?.Invoke(false);
+                yield break;
+            }
 
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
@@ -126,6 +134,9 @@ namespace XPlan.Addressable
                 Debug.LogError($"❌ Catalog 載入失敗：{catalogUrl}");
                 finishAction?.Invoke(false);
             }
+
+            // 手動釋放並清空
+            Addressables.Release(handle);
 #endif
             yield return null;
         }
