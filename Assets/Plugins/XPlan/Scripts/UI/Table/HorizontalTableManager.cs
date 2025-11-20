@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using XPlan.Interface;
 using XPlan.Utility;
 
-namespace XPlan.UI.Component
+namespace XPlan.UI.Tables
 {
     public class HorizontalTableManager<T> where T : TableItemInfo
     {

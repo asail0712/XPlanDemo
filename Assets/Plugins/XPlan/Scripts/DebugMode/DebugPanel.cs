@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.UI;
-using XPlan.UI.Component;
 
 namespace XPlan.DebugMode
 {

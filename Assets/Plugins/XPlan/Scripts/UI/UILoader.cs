@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using XPlan.Utility;
 
 #if ADDRESSABLES_EXISTS
 using UnityEngine.AddressableAssets;
@@ -24,7 +25,7 @@ namespace XPlan.UI
 
 		[SerializeField] public bool bVisible;
 
-        [HideInInspector] public UIBase[] uiList;
+        [HideInInspector] public List<IUIView> uiList;
 
 		public UILoadingInfo()
 		{
@@ -101,9 +102,9 @@ namespace XPlan.UI
             // 初始化 UILoadingInfo 的 uiList
             foreach (UILoadingInfo uiLoadingInfo in loadingList)
             {
-                if(uiLoadingInfo.uiList == null || uiLoadingInfo.uiList.Length == 0)
+                if(uiLoadingInfo.uiList == null || uiLoadingInfo.uiList.Count == 0)
                 {
-                    uiLoadingInfo.uiList = uiLoadingInfo.uiPerfab.GetComponents<UIBase>();
+                    uiLoadingInfo.uiList = uiLoadingInfo.uiPerfab.GetInterfaces<IUIView>();
                 }                
             }
 

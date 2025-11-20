@@ -68,7 +68,7 @@ namespace XPlan.UI
 			this.cancelStr		= cancelKey;
 			this.clickAction	= clickAction;
 
-			UISystem.DirectCall<ShowDialogue>(DialogMessage.ConfirmMessage, this);
+			UIEventBus.DirectCall<ShowDialogue>(DialogMessage.ConfirmMessage, this);
 		}
 	}
 

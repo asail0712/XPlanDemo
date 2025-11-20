@@ -6,7 +6,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace XPlan.UI
+using XPlan.Utility;
+
+namespace XPlan.UI.Components
 {
     [Serializable]
     public class TextMap
@@ -20,9 +22,9 @@ namespace XPlan.UI
             this.key    = key;
         }
 
-        public void Refresh()
+        public void Refresh(StringTable st)
         {
-            text.text = UIController.Instance.GetStr(key);
+            text.text = st.GetStr(key);
         }
     }
 
@@ -36,9 +38,9 @@ namespace XPlan.UI
             this.text   = text;
             this.key    = key;
         }
-        public void Refresh()
+        public void Refresh(StringTable st)
         {
-            text.text = UIController.Instance.GetStr(key);
+            text.text = st.GetStr(key);
         }
     }
 
@@ -77,10 +79,10 @@ namespace XPlan.UI
             }
         }
 
-        public void RefreshText()
+        public void RefreshText(StringTable st)
         {
-            textMapper.ForEach(e04 => e04.Refresh());
-            tmpMapper.ForEach(e04 => e04.Refresh());
+            textMapper.ForEach(e04 => e04.Refresh(st));
+            tmpMapper.ForEach(e04 => e04.Refresh(st));
         }
     }
 }

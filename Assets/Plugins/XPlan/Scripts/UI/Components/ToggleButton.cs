@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 using XPlan.Interface;
 
-namespace XPlan.UI.Component
+namespace XPlan.UI.Components
 {
 	[Serializable]
 	public class ToggleButton : IToggleButton

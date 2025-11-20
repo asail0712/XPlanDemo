@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 using XPlan.Interface;
 
-namespace XPlan.UI.Component
+namespace XPlan.UI.Components
 {
 	public class GdScrollView : ScrollRect
 	{

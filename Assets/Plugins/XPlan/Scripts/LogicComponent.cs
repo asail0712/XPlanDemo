@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -259,17 +259,17 @@ namespace XPlan
 		 * ***********************/
 		protected void DirectCallUI<T>(string uniqueID, T value)
 		{
-			UISystem.DirectCall<T>(uniqueID, value);
+			UIEventBus.DirectCall<T>(uniqueID, value);
 		}
 
 		protected void DirectCallUI(string uniqueID)
 		{
-			UISystem.DirectCall(uniqueID);
+			UIEventBus.DirectCall(uniqueID);
 		}
 
 		protected void DirectCallUI(string uniqueID, params object[] paramList)
 		{
-			UISystem.DirectCall(uniqueID, paramList);
+			UIEventBus.DirectCall(uniqueID, paramList);
 		}
 
 		protected void AddUIListener<T>(string uniqueID, Action<T> callback)
@@ -279,7 +279,7 @@ namespace XPlan
 				return;
 			}
 
-			UISystem.RegisterCallback(uniqueID, this, (param)=> 
+			UIEventBus.RegisterCallback(uniqueID, this, (param)=> 
 			{
 				callback?.Invoke(param.GetValue<T>());
 			});
@@ -292,7 +292,7 @@ namespace XPlan
 				return;
 			}
 
-			UISystem.RegisterCallback(uniqueID, this, (dump) =>
+			UIEventBus.RegisterCallback(uniqueID, this, (dump) =>
 			{
 				callback?.Invoke();
 			});
@@ -300,12 +300,12 @@ namespace XPlan
 
 		protected void RemoveUIListener(string uniqueID)
 		{
-			UISystem.UnregisterCallback(uniqueID, this);
+			UIEventBus.UnregisterCallback(uniqueID, this);
 		}
 
 		protected void RemoveAllUIListener()
 		{
-			UISystem.UnregisterAllCallback(this);
+			UIEventBus.UnregisterAllCallback(this);
 		}
 
         /********************************

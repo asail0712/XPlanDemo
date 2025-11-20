@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 using XPlan.Utility;
 
-namespace XPlan.UI
+namespace XPlan.UI.Components
 {
     [Serializable]
     public class QualityMapper
@@ -28,9 +28,9 @@ namespace XPlan.UI
             this.mbIns      = null;
         }
 
-        public void Refresh()
+        public void Refresh(int quality)
         {
-            int currQuality = UIController.Instance.CurrQuality;
+            int currQuality = quality;
             string loadName = $"{fileName}_{currQuality}.png";
 
             // StreamingAssets 完整路徑
@@ -101,9 +101,9 @@ namespace XPlan.UI
             }
         }
 
-        public void RefreshImage()
+        public void RefreshImage(int quality)
         {
-            qualityMapper.ForEach(e04 => e04.Refresh());
+            qualityMapper.ForEach(e04 => e04.Refresh(quality));
         }
     }
 }

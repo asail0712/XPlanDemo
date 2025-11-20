@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,7 +43,7 @@ namespace XPlan.UI
 		}
 	}
 
-	public static class UISystem
+	public static class UIEventBus
 	{
 		static private List<Func<bool>> pauseList = new List<Func<bool>>();
 

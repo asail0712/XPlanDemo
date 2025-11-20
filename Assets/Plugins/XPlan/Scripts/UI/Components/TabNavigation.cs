@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace XPlan.UI
+namespace XPlan.UI.Components
 {
     public class TabNavigation : MonoBehaviour
     {

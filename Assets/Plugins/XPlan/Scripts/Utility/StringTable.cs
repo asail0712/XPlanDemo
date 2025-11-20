@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.UI;
+using XPlan.UI.Components;
 
 namespace XPlan.Utility
 {
@@ -77,8 +78,8 @@ namespace XPlan.Utility
             TextKeyMapper textKeycomp	= uiGO.AddOrFindComponent<TextKeyMapper>();
             I18NSpriteProvider i18Ncomp = uiGO.AddOrFindComponent<I18NSpriteProvider>();
             
-			textKeycomp.RefreshText();
-            i18Ncomp.RefreshImage();
+			textKeycomp.RefreshText(this);
+            i18Ncomp.RefreshImage(this);
         }
 
 		public string GetStr(string keyStr)
@@ -153,11 +154,11 @@ namespace XPlan.Utility
 			{
 				InitialUIText(uiIns);
 
-				UIBase[] uiList = uiIns.GetComponents<UIBase>();
+                List<IUIView> uiList = uiIns.GetInterfaces<IUIView>();
 
-				foreach (UIBase ui in uiList)
+				foreach (IUIView ui in uiList)
 				{
-					ui.RefreshText();
+					ui.RefreshLanguage();
 				}
 			}
 		}

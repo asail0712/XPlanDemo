@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace XPlan.UI.Component
+namespace XPlan.UI.Components
 {
 
     [RequireComponent(typeof(RectTransform))]

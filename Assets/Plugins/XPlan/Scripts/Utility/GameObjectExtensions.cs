@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -115,6 +116,7 @@ namespace XPlan.Utility
                 }
             }
         }
+
         public static T AddOrFindComponent<T>(this GameObject gameObject) where T : Component
         {
             T comp = null;
@@ -125,6 +127,87 @@ namespace XPlan.Utility
             }
             
             return comp;
+        }
+
+        /**********************************************
+         * 單一版本：GetComponent<TInterface>()
+         **********************************************/
+        public static TInterface GetInterface<TInterface>(this GameObject go)
+        {
+            EnsureIsInterface<TInterface>();
+
+            return go.GetComponents<MonoBehaviour>()
+                     .OfType<TInterface>()
+                     .FirstOrDefault();
+        }
+
+        /**********************************************
+         * 多個版本：GetComponents<TInterface>()
+         **********************************************/
+        public static List<TInterface> GetInterfaces<TInterface>(this GameObject go)
+        {
+            EnsureIsInterface<TInterface>();
+
+            return go.GetComponents<MonoBehaviour>()
+                     .OfType<TInterface>()
+                     .ToList();
+        }
+
+        /**********************************************
+         * 子物件版本：GetComponentInChildren<TInterface>()
+         **********************************************/
+        public static TInterface GetInterfaceInChildren<TInterface>(this GameObject go, bool includeInactive = true)
+        {
+            EnsureIsInterface<TInterface>();
+
+            return go.GetComponentsInChildren<MonoBehaviour>(includeInactive)
+                     .OfType<TInterface>()
+                     .FirstOrDefault();
+        }
+
+        /**********************************************
+         * 子物件多個版本：GetComponentsInChildren<TInterface>()
+         **********************************************/
+        public static List<TInterface> GetInterfacesInChildren<TInterface>(this GameObject go, bool includeInactive = true)
+        {
+            EnsureIsInterface<TInterface>();
+
+            return go.GetComponentsInChildren<MonoBehaviour>(includeInactive)
+                     .OfType<TInterface>()
+                     .ToList();
+        }
+
+        /**********************************************
+         * 父物件版本：GetComponentInParent<TInterface>()
+         **********************************************/
+        public static TInterface GetInterfaceInParent<TInterface>(this GameObject go, bool includeInactive = true)
+        {
+            EnsureIsInterface<TInterface>();
+
+            return go.GetComponentsInParent<MonoBehaviour>(includeInactive)
+                     .OfType<TInterface>()
+                     .FirstOrDefault();
+        }
+
+        /**********************************************
+         * 父物件多個版本：GetComponentsInParent<TInterface>()
+         **********************************************/
+        public static List<TInterface> GetInterfacesInParent<TInterface>(this GameObject go, bool includeInactive = true)
+        {
+            EnsureIsInterface<TInterface>();
+
+            return go.GetComponentsInParent<MonoBehaviour>(includeInactive)
+                     .OfType<TInterface>()
+                     .ToList();
+        }
+
+        /**********************************************
+         * 私有檢查：確保 T 是 interface
+         **********************************************/
+        private static void EnsureIsInterface<TInterface>()
+        {
+            if (!typeof(TInterface).IsInterface)
+                throw new InvalidOperationException($"{typeof(TInterface).Name} 必須是 interface。");
         }
     }
 }
