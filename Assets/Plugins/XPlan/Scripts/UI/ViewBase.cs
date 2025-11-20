@@ -9,7 +9,7 @@ using XPlan.UI.Fade;
 
 namespace XPlan.UI
 {
-    // 可覆寫綁定名稱（預設由欄位名推導）
+    // 標記此欄位可與ViewModel成員繫結（預設由欄位名推導）
     // 名稱為 BindName
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class BindNameAttribute : Attribute
@@ -72,6 +72,13 @@ namespace XPlan.UI
             }
 
             _disposables.Clear();
+
+            // 清掉動態產的 Sprite（僅清理我們產生的）
+            foreach (var kv in _spriteFromTexCache)
+            {
+                if (kv.Value != null) Destroy(kv.Value);
+            }
+            _spriteFromTexCache.Clear();
         }
 
         public static async Task<T> WithTimeout<T>(Task<T> task, int timeoutMs)
@@ -429,7 +436,7 @@ namespace XPlan.UI
                 var comp = f.GetValue(this);
                 if (comp == null) continue;
 
-                if (comp is Button || comp is Toggle || comp is InputField || comp is Slider || comp is Text)
+                if (comp is Button || comp is Toggle || comp is InputField || comp is Slider || comp is Text || comp is RawImage || comp is Image)
                 {
                     var key     = DeriveBaseName(f.Name);
                     map[key]    = comp;
@@ -480,6 +487,74 @@ namespace XPlan.UI
                     if (!Mathf.Approximately(slider.value, f)) slider.SetValueWithoutNotify(f);
                 };
                 return SubscribeObject(opInstance, valueType, setter);
+            }
+            else if (uiObj is Image img)
+            {
+                // Image ← Sprite（最推薦）
+                if (valueType == typeof(Sprite))
+                {
+                    Action<Sprite> setter = sp =>
+                    {
+                        if (img == null) return;
+                        img.sprite = sp;
+                        // 如想讓尺寸跟著圖走，可在這裡加：img.SetNativeSize();
+                    };
+                    return Subscribe(opInstance, setter);
+                }
+                // Image ← Texture2D（自動轉 Sprite）
+                else if (typeof(Texture2D).IsAssignableFrom(valueType))
+                {
+                    Action<object> setter = v =>
+                    {
+                        if (img == null) return;
+                        var tex = v as Texture2D;
+                        img.sprite = tex != null ? GetOrCreateSprite(tex) : null;
+                    };
+                    return SubscribeObject(opInstance, valueType, setter);
+                }
+                else if (valueType == typeof(string))
+                {
+                    Action<string> setter = v =>
+                    {
+                        if (img == null) return;
+
+                        ImageUtils.LoadImageFromUrl(img, v);
+                    };
+                    return Subscribe(opInstance, setter);
+                }
+            }
+            else if (uiObj is RawImage raw)
+            {
+                // RawImage ← Texture（含 Texture2D / RenderTexture / WebCamTexture）
+                if (typeof(Texture).IsAssignableFrom(valueType))
+                {
+                    Action<object> setter = v =>
+                    {
+                        if (raw == null) return;
+                        raw.texture = v as Texture; // null OK，等於清空
+                    };
+                    return SubscribeObject(opInstance, valueType, setter);
+                }
+                // （可選）RawImage ← Sprite（取 sprite.texture）
+                else if (valueType == typeof(Sprite))
+                {
+                    Action<Sprite> setter = sp =>
+                    {
+                        if (raw == null) return;
+                        raw.texture = sp != null ? sp.texture : null;
+                    };
+                    return Subscribe(opInstance, setter);
+                }
+                else if (valueType == typeof(string))
+                {
+                    Action<string> setter = v =>
+                    {
+                        if (raw == null) return;
+
+                        ImageUtils.LoadImageFromUrl(raw, v);
+                    };
+                    return Subscribe(opInstance, setter);
+                }
             }
 
             // 型別不相容就不綁
@@ -648,6 +723,26 @@ namespace XPlan.UI
                     });
                 });
             }
+        }
+
+        /***************************************
+        * Sprite 快取，避免重複從 Texture2D 產生
+        * *************************************/
+        private readonly Dictionary<Texture2D, Sprite> _spriteFromTexCache = new();
+
+        private static Sprite ToSprite(Texture2D tex)
+        {
+            if (tex == null) return null;
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+        }
+
+        private Sprite GetOrCreateSprite(Texture2D tex)
+        {
+            if (tex == null) return null;
+            if (_spriteFromTexCache.TryGetValue(tex, out var sp) && sp != null) return sp;
+            sp                          = ToSprite(tex);
+            _spriteFromTexCache[tex]    = sp;
+            return sp;
         }
     }
 }
