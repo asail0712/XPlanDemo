@@ -352,21 +352,16 @@ namespace XPlan.UI
 		}
 
         /********************************
-		 * 初始化
-		 * *****************************/
-        public int SortIdx { get; set; }
-
-        /********************************
 		 * 其他
 		 * *****************************/
         protected string GetStr(string keyStr)
 		{
-			return UIController.Instance.GetStr(keyStr);
+			return StringTable.Instance.GetStr(keyStr);
 		}
 
         protected string ReplaceStr(string keyStr, params string[] paramList)
         {
-            return UIController.Instance.ReplaceStr(keyStr, paramList);
+            return StringTable.Instance.ReplaceStr(keyStr, paramList);
         }
 
         protected void DefaultToggleBtns(Button[] btns)
@@ -405,14 +400,16 @@ namespace XPlan.UI
 		}
 
         /***************************************
-		 * UI文字調整
+		 * 實作IUIView
 		 * *************************************/
-        public void RefreshLanguage()
+        public int SortIdx { get; set; }
+
+        public void RefreshLanguage(int currLang)
         {
-            OnRefreshLanguage();
+            OnRefreshLanguage(currLang);
         }
 
-        protected virtual void OnRefreshLanguage()
+        protected virtual void OnRefreshLanguage(int currLang)
         {
 
         }
@@ -422,54 +419,7 @@ namespace XPlan.UI
 		 * *************************************/
         public void ToggleUI(GameObject ui, bool bEnabled)
 		{
-			// 狀態一致 不需要改變
-			if(ui.activeSelf == bEnabled)
-            {
-				return;
-            }
-
-			FadeBase[] fadeList = ui.GetComponents<FadeBase>();
-
-			if (fadeList == null || fadeList.Length == 0)
-			{
-				ui.SetActive(bEnabled);
-				return;
-			}
-
-			if (bEnabled)
-			{
-				ui.SetActive(true);
-
-				Array.ForEach<FadeBase>(fadeList, (fadeComp) =>
-				{
-					if (fadeComp == null)
-					{
-						return;
-					}
-
-					fadeComp.PleaseStartYourPerformance(true, null);
-				});
-			}
-			else
-			{
-				int finishCounter = 0;
-
-				Array.ForEach<FadeBase>(fadeList, (fadeComp) =>
-				{
-					if (fadeComp == null)
-					{
-						return;
-					}
-
-					fadeComp.PleaseStartYourPerformance(false, () =>
-					{
-						if (++finishCounter == fadeList.Length)
-						{
-							ui.SetActive(false);
-						}
-					});
-				});
-			}
+			ViewVisibilityHelper.ToggleUI(ui, bEnabled);			
 		}
 	}
 }

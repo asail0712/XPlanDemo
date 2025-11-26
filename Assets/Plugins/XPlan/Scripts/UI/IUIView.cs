@@ -4,6 +4,6 @@
     {
         int SortIdx { get; set; }
 
-        void RefreshLanguage();
+        void RefreshLanguage(int currLang);
     }
 }

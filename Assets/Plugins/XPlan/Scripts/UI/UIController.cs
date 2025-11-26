@@ -70,23 +70,22 @@ namespace XPlan.UI
 		{
 			get
 			{
-				return stringTable.CurrLanguage;
+				return StringTable.Instance.CurrLanguage;
 			}
 			set
 			{
-				stringTable.CurrLanguage = value;
+                StringTable.Instance.CurrLanguage = value;
 			}
 		}
 
 		private List<UIVisibleInfo> currVisibleList		= new List<UIVisibleInfo>();
 		private List<UIVisibleInfo> persistentUIList	= new List<UIVisibleInfo>();
 		private List<UILoader> loaderStack				= new List<UILoader>();
-		private StringTable stringTable					= new StringTable();
 
 		protected override void InitSingleton()
 		{
-			// 設定多語言字串表
-			stringTable.InitialStringTable(csvAssetList);
+            // 設定多語言字串表
+            StringTable.Instance.InitialStringTable(csvAssetList);
 
 			// 初始化靜態UI
 			InitialStaticUI();
@@ -125,7 +124,7 @@ namespace XPlan.UI
 			foreach (GameObject ui in uiGOSet)
 			{
                 // 設定字表
-                stringTable.InitialUIText(ui);
+                StringTable.Instance.InitialUIText(ui);
 
                 // 處理Quality
                 RefreshQuality(ui, currQuality);
@@ -183,8 +182,8 @@ namespace XPlan.UI
 					// 生成UI
 					uiIns = GameObject.Instantiate(loadingInfo.uiPerfab, uiRootList[loadingInfo.rootIdx].transform);
 
-					// 加上文字
-					stringTable.InitialUIText(uiIns);
+                    // 加上文字
+                    StringTable.Instance.InitialUIText(uiIns);
 
 					// 處理Quality
 					RefreshQuality(uiIns, currQuality);
@@ -387,19 +386,6 @@ namespace XPlan.UI
 			{
 				X.SetActive(bEnable);
 			});
-		}
-
-		/**************************************
-		 * String Table
-		 * ************************************/
-		public string GetStr(string keyStr)
-		{
-			return stringTable.GetStr(keyStr);
-		}
-
-		public string ReplaceStr(string keyStr, params string[] paramList)
-		{
-			return stringTable.ReplaceStr(keyStr, paramList);
 		}
 
 		public List<GameObject> GetAllVisibleUI()

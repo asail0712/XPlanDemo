@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -178,9 +178,10 @@ namespace XPlan.Observe
 
 			if(notifyInfo.receiveInfoMap.ContainsKey(type))
 			{
-				Debug.LogError($"{notifyInfo.notifyReceiver} 重複註冊同一個message {type} 囉");
-				return;
-			}
+				Debug.LogWarning($"{notifyInfo.notifyReceiver} 重複註冊同一個message {type} 囉");
+				notifyInfo.receiveInfoMap.Remove(type);
+
+            }
 
 			notifyInfo.receiveInfoMap.Add(type, new ReceiverInfo()
 			{

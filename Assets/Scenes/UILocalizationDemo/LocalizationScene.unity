@@ -542,7 +542,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5524728936780685537, guid: cb2f56a8d82ddbd43874a77e025e5ae1, type: 3}
       propertyPath: csvAssetList.Array.size
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5524728936780685537, guid: cb2f56a8d82ddbd43874a77e025e5ae1, type: 3}
       propertyPath: 'uiRootList.Array.data[0]'
@@ -550,6 +550,14 @@ PrefabInstance:
       objectReference: {fileID: 318667570}
     - target: {fileID: 5524728936780685537, guid: cb2f56a8d82ddbd43874a77e025e5ae1, type: 3}
       propertyPath: 'csvAssetList.Array.data[0]'
+      value: 
+      objectReference: {fileID: 4900000, guid: 12e5e0a39a61b324da04dfeb2d8e477b, type: 3}
+    - target: {fileID: 5524728936780685537, guid: cb2f56a8d82ddbd43874a77e025e5ae1, type: 3}
+      propertyPath: 'csvAssetList.Array.data[1]'
+      value: 
+      objectReference: {fileID: 4900000, guid: 1a63d8e25223bb54691cb19af71a0852, type: 3}
+    - target: {fileID: 5524728936780685537, guid: cb2f56a8d82ddbd43874a77e025e5ae1, type: 3}
+      propertyPath: 'csvAssetList.Array.data[2]'
       value: 
       objectReference: {fileID: 4900000, guid: 4bd54b71c2b6933408c1190ed95edf65, type: 3}
     - target: {fileID: 5524728936780685538, guid: cb2f56a8d82ddbd43874a77e025e5ae1, type: 3}

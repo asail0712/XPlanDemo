@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,15 +22,13 @@ namespace XPlan.Demo.Architecture
     }
     public class MultiplicationLogic : LogicComponent
     {
-        public MultiplicationLogic()
+        [NotifyHandler]
+        private void Multiplication(MultiplicationMsg msg)
         {
-            RegisterNotify<MultiplicationMsg>((msg) =>
-            {
-                int a = msg.a;
-                int b = msg.b;
+            float a = (float)msg.a;
+            float b = (float)msg.b;
 
-                msg.finishAction?.Invoke(a * b);
-            });
+            msg.finishAction?.Invoke((int)(a * b));
         }
     }
 }

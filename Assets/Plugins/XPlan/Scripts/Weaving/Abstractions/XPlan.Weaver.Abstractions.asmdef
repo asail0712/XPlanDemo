@@ -1,0 +1,14 @@
+﻿{
+  "name": "XPlan.Weaver.Abstractions",
+  "rootNamespace": "XPlan.Weaver.Abstractions",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

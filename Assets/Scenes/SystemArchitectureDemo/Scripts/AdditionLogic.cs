@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,15 +23,13 @@ namespace XPlan.Demo.Architecture
 
     public class AdditionLogic : LogicComponent
     {
-        public AdditionLogic()
-		{
-            RegisterNotify<AdditionMsg>((msg) => 
-            {
-                int a = msg.a;
-                int b = msg.b;
+        [NotifyHandler]
+        private void Addition(AdditionMsg msg)
+        {
+            int a = msg.a;
+            int b = msg.b;
 
-                msg.finishAction?.Invoke(a + b);
-            });
-		}
+            msg.finishAction?.Invoke(a + b);
+        }
     }
 }

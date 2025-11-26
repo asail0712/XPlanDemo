@@ -60,7 +60,7 @@ namespace XPlan.UI.Tables
 		 * *****************************/
 		protected string GetStr(string keyStr)
 		{
-			return UIController.Instance.GetStr(keyStr);
+			return StringTable.Instance.GetStr(keyStr);
 		}
 
 		/*****************************************

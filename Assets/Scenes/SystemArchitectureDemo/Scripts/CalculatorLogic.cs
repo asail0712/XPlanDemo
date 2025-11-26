@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,12 +43,18 @@ namespace XPlan.Demo.Architecture
                 });                
             });
 
-            RegisterNotify<CalculatorMsg>((msg)=> 
-            {
-                CalcularResult(msg.a, msg.b, msg.operatorType, msg.finishAction);
-            });
         }
 
+        [NotifyHandler]
+        private void CalcularResult(CalculatorMsg msg)
+        {
+            int a                       = msg.a;
+            int b                       = msg.b;
+            OperatorType operatorType   = msg.operatorType;
+            Action<int> finishAction    = msg.finishAction;
+
+            CalcularResult(a, b, operatorType, finishAction);
+        }
         private void CalcularResult(int a, int b, OperatorType operatorType, Action<int> finishAction)
         {
             switch (operatorType)

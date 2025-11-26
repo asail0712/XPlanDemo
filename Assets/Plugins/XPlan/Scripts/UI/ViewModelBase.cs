@@ -169,11 +169,11 @@ namespace XPlan.UI
                 switch (m)
                 {
                     case FieldInfo fi:
-                        if (TryGetObservableInfo(fi.FieldType, out opType, out valueType))
+                        if (ViewBindingHelper.TryGetObservableInfo(fi.FieldType, out opType, out valueType))
                             getter = () => fi.GetValue(this);
                         break;
                     case PropertyInfo pi:
-                        if (pi.CanRead && TryGetObservableInfo(pi.PropertyType, out opType, out valueType))
+                        if (pi.CanRead && ViewBindingHelper.TryGetObservableInfo(pi.PropertyType, out opType, out valueType))
                             getter = () => pi.GetValue(this);
                         break;
                 }
@@ -207,18 +207,6 @@ namespace XPlan.UI
                 var disposable = (IDisposable)subscribeMi.Invoke(opInstance, new object[] { handler });
                 if (disposable != null) _autoChangeSubs.Add(disposable);
             }
-        }
-
-        protected static bool TryGetObservableInfo(Type t, out Type opType, out Type valueType)
-        {
-            opType = null; valueType = null;
-            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ObservableProperty<>))
-            {
-                opType      = t;
-                valueType   = t.GetGenericArguments()[0];
-                return true;
-            }
-            return false;
         }
 
         protected static string DeriveBaseName(string memberName)

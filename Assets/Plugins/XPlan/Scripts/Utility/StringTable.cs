@@ -8,8 +8,8 @@ using XPlan.UI.Components;
 
 namespace XPlan.Utility
 {
-    public class StringTable
-	{
+    public class StringTable : CreateSingleton<StringTable>
+    {
 		public int CurrLanguage
 		{
 			get
@@ -24,14 +24,15 @@ namespace XPlan.Utility
 		}
 
 		private int currLang									= -1;
-		private Dictionary<string, List<string>> stringTable	= new Dictionary<string, List<string>>();
+		private Dictionary<string, List<string>> stringTable	= null;
 
-		public StringTable()
-		{
-			currLang = 0;
-		}
+        protected override void InitSingleton()
+        {
+            currLang	= 0;
+            stringTable = new Dictionary<string, List<string>>(System.StringComparer.OrdinalIgnoreCase);
+        }
 
-		public void InitialStringTable(TextAsset[] csvAssetList)
+        public void InitialStringTable(TextAsset[] csvAssetList)
 		{
 			if (csvAssetList == null)
 			{
@@ -75,11 +76,11 @@ namespace XPlan.Utility
 
 		public void InitialUIText(GameObject uiGO)
 		{
-            TextKeyMapper textKeycomp	= uiGO.AddOrFindComponent<TextKeyMapper>();
-            I18NSpriteProvider i18Ncomp = uiGO.AddOrFindComponent<I18NSpriteProvider>();
+            I18NTextProvider textKeycomp	= uiGO.AddOrFindComponent<I18NTextProvider>();
+            I18NSpriteProvider i18Ncomp		= uiGO.AddOrFindComponent<I18NSpriteProvider>();
             
-			textKeycomp.RefreshText(this);
-            i18Ncomp.RefreshImage(this);
+			textKeycomp.RefreshText();
+            i18Ncomp.RefreshImage();
         }
 
 		public string GetStr(string keyStr)
@@ -158,7 +159,7 @@ namespace XPlan.Utility
 
 				foreach (IUIView ui in uiList)
 				{
-					ui.RefreshLanguage();
+					ui.RefreshLanguage(currLang);
 				}
 			}
 		}

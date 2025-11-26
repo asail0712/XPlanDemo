@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,15 +22,13 @@ namespace XPlan.Demo.Architecture
     }
     public class SubtractionLogic : LogicComponent
     {
-        public SubtractionLogic()
+        [NotifyHandler]
+        private void Subtraction(SubtractionMsg msg)
         {
-            RegisterNotify<SubtractionMsg>((msg) =>
-            {
-                int a = msg.a;
-                int b = msg.b;
+            int a = msg.a;
+            int b = msg.b;
 
-                msg.finishAction?.Invoke(a - b);
-            });
+            msg.finishAction?.Invoke(a - b);
         }
     }
 }

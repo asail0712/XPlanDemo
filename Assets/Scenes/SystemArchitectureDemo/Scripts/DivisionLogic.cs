@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,21 +23,19 @@ namespace XPlan.Demo.Architecture
 
     public class DivisionLogic : LogicComponent
     {
-        public DivisionLogic()
+        [NotifyHandler]
+        private void Division(DivisionMsg msg)
         {
-            RegisterNotify<DivisionMsg>((msg) =>
+            float a = (float)msg.a;
+            float b = (float)msg.b;
+
+            if (b.Equals(0f))
             {
-                float a = (float)msg.a;
-                float b = (float)msg.b;
+                Debug.LogError("Èô§Êï∏‰∏çÂèØÁÇ∫0");
+                return;
+            }
 
-                if(b.Equals(0f))
-				{
-                    Debug.LogError("∞£º∆§£•i¨∞0");
-                    return;
-				}
-
-                msg.finishAction?.Invoke((int)(a / b));
-            });
+            msg.finishAction?.Invoke((int)(a / b));
         }
     }
 }

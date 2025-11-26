@@ -28,9 +28,9 @@ namespace XPlan.UI.Components
             this.mbIns      = null;
         }
 
-        public void Refresh(StringTable st)
+        public void Refresh()
         {
-            int currLang    = st.CurrLanguage;
+            int currLang    = StringTable.Instance.CurrLanguage;
             string loadName = $"{fileName}_{currLang}.png";
 
             // StreamingAssets 完整路徑
@@ -84,26 +84,20 @@ namespace XPlan.UI.Components
     {
         [SerializeField] private List<ImageMapper> imgMapper;
 
-        private const string I18N = "I18N_";
-
-        // Start is called before the first frame update
-        private void Awake()
+        public void Register(Image img, string fileName)
         {
-            imgMapper           = new List<ImageMapper>();
-            Image[] imgComps    = gameObject.GetComponentsInChildren<Image>(true);
+            if (img == null || string.IsNullOrEmpty(fileName)) return;
 
-            foreach (Image img in imgComps)
-            {
-                if(img.name.StartsWith(I18N))
-                {
-                    imgMapper.Add(new ImageMapper(img, img.name.Substring(I18N.Length)));
-                }
-            }
+            imgMapper       ??= new List<ImageMapper>();
+            ImageMapper tmp = new ImageMapper(img, fileName);
+            tmp.Refresh();
+
+            imgMapper.Add(tmp);
         }
 
-        public void RefreshImage(StringTable st)
+        public void RefreshImage()
         {
-            imgMapper.ForEach(e04 => e04.Refresh(st));
+            imgMapper?.ForEach(e04 => e04.Refresh());
         }
     }
 }
