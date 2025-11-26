@@ -18,13 +18,20 @@ namespace XPlan.Demo.APIDemo
             AddUrlParam("locationName", APIDefine.QuerySection);
             AddUrlParam("elementName", "%E6%BA%AB%E5%BA%A6");
 
-            SendWebRequest((json) =>
+            SendWebRequest((result) =>
             {
-                TemperatureResponse response = JsonConvert.DeserializeObject<TemperatureResponse>((string)json);
-                LocationInfo locInfo = response.records.locations[0];
-                TimeInfo[] timeInfo = locInfo.location[0].weatherElement[0].time;
-                int timeIdx = FindClosestTimeElement(timeInfo);
-                string temperatureStr = timeInfo[timeIdx].elementValue[0].Temperature;
+                if(!result.IsSuccess)
+                {
+                    Debug.LogWarning(result.ErrorMessage);
+
+                    return;
+                }
+
+                TemperatureResponse response    = JsonConvert.DeserializeObject<TemperatureResponse>(result.Data.Text);
+                LocationInfo locInfo            = response.records.locations[0];
+                TimeInfo[] timeInfo             = locInfo.location[0].weatherElement[0].time;
+                int timeIdx                     = FindClosestTimeElement(timeInfo);
+                string temperatureStr           = timeInfo[timeIdx].elementValue[0].Temperature;
 
                 finishAction?.Invoke(true, temperatureStr);
             });

@@ -9,13 +9,50 @@ using XPlan.Utility;
 
 namespace XPlan.Net
 {
+    public sealed class WebResponseData
+    {
+        public string ContentType { get; }
+        public string Text { get; }
+        public byte[] RawData { get; }
+
+        public bool IsText      => !string.IsNullOrEmpty(Text);
+        public bool IsBinary    => RawData != null && RawData.Length > 0;
+
+        public WebResponseData(string contentType, string text, byte[] rawData)
+        {
+            ContentType = contentType;
+            Text        = text;
+            RawData     = rawData;
+        }
+    }
+
+    public sealed class ApiResult<T>
+    {
+        public bool IsSuccess { get; }
+        public T Data { get; }
+        public string ErrorMessage { get; }
+
+        private ApiResult(bool isSuccess, T data, string errorMessage)
+        {
+            IsSuccess       = isSuccess;
+            Data            = data;
+            ErrorMessage    = errorMessage;
+        }
+
+        public static ApiResult<T> Success(T data)
+            => new ApiResult<T>(true, data, null);
+
+        public static ApiResult<T> Fail(string errorMessage)
+            => new ApiResult<T>(false, default, errorMessage);
+    }
+
     public class WebRequestBase
     {
         private string apiUrl;
 		private Dictionary<string, string> headers;
         private Dictionary<string, string> urlParams;
         private bool bWaitingNet;
-		private bool bIgnoreError;
+		private bool bAllowSoftError;
 		private int timeOut;
 
 		public WebRequestBase()
@@ -23,7 +60,7 @@ namespace XPlan.Net
 			headers			= new Dictionary<string, string>();
             urlParams		= new Dictionary<string, string>();
             bWaitingNet		= true;
-			bIgnoreError	= false;
+            bAllowSoftError = false;
 			timeOut			= 10;
         }
 
@@ -77,12 +114,12 @@ namespace XPlan.Net
 
         public void SetWaiting(bool b)
         {
-            this.bWaitingNet = b;
+            bWaitingNet = b;
         }
 
-        public void IgnoreError()
+        public void AllowSoftError()
         {
-			this.bIgnoreError = true;
+            bAllowSoftError = true;
 		}
 
         public void SetTimeout(int timeOut)
@@ -90,16 +127,15 @@ namespace XPlan.Net
             this.timeOut = timeOut;
         }
 
-        public void SendWebRequest(Action<object> finishAction)
+        public void SendWebRequest(Action<ApiResult<WebResponseData>> finishAction)
 		{
 			MonoBehaviourHelper.StartCoroutine(SendWebRequest_Internal(finishAction));
 		}
 
-		private IEnumerator SendWebRequest_Internal(Action<object> finishAction)
+		private IEnumerator SendWebRequest_Internal(Action<ApiResult<WebResponseData>> finishAction)
         {
-			string url = GetUrl();
-
-			using (UnityWebRequest request = new UnityWebRequest(url, GetRequestMethod()))
+			string url                      = GetUrl();
+			using (UnityWebRequest request  = new UnityWebRequest(url, GetRequestMethod()))
 			{
 				SetUploadBuffer(request);
 
@@ -136,20 +172,35 @@ namespace XPlan.Net
 						string text = request.downloadHandler.text;
 						LogSystem.Record($"文字內容: {text}");
 
-						finishAction?.Invoke(text);
-					}
+
+                        var payload = new WebResponseData(contentType, text, null);
+                        var result  = ApiResult<WebResponseData>.Success(payload);
+
+                        finishAction?.Invoke(result);
+                    }
 					else
 					{
 						// 處理二進位資料
 						byte[] data = request.downloadHandler.data;
 						LogSystem.Record($"接收到 {data.Length} 位元組的二進位資料");
 
-						finishAction?.Invoke(data);
+                        var payload = new WebResponseData(contentType, null, data);
+                        var result  = ApiResult<WebResponseData>.Success(payload);
+
+                        finishAction?.Invoke(result);
 					}
 				}
-				else if (bIgnoreError)
+				else if (bAllowSoftError)
 				{
-                    finishAction?.Invoke("");
+                    string errorMsg     = request.error ?? "Unknown error";
+                    string responseBody = request.downloadHandler != null ? request.downloadHandler.text : string.Empty;
+
+                    // 這裡把錯誤訊息塞進 ErrorMessage，Data = default
+                    var result = ApiResult<WebResponseData>.Fail(
+                        $"[{apiUrl}] error: {errorMsg}, body: {responseBody}"
+                    );
+
+                    finishAction?.Invoke(result);
                 }
 				else
 				{
