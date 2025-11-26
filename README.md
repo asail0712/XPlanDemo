@@ -20,15 +20,39 @@ XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點�
   
 ### [XPlan框架介紹 : 親愛的， 我把interface丟掉了](https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY643A/edit#slide=id.g3125b255978_2_10)
 # 2.版本資訊
-- Version 2.5.8
+- Version 2.6.8
 # 3.安裝指南
 ### 系統要求
 - Unity 6000.0.58f2 或更高版本
 ### 安裝指南
 - 將XPlan資料夾放進專案中的Assets/Plugins即可
 - 不需要使用的DLL可以刪除，請參照"其他"的說明
-  
-# 4.使用說明
+# 4.目標和功能
+### 目標
+增加專案開發效率，並節省專案的開發時間。
+### 功能
+- 使用簡化的EDA架構為系統建構的基礎
+- 可選擇使用MVVM或是MVP去架構你的UI
+  - 相關範例可以參考 [Login UI Demo](https://github.com/asail0712/PlayMeowDemo)
+- 提供API與WebSocket的套件組
+- 提供聲音套件，支援多個聲音的播放與切換以及Fade In/Out
+- 建立場景間的關係，簡化場景管理與切換
+- 提供UI的在地化處理
+- 提供每個場景的獨立按鍵輸入以及手勢輸入
+- 提供常用元件與函式庫，包含
+  - 字串處理
+  - Texture處理
+  - Singleton
+  - Recycle Pool
+  - Easing Functon
+  - Web Camera設定
+  - Gesture 功能
+- 其他 
+  - GPS資料解析
+  - PCSC支援
+  - 二維條碼加解密
+  - SH256加密
+# 5.使用說明
 - Assets/Scenes/SystemArchitectureDemo/MainScene.unity
   - 此為簡易計算機的範例
   - 說明XPlan的系統架構該如何建立以及類別間的溝通方式
@@ -63,31 +87,6 @@ XPlan是一個基於EDA架構的Unity中小型專案快速開發框架，要點�
   - 包含Drag to Move，Drag to Rotate、Pinch to Zoom、Tap to Point
 - Assets/Scenes/SceneDebugDemo/SceneDebugDemo.unity
   - 示範專案中的每個Scene要如何設定，讓單一場景可以獨立運作
- 
-# 5.目標和功能
-### 目標
-降低專案開發難度，並節省專案的開發時間。
-### 功能
-- 使用簡化的EDA架構微系統建構的基礎
-- 使用事件導向MVP解構View與Presenter。
-- 提供API與WebSocket的套件組
-- 提供聲音套件，支援多個聲音的播放與切換以及Fade In/Out
-- 建立場景間的關係，簡化場景管理與切換
-- 提供UI的在地化處理
-- 提供每個場景的獨立按鍵輸入以及手勢輸入
-- 提供常用元件與函式庫，包含
-  - 字串處理
-  - Texture處理
-  - Singleton
-  - Recycle Pool
-  - Easing Functon
-  - Web Camera設定
-  - Gesture 功能
-- 其他 
-  - GPS資料解析
-  - PCSC支援
-  - 二維條碼加解密
-  - SH256加密
 # 6.其他
 - 前置定義
   - PCSC 可開啟支援讀取Smart Card功能
