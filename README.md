@@ -60,6 +60,7 @@ https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY6
 - 提供 UI 在地化  
 - 提供每個場景獨立的 Input 與手勢操作
 - 提供IL Weaving處理，可自行擴充Weaver
+  - 參考示例：https://github.com/asail0712/ILWeaveSurvey 
 - 常用組件與工具庫  
   - 字串處理  
   - Texture 處理  
