@@ -10,7 +10,7 @@ namespace XPlan.UI
 {
     public static class ImageUtils
     {
-        static public void LoadImageFromUrl(RawImage targetImage, string url)
+        static public void LoadImageFromUrl(RawImage targetImage, string url, Action<Texture2D> finishAction = null)
         {
             if (string.IsNullOrEmpty(url))
             {
@@ -22,10 +22,12 @@ namespace XPlan.UI
             MonoBehaviourHelper.StartCoroutine(LoadImageFromUrl_Internal(url, (texture) =>
             {
                 targetImage.texture = texture;
+
+                finishAction?.Invoke(texture);
             }));
         }
 
-        static public void LoadImageFromUrl(Image targetImage, string url, bool bResize = true)
+        static public void LoadImageFromUrl(Image targetImage, string url, bool bResize = true, Action<Sprite> finishAction = null)
         {
             if (string.IsNullOrEmpty(url))
             {
@@ -64,6 +66,8 @@ namespace XPlan.UI
                         rt.sizeDelta = new Vector2(texture.width, texture.height);
                     }
                 }
+
+                finishAction?.Invoke(sprite);
             }));
         }
 
