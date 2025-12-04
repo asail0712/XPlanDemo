@@ -151,6 +151,18 @@ namespace XPlan.UI
                         });
                     }
                 }
+                else if (obj is ScrollRect scrollRect)
+                {
+                    // ScrollRect 的 normalizedPosition 是 Vector2
+                    if (bind != null && bind.ValueType == typeof(float))
+                    {
+                        // 訂閱 onValueChanged 事件。當捲動位置改變時觸發
+                        scrollRect.onValueChanged.AddListener(v2 =>
+                        {                            
+                            SetVmObservableValue(bind, v2);
+                        });
+                    }
+                }
                 // Button 的 MVVM 點擊綁定改用 IL Weaving 做，這裡就不處理了
             }
         }
@@ -198,7 +210,8 @@ namespace XPlan.UI
             MonoBehaviour view,
             ViewModelBase viewModel,
             List<IDisposable> disposables,
-            SpriteCache spriteCache)
+            SpriteCache spriteCache,
+            Action anythingChange = null)
         {
             var viewUiMap   = BuildSerializedUiMap(view);
 
@@ -233,7 +246,7 @@ namespace XPlan.UI
                 if (!viewUiMap.TryGetValue(baseName, out var uiObj))
                     continue;
 
-                var disp = BindOneObservableToUi(opInstance, valueType, uiObj, spriteCache);
+                var disp = BindOneObservableToUi(opInstance, valueType, uiObj, spriteCache, anythingChange);
                 if (disp == null)
                     continue;
 
@@ -275,7 +288,8 @@ namespace XPlan.UI
             object opInstance,
             Type valueType,
             object uiObj,
-            SpriteCache spriteCache)
+            SpriteCache spriteCache,
+            Action anythingChange = null)
         {
             // InputField ⇐ string
             if (uiObj is InputField input && valueType == typeof(string))
@@ -284,6 +298,8 @@ namespace XPlan.UI
                 {
                     if (input == null) return;
                     input.SetTextWithoutNotify(v ?? string.Empty);
+
+                    anythingChange?.Invoke();
                 };
                 return Subscribe(opInstance, setter);
             }
@@ -294,6 +310,8 @@ namespace XPlan.UI
                 {
                     if (textUi == null) return;
                     textUi.text = v?.ToString() ?? string.Empty;
+
+                    anythingChange?.Invoke();
                 };
                 return SubscribeObject(opInstance, valueType, setter);
             }
@@ -304,6 +322,8 @@ namespace XPlan.UI
                 {
                     if (tmpUi == null) return;
                     tmpUi.text = v?.ToString() ?? string.Empty;
+
+                    anythingChange?.Invoke();
                 };
                 return SubscribeObject(opInstance, valueType, setter);
             }
@@ -314,6 +334,8 @@ namespace XPlan.UI
                 {
                     if (toggle == null) return;
                     toggle.SetIsOnWithoutNotify(v);
+
+                    anythingChange?.Invoke();
                 };
                 return Subscribe(opInstance, setter);
             }
@@ -325,7 +347,10 @@ namespace XPlan.UI
                     if (slider == null) return;
                     float f = Convert.ToSingle(v);
                     if (!Mathf.Approximately(slider.value, f))
+                    {
                         slider.SetValueWithoutNotify(f);
+                        anythingChange?.Invoke();
+                    }
                 };
                 return SubscribeObject(opInstance, valueType, setter);
             }
@@ -338,6 +363,7 @@ namespace XPlan.UI
                     {
                         if (img == null) return;
                         img.sprite = sp;
+                        anythingChange?.Invoke();
                     };
                     return Subscribe(opInstance, setter);
                 }
@@ -347,10 +373,11 @@ namespace XPlan.UI
                     Action<object> setter = v =>
                     {
                         if (img == null) return;
-                        var tex = v as Texture2D;
-                        img.sprite = tex != null
+                        var tex     = v as Texture2D;
+                        img.sprite  = tex != null
                             ? spriteCache.GetOrCreateSprite(tex)
                             : null;
+                        anythingChange?.Invoke();
                     };
                     return SubscribeObject(opInstance, valueType, setter);
                 }
@@ -360,7 +387,10 @@ namespace XPlan.UI
                     Action<string> setter = url =>
                     {
                         if (img == null) return;
-                        ImageUtils.LoadImageFromUrl(img, url);
+                        ImageUtils.LoadImageFromUrl(img, url, true, (dummy) => 
+                        {
+                            anythingChange?.Invoke();
+                        });                        
                     };
                     return Subscribe(opInstance, setter);
                 }
@@ -374,6 +404,7 @@ namespace XPlan.UI
                     {
                         if (raw == null) return;
                         raw.texture = v as Texture;
+                        anythingChange?.Invoke();
                     };
                     return SubscribeObject(opInstance, valueType, setter);
                 }
@@ -384,6 +415,7 @@ namespace XPlan.UI
                     {
                         if (raw == null) return;
                         raw.texture = sp?.texture;
+                        anythingChange?.Invoke();
                     };
                     return Subscribe(opInstance, setter);
                 }
@@ -393,10 +425,32 @@ namespace XPlan.UI
                     Action<string> setter = url =>
                     {
                         if (raw == null) return;
-                        ImageUtils.LoadImageFromUrl(raw, url);
+                        ImageUtils.LoadImageFromUrl(raw, url, (dummy) => 
+                        {
+                            anythingChange?.Invoke();
+                        }); 
                     };
                     return Subscribe(opInstance, setter);
                 }
+            }
+            if (uiObj is ScrollRect scrollRect && valueType == typeof(Vector2))
+            {
+                // 訂閱 VM Observable 的變化
+                Action<Vector2> setter = v =>
+                {
+                    if (scrollRect == null) return;
+
+                    // 檢查是否接近當前值，避免不必要的設定和浮點數問題
+                    // 使用 Vector2.Approximately 來比較兩個 Vector2 是否接近
+                    if (!Vector2.Equals(scrollRect.normalizedPosition, v))
+                    {
+                        // 將 VM 傳來的 Vector2 值設定給 normalizedPosition (包含 X 和 Y 軸)
+                        scrollRect.normalizedPosition = v;
+                        anythingChange?.Invoke();
+                    }
+                };
+                // 假設 Subscribe 方法接受 Vector2 泛型和 Action<Vector2>
+                return Subscribe(opInstance, setter);
             }
 
             return null;
@@ -533,7 +587,9 @@ namespace XPlan.UI
             s = StripSuffix(s, "Button", "Btn");
             s = StripSuffix(s, "Toggle", "Tgl");
             s = StripSuffix(s, "Slider", "Sld");
+            s = StripSuffix(s, "Scroll");
             s = StripSuffix(s, "InputField", "Input", "Field", "Txt", "Text");
+            s = StripSuffix(s, "Image", "Img");
 
             return s;
         }
