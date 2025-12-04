@@ -123,7 +123,7 @@ namespace XPlan.Observe
 		{
 			string lazyZoneID		= this.LazyZoneID?.Invoke();
 
-			bool bZoneMatch		= zoneID == "" || zoneID == lazyZoneID;
+			bool bZoneMatch			= string.IsNullOrEmpty(zoneID) || zoneID == lazyZoneID;
 			bool bTypeCorrespond	= receiveInfoMap.ContainsKey(type);
 
 			return bZoneMatch && bTypeCorrespond;
