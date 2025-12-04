@@ -126,6 +126,35 @@ namespace XPlan.Utility
 
             return localTime;
         }
+
+        public static bool IsValidHttpUrl(this string source)
+        {
+            // 1. 檢查字串是否為空或 null
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                return false;
+            }
+
+            Uri uriResult;
+
+            // 2. 嘗試建立 Uri 物件
+            bool isValid = Uri.TryCreate(
+                uriString: source,
+                uriKind: UriKind.Absolute, // 必須是絕對路徑 (包含協議)
+                result: out uriResult
+            );
+
+            // 3. 檢查 TryCreate 是否成功，並且協議是 HTTP 或 HTTPS
+            if (isValid)
+            {
+                // 確保 URL 確實是可以用 Application.OpenURL 開啟的網頁協議
+                return (uriResult.Scheme == Uri.UriSchemeHttp ||
+                        uriResult.Scheme == Uri.UriSchemeHttps);
+            }
+
+            return false;
+        }
+
     }
 }
 
