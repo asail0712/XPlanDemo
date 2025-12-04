@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 using System.Linq;
+using UnityEngine;
 
 using XPlan.Weaver.Abstractions;
 using XPlan.Weaver.Runtime;
@@ -45,6 +46,8 @@ namespace XPlan.Editors.Weaver
             // 在 OnEnable / OnDisable 中插入呼叫
             InjectCallInto(targetType, "OnEnable", bindMethodRef);
             InjectCallInto(targetType, "OnDisable", unbindMethodRef);
+
+            Debug.Log($"[VmButtonBindingViewBaseWeaver] 成功注入 {targetType.FullName} 的 OnEnable/OnDisable");
         }
 
         /// <summary>

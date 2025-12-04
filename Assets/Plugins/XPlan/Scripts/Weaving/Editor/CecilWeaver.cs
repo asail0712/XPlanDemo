@@ -38,19 +38,6 @@ namespace XPlan.Editors.Weaver
             _typeAspects    = FindAllInstances<ITypeAspectWeaver>();
             _fieldAspects   = FindAllInstances<IFieldAspectWeaver>();
 
-            // ★ Log: 顯示找到的 weaver
-            Debug.Log($"[CecilWeaver] Method Weavers: {_methodAspects.Length}");
-            foreach (var w in _methodAspects)
-                Debug.Log($"  - {w.GetType().FullName}");
-
-            Debug.Log($"[CecilWeaver] Type Weavers: {_typeAspects.Length}");
-            foreach (var w in _typeAspects)
-                Debug.Log($"  - {w.GetType().FullName}");
-
-            Debug.Log($"[CecilWeaver] Field Weavers: {_fieldAspects.Length}");
-            foreach (var w in _fieldAspects)
-                Debug.Log($"  - {w.GetType().FullName}");
-
             CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompiled;
         }
 
@@ -189,18 +176,15 @@ namespace XPlan.Editors.Weaver
                 {
                     foreach (var nestedType in GetAllNestedTypes(type))
                     {
-                        // ① 類別屬性
-                        if (nestedType.HasCustomAttributes)
+                        foreach (var aspect in _typeAspects)
                         {
-                            foreach (var attr in nestedType.CustomAttributes)
+                            var result = GetCustomAttributeFromHierarchy(nestedType, aspect.AttributeFullName);
+
+                            if (result.attribute != null)
                             {
-                                foreach (var aspect in _typeAspects)
-                                {
-                                    if (attr.AttributeType.FullName == aspect.AttributeFullName)
-                                    {
-                                        typeTargets.Add((aspect, nestedType, attr));
-                                    }
-                                }
+                                // 如果在自身或基類上找到屬性，則將目前的 TypeDefinition 加入目標清單
+                                // 注意：我們是對 nestedType（派生類）進行織入
+                                typeTargets.Add((aspect, nestedType, result.attribute));
                             }
                         }
 
@@ -361,6 +345,50 @@ namespace XPlan.Editors.Weaver
                     t.GetConstructor(Type.EmptyTypes) != null)
                 .Select(t => (TWeaver)Activator.CreateInstance(t))
                 .ToArray();
+        }
+
+        /// <summary>
+        /// 檢查一個類型本身及其所有基類上是否有特定的 CustomAttribute。
+        /// </summary>
+        private static (TypeDefinition type, CustomAttribute attribute) GetCustomAttributeFromHierarchy(
+                                          TypeDefinition targetType,
+                                          string attributeFullName)
+        {
+            var currentType = targetType;
+            while (currentType != null)
+            {
+                // 1. 檢查當前類型上是否有該屬性
+                if (currentType.HasCustomAttributes)
+                {
+                    var foundAttr = currentType.CustomAttributes
+                      .FirstOrDefault(a => a.AttributeType.FullName == attributeFullName);
+
+                    if (foundAttr != null)
+                    {
+                        // 找到屬性，回傳找到的類型和屬性實例
+                        return (currentType, foundAttr);
+                    }
+                }
+
+                // 2. 準備檢查基類
+                if (currentType.BaseType == null)
+                    break; // 到達 System.Object 或其他沒有 BaseType 的類別
+
+                // 嘗試解析基類 TypeReference 為 TypeDefinition
+                try
+                {
+                    // 使用 Resolve 獲取基類定義，以便檢查它的 CustomAttributes
+                    currentType = currentType.BaseType.Resolve();
+                }
+                catch
+                {
+                    // 解析失敗 (例如：DLL 不在搜尋路徑)，停止向上檢查
+                    break;
+                }
+            }
+
+            // 整個繼承鏈都沒找到
+            return (null, null);
         }
     }
 }
