@@ -184,7 +184,7 @@ namespace XPlan.UI.Tables
 			/**********************************
 			 * grid設定
 			 * *******************************/
-			gridLayoutGroup					= anchor.AddComponent<GridLayoutGroup>();
+			gridLayoutGroup					= anchor.AddOrFindComponent<GridLayoutGroup>();
 			gridLayoutGroup.cellSize		= new Vector2(cellSizeX, cellSizeY);
 			gridLayoutGroup.spacing			= new Vector2(10, 10);
 			gridLayoutGroup.startAxis		= bHorizontal ? GridLayoutGroup.Axis.Horizontal : GridLayoutGroup.Axis.Vertical;

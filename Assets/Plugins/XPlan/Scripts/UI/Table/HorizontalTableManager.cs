@@ -68,7 +68,7 @@ namespace XPlan.UI.Tables
             /**********************************
              * 設定 HorizontalLayoutGroup
              * *******************************/
-            hLayoutGroup                = anchor.AddComponent<HorizontalLayoutGroup>();
+            hLayoutGroup                = anchor.AddOrFindComponent<HorizontalLayoutGroup>();
             hLayoutGroup.spacing        = 10f;
             hLayoutGroup.childAlignment = TextAnchor.UpperLeft;
 
@@ -79,7 +79,7 @@ namespace XPlan.UI.Tables
             hLayoutGroup.childForceExpandHeight = false;
 
             // 建議搭配 ContentSizeFitter 讓 anchor 依子物件自動撐開（也會在 Refresh 中保險設定一次）
-            var fitter              = anchor.AddComponent<ContentSizeFitter>();
+            var fitter              = anchor.AddOrFindComponent<ContentSizeFitter>();
             fitter.horizontalFit    = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit      = ContentSizeFitter.FitMode.PreferredSize;
 

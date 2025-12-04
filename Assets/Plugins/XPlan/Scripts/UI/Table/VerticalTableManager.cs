@@ -62,7 +62,7 @@ namespace XPlan.UI.Tables
             /**********************************
              * 設定 VerticalLayoutGroup
              * *******************************/
-            vLayoutGroup                = anchor.AddComponent<VerticalLayoutGroup>();
+            vLayoutGroup                = anchor.AddOrFindComponent<VerticalLayoutGroup>();
             vLayoutGroup.spacing        = 10f;
             vLayoutGroup.childAlignment = TextAnchor.UpperLeft;
 
@@ -73,7 +73,7 @@ namespace XPlan.UI.Tables
             vLayoutGroup.childForceExpandHeight = false;
 
             // 建議搭配 ContentSizeFitter
-            var fitter              = anchor.AddComponent<ContentSizeFitter>();
+            var fitter              = anchor.AddOrFindComponent<ContentSizeFitter>();
             fitter.horizontalFit    = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit      = ContentSizeFitter.FitMode.PreferredSize;
 
