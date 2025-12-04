@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Xml;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,8 +12,8 @@ namespace XPlan.UI.Components
     [Serializable]
     public class TextMap
     {
-        [SerializeField] private Text text;
-        [SerializeField] private string key;
+        [SerializeField] public Text text;
+        [SerializeField] public string key;
 
         public TextMap(Text text, string key) 
         {
@@ -31,8 +30,8 @@ namespace XPlan.UI.Components
     [Serializable]
     public class TmpMap
     {
-        [SerializeField] private TextMeshProUGUI text;
-        [SerializeField] private string key;
+        [SerializeField] public TextMeshProUGUI text;
+        [SerializeField] public string key;
         public TmpMap(TextMeshProUGUI text, string key)
         {
             this.text   = text;
@@ -48,26 +47,82 @@ namespace XPlan.UI.Components
     {
         [SerializeField] private List<TextMap> textMapper;
         [SerializeField] private List<TmpMap> tmpMapper;
-        
+
+        // Start is called before the first frame update
+        private void Awake()
+        {
+            Text[] textComponents = gameObject.GetComponentsInChildren<Text>(true);
+
+            foreach (Text textComponent in textComponents)
+            {
+                if (textComponent == null)
+                {
+                    continue;
+                }
+
+                if(!textComponent.text.StartsWith("key_", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                Register(textComponent, textComponent.text);
+            }
+
+            TextMeshProUGUI[] tmpTextComponents = gameObject.GetComponentsInChildren<TextMeshProUGUI>(true);
+            foreach (TextMeshProUGUI tmpText in tmpTextComponents)
+            {
+                if (tmpText == null)
+                {
+                    continue;
+                }
+
+                if (!tmpText.text.StartsWith("key_", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                Register(tmpText, tmpText.text);
+            }
+        }
+
         public void Register(Text text, string key)
         {
             if (text == null || string.IsNullOrEmpty(key)) return;
-
             textMapper  ??= new List<TextMap>();
-            TextMap tmp = new TextMap(text, key);
+
+            TextMap tmp = textMapper.FirstOrDefault(e04 => e04.text == text);
+            if(tmp == null)
+            {
+                tmp = new TextMap(text, key);
+            }
+            else
+            {
+                tmp.key = key;
+            }
+
             tmp.Refresh();
 
-            textMapper.Add(tmp);
+            textMapper.AddUnique(tmp);
         }
 
         public void Register(TextMeshProUGUI text, string key)
         {
             if (text == null || string.IsNullOrEmpty(key)) return;
             tmpMapper   ??= new List<TmpMap>();
-            TmpMap tmp  = new TmpMap(text, key);
+
+            TmpMap tmp = tmpMapper.FirstOrDefault(e04 => e04.text == text);
+            if (tmp == null)
+            {
+                tmp = new TmpMap(text, key);
+            }
+            else
+            {
+                tmp.key = key;
+            }
+
             tmp.Refresh();
 
-            tmpMapper.Add(tmp);
+            tmpMapper.AddUnique(tmp);
         }
 
         public void RefreshText()
