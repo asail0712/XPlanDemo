@@ -10,8 +10,7 @@ namespace XPlan.UI
 {
     public static class VMLocator
     {
-        private static readonly Dictionary<Type, object> _map                           = new();
-        private static readonly Dictionary<Type, TaskCompletionSource<object>> _waiters = new();
+        private static readonly Dictionary<Type, object> _map = new();
 
         public static void Register(ViewModelBase vm)
         {
@@ -131,15 +130,33 @@ namespace XPlan.UI
     {
         private readonly List<IDisposable> _autoChangeSubs = new(); // 自動 On{Name}Change 訂閱
 
-        public ViewModelBase()
+        // 原始的無參數建構子 (用於一般 ViewModel)
+        public ViewModelBase() : this(true)
         {
-            VMLocator.Register(this);
+            // 呼叫新的帶參數建構子，並傳入 true
+        }
+
+        // 新增的帶參數建構子 (用於 ItemViewModelBase 這種需要控制註冊的子類)
+        protected ViewModelBase(bool bRegister)
+        {
+            // 根據參數決定是否註冊
+            if (bRegister)
+            {
+                VMLocator.Register(this);
+            }
 
             EnableAutoNotifyForObservables();
         }
 
         protected override void OnDispose(bool bAppQuit)
         {
+            foreach (var d in _autoChangeSubs)
+            {
+                d?.Dispose();
+            }
+
+            _autoChangeSubs.Clear();
+
             VMLocator.Unregister(this);
         }
 
@@ -183,7 +200,7 @@ namespace XPlan.UI
                 var opInstance = getter();
                 if (opInstance == null) continue;
 
-                var baseName    = DeriveBaseName(m.Name);
+                var baseName    = ViewBindingHelper.DeriveBaseName(m.Name);
                 var methodName  = $"On{baseName}Change";
 
                 // 找 On{Name}Change(T)（允許 private/protected）
@@ -207,29 +224,6 @@ namespace XPlan.UI
                 var disposable = (IDisposable)subscribeMi.Invoke(opInstance, new object[] { handler });
                 if (disposable != null) _autoChangeSubs.Add(disposable);
             }
-        }
-
-        protected static string DeriveBaseName(string memberName)
-        {
-            // 去前綴
-            string s = memberName;
-            if (s.StartsWith("m_")) s = s.Substring(2);
-            if (s.StartsWith("_"))  s = s.Substring(1);
-
-            // 首字大寫
-            if (s.Length > 0) s = char.ToUpperInvariant(s[0]) + (s.Length > 1 ? s.Substring(1) : "");
-
-            // 常見尾綴移除（可依你專案再擴充）
-            s = StripSuffix(s, "Property", "Prop", "Field");
-            return s;
-        }
-
-        protected static string StripSuffix(string s, params string[] suffixes)
-        {
-            foreach (var suf in suffixes)
-                if (s.EndsWith(suf, StringComparison.Ordinal))
-                    return s.Substring(0, s.Length - suf.Length);
-            return s;
         }
     }
 }
