@@ -1,7 +1,4 @@
-﻿// 檔案: ItemViewModelBase.cs
-using XPlan.UI;
-
-namespace XPlan.UI
+﻿namespace XPlan
 {
     // 作為列表中單一項目 ViewModel 的基底。
     // 繼承 ViewModelBase 以便使用 ObservableProperty 的自動通知機制。

@@ -33,10 +33,13 @@ namespace XPlan.UI
                 // 先建立 VM 的 Observable 索引（UI→VM 要用）
                 ViewBindingHelper.IndexVmObservables(_viewModel, _vmObservableMap);
 
-                // 再自動註冊 UI 控制的事件（UI→VM）（InputField / Toggle / Slider）
+                // 自動註冊 UI 控制的事件（UI→VM）（InputField / Toggle / Slider）
                 ViewBindingHelper.AutoRegisterComponents(this, _vmObservableMap);
 
-                // 最後綁訂閱（VM→UI） （文字、Toggle、Slider、Image、RawImage ...）
+                // 自動綁訂閱（VM→UI）（Observable → 方法綁定 (OnXXXXChange)）
+                ViewBindingHelper.AutoBindObservableHandlers(this, _vmObservableMap, _disposables);
+
+                // 自動綁訂閱（VM→UI） （文字、Toggle、Slider、Image、RawImage ...）
                 ViewBindingHelper.AutoBindObservables(this, _viewModel, _disposables, _spriteCache);
 
                 // ★ 新增：VM→UI（Visible）

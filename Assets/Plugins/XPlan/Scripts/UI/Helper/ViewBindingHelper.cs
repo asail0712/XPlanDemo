@@ -475,6 +475,128 @@ namespace XPlan.UI
 
         #endregion
 
+        #region ==== VM Observable → View 方法綁定 (OnXXXXChange) ====
+
+        /// <summary>
+        /// 掃描 View 上所有有 [ObBinding] 的方法，
+        /// 自動幫它們綁到 ViewModel 的 ObservableProperty 上。
+        ///
+        /// 規則：
+        /// - 先找方法名對應的 Observable：
+        ///   1) 先用 DeriveBaseName(methodName) 找
+        ///   2) 若找不到，且 methodName 形如 OnXXXXChange，則取 XXXX 再 DeriveBaseName
+        /// - 方法必須只有一個參數
+        /// - 方法參數型別要與 ObservableProperty<T> 的 T 一致
+        /// - 成功則 Subscribe，並把 IDisposable 丟進 disposables
+        /// - 綁定後會呼叫一次 ForceNotify() 推當前值
+        /// </summary>
+        public static void AutoBindObservableHandlers(
+            MonoBehaviour view,
+            Dictionary<string, ObservableBinding> vmObservableMap,
+            List<IDisposable> disposables)
+        {
+            if (view == null) return;
+
+            var flags   = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var methods = view.GetType().GetMethods(flags);
+
+            foreach (var mi in methods)
+            {
+                // 1) 只處理有 [ObBinding] 的方法
+                if (mi.GetCustomAttribute<ObBindingAttribute>() == null)
+                    continue;
+
+                // 2) 檢查參數：必須只有一個
+                var ps = mi.GetParameters();
+                if (ps.Length != 1)
+                {
+                    Debug.LogError(
+                        $"[AutoBindObservableHandlers] 方法 {mi.DeclaringType?.Name}.{mi.Name} 必須有且只有一個參數。");
+                    continue;
+                }
+
+                var paramType           = ps[0].ParameterType;
+
+                // 3) 依命名規則推導對應的 Observable 名稱
+                //    先直接用方法名稱 DeriveBaseName
+                ObservableBinding bind  = null;
+                string key              = DeriveBaseName(mi.Name);
+
+                if (!vmObservableMap.TryGetValue(key, out bind))
+                {
+                    // 若找不到，且是 OnXXXXChange 這種命名，就取中間的 XXXX
+                    const string prefix = "On";
+                    const string suffix = "Change";
+
+                    var name = mi.Name;
+                    if (name.StartsWith(prefix, StringComparison.Ordinal) &&
+                        name.EndsWith(suffix, StringComparison.Ordinal) &&
+                        name.Length > (prefix.Length + suffix.Length))
+                    {
+                        var mid = name.Substring(prefix.Length, name.Length - prefix.Length - suffix.Length);
+                        key     = DeriveBaseName(mid);
+                        vmObservableMap.TryGetValue(key, out bind);
+                    }
+                }
+
+                if (bind == null)
+                {
+                    Debug.LogError(
+                        $"[AutoBindObservableHandlers] 找不到與方法 {mi.DeclaringType?.Name}.{mi.Name} 對應的 ViewModel Observable（Key: {key}）。");
+                    continue;
+                }
+
+                // 4) 檢查型別是否一致
+                if (bind.ValueType != paramType)
+                {
+                    Debug.LogError(
+                        $"[AutoBindObservableHandlers] 方法 {mi.DeclaringType?.Name}.{mi.Name} 的參數型別為 {paramType.Name}，" +
+                        $"但對應的 ObservableProperty<{bind.ValueType.Name}> 不相容。");
+                    continue;
+                }
+
+                // 5) 建立 Action<T> delegate
+                Delegate del;
+                try
+                {
+                    var handlerType = typeof(Action<>).MakeGenericType(paramType);
+                    del             = Delegate.CreateDelegate(handlerType, view, mi);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(
+                        $"[AutoBindObservableHandlers] 建立委派失敗：{mi.DeclaringType?.Name}.{mi.Name}，Exception: {e}");
+                    continue;
+                }
+
+                // 6) 使用 ObservableProperty<T>.Subscribe(Action<T>) 做綁定
+                try
+                {
+                    var subscribeMi = bind.OpInstance.GetType().GetMethod("Subscribe");
+                    if (subscribeMi == null)
+                    {
+                        Debug.LogError(
+                            $"[AutoBindObservableHandlers] Observable '{key}' 找不到 Subscribe 方法。");
+                        continue;
+                    }
+
+                    var disp = (IDisposable)subscribeMi.Invoke(bind.OpInstance, new object[] { del });
+                    if (disp != null)
+                        disposables.Add(disp);
+
+                    // 7) 綁完後推一次初值
+                    bind.ForceNotify?.Invoke(bind.OpInstance, null);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(
+                        $"[AutoBindObservableHandlers] 訂閱 Observable '{key}' 失敗，方法 {mi.DeclaringType?.Name}.{mi.Name}，Exception: {e}");
+                }
+            }
+        }
+
+        #endregion
+
         #region ==== Visible 綁定 ====
 
         public static void AutoBindVisibility(

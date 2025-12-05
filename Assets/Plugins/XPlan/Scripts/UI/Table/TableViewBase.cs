@@ -142,8 +142,8 @@ namespace XPlan.UI
                     var methodInfo      = typeof(TTableViewModel).GetMethod(methodName,
                         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-                    // 3. 檢查方法是否存在且簽名正確
-                    if (methodInfo == null)
+                    // 3. 檢查方法是否存在且簽名正確以及加上正確的attribute
+                    if (methodInfo == null || !methodInfo.IsDefined(typeof(ButtonBindingAttribute), inherit: true))
                     {
                         continue; // 找不到對應方法則跳過
                     }

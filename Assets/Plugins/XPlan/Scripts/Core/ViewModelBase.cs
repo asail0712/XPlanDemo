@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
+
+using XPlan.UI;
 using XPlan.Utility;
 
-namespace XPlan.UI
+namespace XPlan
 {
     public static class VMLocator
     {
