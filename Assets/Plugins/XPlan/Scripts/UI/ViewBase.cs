@@ -22,7 +22,7 @@ namespace XPlan.UI
         private readonly List<IDisposable> _disposables                         = new();                        // 解除訂閱集中管理
         private readonly Dictionary<string, ObservableBinding> _vmObservableMap = new(StringComparer.Ordinal);  // 新增：把 VM 內的 ObservableProperty 索引起來（baseName → 綁定資訊）
         private readonly SpriteCache _spriteCache                               = new();                        // 給圖片綁定用的 Sprite 快取
-        private const int TimeToWaitViewModel                                   = 5000;        
+        private const int TimeToWaitViewModel                                   = 10;        
         
         private void Awake()
         {
