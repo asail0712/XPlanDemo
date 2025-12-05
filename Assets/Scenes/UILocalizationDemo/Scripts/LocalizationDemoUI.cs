@@ -19,6 +19,27 @@ namespace XPlan.Demo.Localization
         [SerializeField] Text demoTxt3;
 
 
+        protected override void OnRefreshLanguage(int currLang)
+        {
+            string currLangStr = string.Empty;
+
+            switch (currLang)
+            {
+                case 0:
+                    currLangStr = "繁體中文";
+                    break;
+                case 1:
+                    currLangStr = "英文";
+                    break;
+                case 2:
+                    currLangStr = "日文";
+                    break;
+            }
+
+            LogSystem.Record($"Current Language is {currLangStr}");
+        }
+
+
         [ContextMenu("換成中文")]
         private void ChangeChn()
         {
