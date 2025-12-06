@@ -622,8 +622,12 @@ namespace XPlan.UI
                 }
             }
 
-            // 2) 整個 View 的 UiVisible
-            if (vmObservableMap.TryGetValue("UiVisible", out var rootBind) &&
+            // 2) 整個 View 的 {view.name}Visible
+            // 直接使用view的name 會有clone字樣
+            string viewClassName    = view.GetType().Name;
+            string rootVisibleKey   = viewClassName + "Visible";
+
+            if (vmObservableMap.TryGetValue(rootVisibleKey, out var rootBind) &&
                 rootBind.ValueType == typeof(bool))
             {
                 var rootGO  = view.gameObject;
