@@ -7,6 +7,6 @@ namespace XPlan.Observe
 { 
     public interface INotifyReceiver
     {
-        Func<string> GetLazyZoneID { get; set; }
+        
     }
 }

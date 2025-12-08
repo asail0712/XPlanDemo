@@ -12,17 +12,17 @@ namespace XPlan.InputMode
 	{
         public string inputAction;
 
-        public XInputActionMsg(string inputAction, string groupID = "")
+        public XInputActionMsg(string inputAction)
 		{
             this.inputAction = inputAction;
 
-            Send(groupID);
+            Send();
 		}
     }
     
     public class InputManager : CreateSingleton<InputManager>
     {
-        public Action<string, string> inputAction;
+        public Action<string> inputAction;
 
         static private List<InputSetting> settingStack = new List<InputSetting>();
 
@@ -90,8 +90,8 @@ namespace XPlan.InputMode
 
                     if (bIsTrigger)
                     {
-                        inputAction?.Invoke(inputInfo.actionStr, setting.msgGroupName);
-                        new XInputActionMsg(inputInfo.actionStr, setting.msgGroupName);
+                        inputAction?.Invoke(inputInfo.actionStr);
+                        new XInputActionMsg(inputInfo.actionStr);
 
                         if (inputInfo.timeToDenind > 0f)
                         { 

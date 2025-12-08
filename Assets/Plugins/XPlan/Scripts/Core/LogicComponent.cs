@@ -18,10 +18,10 @@ namespace XPlan
 		private static int corourintSerialNum	= 0;
 		private bool bEnabled					= true;
 
-		/*************************
+        /*************************
 		 * 實作 INotifyReceiver
 		 * ***********************/
-		public Func<string> GetLazyZoneID { get; set; }
+        public Func<string> GetLazyZoneID { get; set; }
 
 		/*************************
 		 * Coroutine相關
@@ -152,33 +152,8 @@ namespace XPlan
 			}
 
 			// 生成msg並寄出
-			string groupID	= GetLazyZoneID?.Invoke();
-			T msg			= (T)ctor.Invoke(args);
-			msg.Send(groupID);
-		}
-
-		protected void SendGlobalMsg<T>(params object[] args) where T : MessageBase
-		{
-			// 获取类型
-			Type type = typeof(T);
-
-			// 查找匹配的构造函数
-			ConstructorInfo ctor = type.GetConstructor(
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-				null,
-				CallingConventions.HasThis,
-				Array.ConvertAll(args, item => item.GetType()),
-				null
-			);
-
-			if (ctor == null)
-			{
-				throw new Exception($"No matching constructor found for {type.Name}");
-			}
-
-			// 生成msg並寄出
 			T msg = (T)ctor.Invoke(args);
-			msg.Send("");
+			msg.Send();
 		}
 
         protected void SendMsgAsync<T>(params object[] args) where T : MessageBase
@@ -203,61 +178,33 @@ namespace XPlan
             // 生成msg並寄出
             string groupID = GetLazyZoneID?.Invoke();
             T msg = (T)ctor.Invoke(args);
-            msg.Send(groupID, true);
+            msg.Send(true);
         }
 
-        protected void SendGlobalMsgAsync<T>(params object[] args) where T : MessageBase
+        /*************************
+		 * ServiceLocator相關
+		 * ***********************/
+		protected T GetService<T>() where T : class
         {
-            // 获取类型
-            Type type = typeof(T);
-
-            // 查找匹配的构造函数
-            ConstructorInfo ctor = type.GetConstructor(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                null,
-                CallingConventions.HasThis,
-                Array.ConvertAll(args, item => item.GetType()),
-                null
-            );
-
-            if (ctor == null)
-            {
-                throw new Exception($"No matching constructor found for {type.Name}");
-            }
-
-            // 生成msg並寄出
-            T msg = (T)ctor.Invoke(args);
-            msg.Send("", true);
+            return ServiceLocator.GetService<T>();
         }
 
-        protected void SendMsgWithGroup<T>(string groupID, params object[] args) where T : MessageBase
-		{
-			// 获取类型
-			Type type = typeof(T);
-
-			// 查找匹配的构造函数
-			ConstructorInfo ctor = type.GetConstructor(
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-				null,
-				CallingConventions.HasThis,
-				Array.ConvertAll(args, item => item.GetType()),
-				null
-			);
-
-			if (ctor == null)
+        protected bool TryGetService<T>(out T service) where T : class
+        {
+			if(!ServiceLocator.HasService<T>())
 			{
-				throw new Exception($"No matching constructor found for {type.Name}");
+				service = null;
+                return false;
 			}
 
-			// 生成msg並寄出
-			T msg = (T)ctor.Invoke(args);
-			msg.Send(groupID);
-		}
+            service = ServiceLocator.GetService<T>();
+			return true;
+        }
 
-		/*************************
+        /*************************
 		 * UI相關
 		 * ***********************/
-		protected void DirectCallUI<T>(string uniqueID, T value)
+        protected void DirectCallUI<T>(string uniqueID, T value)
 		{
 			UIEventBus.DirectCall<T>(uniqueID, value);
 		}
@@ -327,7 +274,10 @@ namespace XPlan
         public LogicComponent()
 		{
 			coroutineDict = new Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance>();
-		}
+
+            // 建構完成後，嘗試呼叫 IL Weaving 產生的 Hook
+            InvokeWeaverHook();
+        }
 
 		public void PostInitial()
 		{
@@ -371,10 +321,43 @@ namespace XPlan
 			// for override
 		}
 
-		/*************************
+        /*************************
+		 * Hook
+		 * ***********************/
+        /// <summary>
+        /// 給 IL Weaving 的 Hook 入口：
+        /// 在衍生類別中產生一個：
+        ///   void __LogicComponent_WeaverHook()
+        /// 就會被這裡自動呼叫
+        /// </summary>
+        private void InvokeWeaverHook()
+        {
+            const string HookMethodName = "__LogicComponent_WeaverHook";
+
+            // 取得實際執行個體的型別（衍生類別）
+            var type	= GetType();
+
+            var method	= type.GetMethod(
+                HookMethodName,
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            if (method == null)
+                return;
+
+            // 安全限制：必須是 void、無參數
+            if (method.ReturnType != typeof(void))
+                return;
+
+            if (method.GetParameters().Length != 0)
+                return;
+
+            method.Invoke(this, null);
+        }
+
+        /*************************
 		 * Enabled相關
 		 * ***********************/
-		public void SwitchLogic(bool bEnabled)
+        public void SwitchLogic(bool bEnabled)
 		{
 			this.bEnabled = bEnabled;
 

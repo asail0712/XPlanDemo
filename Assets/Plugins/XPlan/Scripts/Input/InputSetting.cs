@@ -114,9 +114,6 @@ namespace XPlan.InputMode
         [SerializeField]
         public List<InputInfo> inputInfoList;
 
-        [SerializeField]
-        public string msgGroupName = "";
-
 		private void Start()
 		{
 			InputManager.Instance.RegisterSetting(this);

@@ -10,17 +10,17 @@ namespace XPlan.Observe
 {
 	public class MessageBase
 	{
-		public void Send(string zoneID = "", bool bAsync = false)
+		public void Send(bool bAsync = false)
 		{
 			MessageSender sender = new MessageSender(this);
 
             if(bAsync)
             {
-                sender.SendMessageAsync(zoneID);
+                sender.SendMessageAsync();
             }
             else
             {
-                sender.SendMessage(zoneID);
+                sender.SendMessage();
             }                
 		}
 	}
@@ -90,14 +90,14 @@ namespace XPlan.Observe
 #endif //DEBUG
 		}
 
-		public void SendMessage(string zoneID)
+		public void SendMessage()
 		{
-			NotifySystem.Instance.SendMsg(this, zoneID);
+			NotifySystem.Instance.SendMsg(this);
 		}
 
-        public void SendMessageAsync(string zoneID)
+        public void SendMessageAsync()
         {
-            NotifySystem.Instance.SendMsgAsync(this, zoneID);
+            NotifySystem.Instance.SendMsgAsync(this);
         }
 
         public Type GetMsgType()
@@ -110,23 +110,18 @@ namespace XPlan.Observe
 	{
 		public INotifyReceiver notifyReceiver;
 		public Dictionary<Type, ReceiverInfo> receiveInfoMap;
-		public Func<string> LazyZoneID;
 
 		public NotifyInfo(INotifyReceiver notifyReceiver)
 		{
 			this.notifyReceiver = notifyReceiver;
 			this.receiveInfoMap = new Dictionary<Type, ReceiverInfo>();
-			this.LazyZoneID	= () => notifyReceiver.GetLazyZoneID?.Invoke();
 		}
 
-		public bool CheckCondition(Type type, string zoneID)
+		public bool CheckCondition(Type type)
 		{
-			string lazyZoneID		= this.LazyZoneID?.Invoke();
+			bool bTypeCorrespond = receiveInfoMap.ContainsKey(type);
 
-			bool bZoneMatch			= string.IsNullOrEmpty(zoneID) || zoneID == lazyZoneID;
-			bool bTypeCorrespond	= receiveInfoMap.ContainsKey(type);
-
-			return bZoneMatch && bTypeCorrespond;
+			return bTypeCorrespond;
 		}
 	}
 
@@ -134,12 +129,12 @@ namespace XPlan.Observe
     {
 		private List<NotifyInfo> notifyInfoList;
 
-        private Queue<(MessageSender, string)> senderQueue;
+        private Queue<MessageSender> senderQueue;
 
 		protected override void InitSingleton()
 	    {
 			notifyInfoList  = new List<NotifyInfo>();
-            senderQueue     = new Queue<(MessageSender, string)>();
+            senderQueue     = new Queue<MessageSender>();
 
         }
 
@@ -211,14 +206,14 @@ namespace XPlan.Observe
 			}			
 		}
 
-		public void SendMsg(MessageSender msgSender, string zoneID)
+		public void SendMsg(MessageSender msgSender)
 		{
 			Type type					    = msgSender.GetMsgType();
 			Queue<ReceiverInfo> infoQueue   = new Queue<ReceiverInfo>();
 
 			foreach (NotifyInfo currInfo in notifyInfoList)
 			{
-				if(currInfo.CheckCondition(type, zoneID))
+				if(currInfo.CheckCondition(type))
 				{
                     ReceiverInfo receiveInfo = currInfo.receiveInfoMap[type];
 
@@ -247,20 +242,18 @@ namespace XPlan.Observe
 			}
 		}
 
-        public void SendMsgAsync(MessageSender msgSender, string zoneID)
+        public void SendMsgAsync(MessageSender msgSender)
         {
-            senderQueue.Enqueue((msgSender, zoneID));
+            senderQueue.Enqueue(msgSender);
         }
 
         public void Update()
         {
             while(senderQueue.Count > 0)
             {
-                var senderInfo          = senderQueue.Dequeue();
-                MessageSender msgSender = senderInfo.Item1;
-                string zoneID           = senderInfo.Item2;
+                MessageSender msgSender = senderQueue.Dequeue();
 
-                SendMsg(msgSender, zoneID);
+                SendMsg(msgSender);
             }
         }
 
