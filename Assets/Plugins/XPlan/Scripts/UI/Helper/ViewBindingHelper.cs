@@ -5,8 +5,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-using XPlan.UI.Fade;
-
 namespace XPlan.UI
 {
     // 標記此欄位可與ViewModel成員繫結（預設由欄位名推導）
@@ -387,7 +385,7 @@ namespace XPlan.UI
                     Action<string> setter = url =>
                     {
                         if (img == null) return;
-                        ImageUtils.LoadImageFromUrl(img, url, true, (dummy) => 
+                        ImageUtils.LoadImageFromUrl(img, url, (dummy) => 
                         {
                             anythingChange?.Invoke();
                         });                        

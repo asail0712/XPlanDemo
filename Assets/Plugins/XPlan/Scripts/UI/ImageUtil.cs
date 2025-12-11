@@ -8,6 +8,13 @@ using XPlan.Utility;
 
 namespace XPlan.UI
 {
+    public enum ResizeFormat
+    {
+        NoResize,
+        MatchWidth,
+        MatchHeight,
+    }
+
     public static class ImageUtils
     {
         static public void LoadImageFromUrl(RawImage targetImage, string url, Action<Texture2D> finishAction = null)
@@ -27,7 +34,7 @@ namespace XPlan.UI
             }));
         }
 
-        static public void LoadImageFromUrl(Image targetImage, string url, bool bResize = true, Action<Sprite> finishAction = null)
+        static public void LoadImageFromUrl(Image targetImage, string url, Action<Sprite> finishAction = null, ResizeFormat resizeFormat = ResizeFormat.MatchWidth)
         {
             if (string.IsNullOrEmpty(url))
             {
@@ -47,23 +54,51 @@ namespace XPlan.UI
                 texture.filterMode  = FilterMode.Bilinear; // 或 Point（像素風）
                 texture.wrapMode    = TextureWrapMode.Clamp;
 
-                Sprite sprite = Sprite.Create(
-                                    texture,
-                                    new Rect(0, 0, texture.width, texture.height),
-                                    new Vector2(0.5f, 0.5f),
-                                    100f // pixelsPerUnit
-                                    );
+                Sprite sprite       = Sprite.Create(
+                                                texture,
+                                                new Rect(0, 0, texture.width, texture.height),
+                                                new Vector2(0.5f, 0.5f),
+                                                100f // pixelsPerUnit
+                                            );
 
                 targetImage.sprite          = sprite;
                 targetImage.preserveAspect  = true;
+                RectTransform rt            = targetImage.rectTransform;
 
-                if (bResize)
+                // ===== 依照 ResizeFormat 調整 RectTransform 尺寸 =====
+                if (rt != null && resizeFormat != ResizeFormat.NoResize)
                 {
-                    // 自動調整 Image 尺寸符合原始圖片
-                    RectTransform rt = targetImage.GetComponent<RectTransform>();
-                    if (rt != null)
+                    float texW = texture.width;
+                    float texH = texture.height;
+
+                    if (texH <= 0f || texW <= 0f)
                     {
-                        rt.sizeDelta = new Vector2(texture.width, texture.height);
+                        LogSystem.Record("LoadImageFromUrl：Texture 尺寸異常", LogType.Warning);
+                    }
+                    else
+                    {
+                        float aspect        = texW / texH;
+                        Vector2 currentSize = rt.rect.size;
+                        float newW          = currentSize.x;
+                        float newH          = currentSize.y;
+
+                        switch (resizeFormat)
+                        {
+                            case ResizeFormat.MatchWidth:
+                                // 固定目前寬度，依比例算出高度
+                                newW = currentSize.x;
+                                newH = newW / aspect;
+                                break;
+
+                            case ResizeFormat.MatchHeight:
+                                // 固定目前高度，依比例算出寬度
+                                newH = currentSize.y;
+                                newW = newH * aspect;
+                                break;
+                        }
+
+                        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newW);
+                        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newH);
                     }
                 }
 
