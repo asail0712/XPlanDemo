@@ -9,6 +9,7 @@ using XPlan.Interface;
 using XPlan.Observe;
 using XPlan.UI;
 using XPlan.Utility;
+using XPlan.Weaver.Runtime;
 
 namespace XPlan
 {
@@ -16,12 +17,59 @@ namespace XPlan
 	{
 		private Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance> coroutineDict;
 		private static int corourintSerialNum	= 0;
-		private bool bEnabled					= true;
 
         /*************************
-		 * 實作 INotifyReceiver
+		 * 初始化與釋放
 		 * ***********************/
-        public Func<string> GetLazyZoneID { get; set; }
+        public LogicComponent()
+        {
+            coroutineDict = new Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance>();
+
+            // 建構完成後，嘗試呼叫 IL Weaving 產生的 Hook
+            WeaverHookInvoker.Invoke(this, "__LogicComponent_WeaverHook");
+        }
+
+        public void PostInitial()
+        {
+            OnPostInitial();
+        }
+
+        protected virtual void OnPostInitial()
+        {
+            // for override
+        }
+
+        public void Dispose(bool bAppQuit)
+        {
+            // 清除ui listener
+            RemoveAllUIListener();
+
+            // 清除coroutine
+            foreach (KeyValuePair<int, MonoBehaviourHelper.MonoBehavourInstance> kvp in coroutineDict)
+            {
+                MonoBehaviourHelper.MonoBehavourInstance coroutine = kvp.Value;
+
+                if (coroutine != null)
+                {
+                    coroutine.StopCoroutine();
+                }
+            }
+
+            coroutineDict.Clear();
+
+            if (!bAppQuit)
+            {
+                // 清除notify
+                NotifySystem.Instance.UnregisterNotify(this);
+            }
+
+            OnDispose(bAppQuit);
+        }
+
+        protected virtual void OnDispose(bool bAppQuit)
+        {
+            // for override
+        }
 
 		/*************************
 		 * Coroutine相關
@@ -88,97 +136,22 @@ namespace XPlan
 		 * ***********************/
 		protected void RegisterNotify<T>(Action<T> notifyAction) where T : MessageBase
 		{
-			if (!bEnabled)
-			{
-				return;
-			}
-
-			INotifyReceiver notifyReceiver = this as INotifyReceiver;
-
-			if(notifyReceiver == null)
-			{
-				LogSystem.Record($"{this} is not implement INotifyReceiver", LogType.Error);
-				return;
-			}
-
-			NotifySystem.Instance.RegisterNotify<T>(notifyReceiver, (msgReceiver) =>
-			{
-				T msg = msgReceiver.GetMessage<T>();
-
-				notifyAction?.Invoke(msg);
-			});
-		}
+            NotifyHelper.RegisterNotify<T>(this, notifyAction);
+        }
 
 		protected void RegisterNotify<T>(ReceiveOption option, Action<T> notifyAction) where T : MessageBase
 		{
-			if (!bEnabled)
-			{
-				return;
-			}
-
-			INotifyReceiver notifyReceiver = this as INotifyReceiver;
-
-			if (notifyReceiver == null)
-			{
-				LogSystem.Record($"{this} is not implement INotifyReceiver", LogType.Error);
-				return;
-			}
-
-			NotifySystem.Instance.RegisterNotify<T>(notifyReceiver, option, (msgReceiver) =>
-			{
-				T msg = msgReceiver.GetMessage<T>();
-
-				notifyAction?.Invoke(msg);
-			});
+			NotifyHelper.RegisterNotify<T>(this, option, notifyAction);
 		}
 
 		protected void SendMsg<T>(params object[] args) where T : MessageBase
 		{
-			// 获取类型
-			Type type = typeof(T);
-
-			// 查找匹配的构造函数
-			ConstructorInfo ctor = type.GetConstructor(
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-				null,
-				CallingConventions.HasThis,
-				Array.ConvertAll(args, item => item.GetType()),
-				null
-			);
-
-			if (ctor == null)
-			{
-				throw new Exception($"No matching constructor found for {type.Name}");
-			}
-
-			// 生成msg並寄出
-			T msg = (T)ctor.Invoke(args);
-			msg.Send();
-		}
+            NotifyHelper.SendMsg<T>(false, args);
+        }
 
         protected void SendMsgAsync<T>(params object[] args) where T : MessageBase
         {
-            // 获取类型
-            Type type = typeof(T);
-
-            // 查找匹配的构造函数
-            ConstructorInfo ctor = type.GetConstructor(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                null,
-                CallingConventions.HasThis,
-                Array.ConvertAll(args, item => item.GetType()),
-                null
-            );
-
-            if (ctor == null)
-            {
-                throw new Exception($"No matching constructor found for {type.Name}");
-            }
-
-            // 生成msg並寄出
-            string groupID = GetLazyZoneID?.Invoke();
-            T msg = (T)ctor.Invoke(args);
-            msg.Send(true);
+			NotifyHelper.SendMsg<T>(true, args);
         }
 
         /*************************
@@ -221,11 +194,6 @@ namespace XPlan
 
 		protected void AddUIListener<T>(string uniqueID, Action<T> callback)
 		{
-			if(!bEnabled)
-			{
-				return;
-			}
-
 			UIEventBus.RegisterCallback(uniqueID, this, (param)=> 
 			{
 				callback?.Invoke(param.GetValue<T>());
@@ -234,11 +202,6 @@ namespace XPlan
 
 		protected void AddUIListener(string uniqueID, Action callback)
 		{
-			if (!bEnabled)
-			{
-				return;
-			}
-
 			UIEventBus.RegisterCallback(uniqueID, this, (dump) =>
 			{
 				callback?.Invoke();
@@ -267,110 +230,6 @@ namespace XPlan
         {
             return StringTable.Instance.ReplaceStr(keyStr, paramList);
         }
-
-        /*************************
-		 * 初始化與釋放
-		 * ***********************/
-        public LogicComponent()
-		{
-			coroutineDict = new Dictionary<int, MonoBehaviourHelper.MonoBehavourInstance>();
-
-            // 建構完成後，嘗試呼叫 IL Weaving 產生的 Hook
-            InvokeWeaverHook();
-        }
-
-		public void PostInitial()
-		{
-			OnPostInitial();
-		}
-
-		protected virtual void OnPostInitial()
-		{
-			// for override
-		}
-
-		public void Dispose(bool bAppQuit)
-		{
-			// 清除ui listener
-			RemoveAllUIListener();
-
-			// 清除coroutine
-			foreach(KeyValuePair<int, MonoBehaviourHelper.MonoBehavourInstance> kvp in coroutineDict)
-			{
-				MonoBehaviourHelper.MonoBehavourInstance coroutine = kvp.Value;
-
-				if (coroutine != null)
-				{
-					coroutine.StopCoroutine();
-				}
-			}
-
-			coroutineDict.Clear();
-
-			if(!bAppQuit)
-			{ 
-				// 清除notify
-				NotifySystem.Instance.UnregisterNotify(this);
-			}
-
-			OnDispose(bAppQuit);
-		}
-
-		protected virtual void OnDispose(bool bAppQuit)
-		{
-			// for override
-		}
-
-        /*************************
-		 * Hook
-		 * ***********************/
-        /// <summary>
-        /// 給 IL Weaving 的 Hook 入口：
-        /// 在衍生類別中產生一個：
-        ///   void __LogicComponent_WeaverHook()
-        /// 就會被這裡自動呼叫
-        /// </summary>
-        private void InvokeWeaverHook()
-        {
-            const string HookMethodName = "__LogicComponent_WeaverHook";
-
-            // 取得實際執行個體的型別（衍生類別）
-            var type	= GetType();
-
-            var method	= type.GetMethod(
-                HookMethodName,
-                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-            if (method == null)
-                return;
-
-            // 安全限制：必須是 void、無參數
-            if (method.ReturnType != typeof(void))
-                return;
-
-            if (method.GetParameters().Length != 0)
-                return;
-
-            method.Invoke(this, null);
-        }
-
-        /*************************
-		 * Enabled相關
-		 * ***********************/
-        public void SwitchLogic(bool bEnabled)
-		{
-			this.bEnabled = bEnabled;
-
-			if(!bEnabled)
-			{
-				coroutineDict.Clear();
-			}
-		}
-
-		public bool IsEnabled()
-		{
-			return bEnabled;
-		}
 	}
 }
 

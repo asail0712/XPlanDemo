@@ -30,17 +30,8 @@ namespace XPlan
 				logicComp	= logicComp,
 				logicType	= logicComp.GetType(),
 			});
-
-			if(logicComp is LogicSwitcher)
-			{
-				LogicSwitcher logicSwitcher = logicComp as LogicSwitcher;
-
-				if(logicSwitcher != null)
-				{
-					logicSwitcher.switchLogicAction = SwitchLogic;
-				}
-			}
 		}
+
 		public void UnregisterScope(LogicComponent logicComp)
 		{
 			if(null == logicComp)
@@ -86,26 +77,13 @@ namespace XPlan
 			{
 				LogicComponent logicComp = kvp.Value.logicComp;
 
-				if (logicComp is ITickable && logicComp.IsEnabled())
+				if (logicComp is ITickable)
 				{
 					ITickable tickable = (ITickable)logicComp;
 
 					tickable.Tick(deltaTime);
 				}
 			}
-		}
-
-		/************************************
-		* 其他
-		* **********************************/
-		private void SwitchLogic(Type type, bool bEnabled)
-		{
-			if(!logicDict.ContainsKey(type))
-			{
-				return;
-			}
-
-			logicDict[type].logicComp.SwitchLogic(bEnabled);
 		}
 	}
 }

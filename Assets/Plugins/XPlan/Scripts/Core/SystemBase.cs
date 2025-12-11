@@ -21,12 +21,6 @@ namespace XPlan
 		**********************************************/
 		protected void RegisterLogic(LogicComponent logicComp)
 		{
-			// 確認msg群發的group
-			logicComp.GetLazyZoneID = () =>
-			{ 
-				return GetType().ToString();
-			};
-
 			logicManager.RegisterScope(logicComp);
 		}
 		protected void UnregisterLogic(LogicComponent logicComp)
