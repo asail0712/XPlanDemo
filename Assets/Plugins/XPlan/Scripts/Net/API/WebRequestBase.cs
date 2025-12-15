@@ -129,7 +129,13 @@ namespace XPlan.Net
 
         public void SendWebRequest(Action<ApiResult<WebResponseData>> finishAction)
 		{
-			MonoBehaviourHelper.StartCoroutine(SendWebRequest_Internal(finishAction));
+            if (WebRequestPolicyProvider.Policy != null &&
+                WebRequestPolicyProvider.Policy.TryHandle(this, finishAction))
+            {
+                return;
+            }
+
+            MonoBehaviourHelper.StartCoroutine(SendWebRequest_Internal(finishAction));
 		}
 
 		private IEnumerator SendWebRequest_Internal(Action<ApiResult<WebResponseData>> finishAction)

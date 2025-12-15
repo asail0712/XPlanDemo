@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,11 +28,15 @@ namespace XPlan.Demo.APIDemo
                     return;
                 }
 
+                string temperatureStr           = string.Empty;
                 TemperatureResponse response    = JsonConvert.DeserializeObject<TemperatureResponse>(result.Data.Text);
-                LocationInfo locInfo            = response.records.locations[0];
-                TimeInfo[] timeInfo             = locInfo.location[0].weatherElement[0].time;
-                int timeIdx                     = FindClosestTimeElement(timeInfo);
-                string temperatureStr           = timeInfo[timeIdx].elementValue[0].Temperature;
+                if(response != null)
+                {
+                    LocationInfo locInfo    = response.records.locations[0];
+                    TimeInfo[] timeInfo     = locInfo.location[0].weatherElement[0].time;
+                    int timeIdx             = FindClosestTimeElement(timeInfo);
+                    temperatureStr          = timeInfo[timeIdx].elementValue[0].Temperature;
+                }
 
                 finishAction?.Invoke(true, temperatureStr);
             });
@@ -71,11 +76,14 @@ namespace XPlan.Demo.APIDemo
 
     public class APIDemoSystem : MonoBehaviour
     {
+        [SerializeField] private WebRequestMode webRequestMode;
         [SerializeField] private Text showStrTxt;
 
         // Start is called before the first frame update
         void Start()
         {
+            WebRequestConfig.Mode = webRequestMode;
+
             WebRequestHelper.AddErrorDelegate(ErrorFadeback);
 
             new TemperatureAPI(Fadeback);
