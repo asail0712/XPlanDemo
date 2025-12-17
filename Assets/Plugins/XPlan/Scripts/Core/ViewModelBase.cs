@@ -14,10 +14,22 @@ namespace XPlan
     {
         private static readonly Dictionary<Type, object> _map = new();
 
+        // 等待 VM 的 callback pool
+        private static readonly Dictionary<Type, List<Action<ViewModelBase>>> _waiters = new();
+
         public static void Register(ViewModelBase vm)
         {
             var t   = vm.GetType();
-            _map[t] = vm; // 後註冊者覆蓋
+            _map[t] = vm;
+
+            // 若有人在等這個 VM，就全部通知
+            if (_waiters.TryGetValue(t, out var list))
+            {
+                foreach (var cb in list)
+                    cb?.Invoke(vm);
+
+                _waiters.Remove(t);
+            }
         }
 
         public static bool TryGet<T>(out T vm) where T : ViewModelBase
@@ -27,48 +39,36 @@ namespace XPlan
                 vm = obj as T;
                 return vm != null;
             }
+
             vm = null;
             return false;
         }
 
         public static T Get<T>() where T : ViewModelBase
-        {
-            return _map[typeof(T)] as T;
-        }
+            => _map[typeof(T)] as T;
 
-        public static void GetOrWaitAsync<T>(float waitTime, Action<T> finishAction) where T : ViewModelBase
+        /// <summary>
+        /// 不等待、不輪詢。
+        /// 當 VM 註冊時會自動通知 callback。
+        /// </summary>
+        public static void GetOrWaitAsync<T>(Action<T> finishAction) where T : ViewModelBase
         {
+            // 先試著立即取得
             if (TryGet<T>(out T vm))
             {
                 finishAction?.Invoke(vm);
+                return;
             }
 
-            MonoBehaviourHelper.StartCoroutine(GetOrWaitAsync_Imp<T>(waitTime, finishAction));
-        }
-
-        private static IEnumerator GetOrWaitAsync_Imp<T>(float waitTime, Action<T> finishAction) where T : ViewModelBase
-        {
-            // 允許在下一個 frame 再檢查（讓 VM 有機會在同一幀的其他 Awake/OnEnable 完成註冊）
-            yield return null;
-
-            float elapsed = 0f;
-            bool infinite = waitTime <= 0f;
-
-            // 輪詢直到找到或超時
-            while (infinite || elapsed < waitTime)
+            // 等註冊事件
+            var t = typeof(T);
+            if (!_waiters.TryGetValue(t, out var list))
             {
-                if (TryGet<T>(out var vm) && vm != null)
-                {
-                    finishAction?.Invoke(vm);
-                    yield break;
-                }
-
-                elapsed += Time.unscaledDeltaTime; // 不受 TimeScale 影響
-                yield return null;
+                list        = new List<Action<ViewModelBase>>();
+                _waiters[t] = list;
             }
 
-            // 超時（可視需求移除或改成回傳 null）
-            Debug.LogWarning($"[VMLocator] 等待 {typeof(T).Name} 超時（{waitTime:F2}s）。");
+            list.Add(vmObj => finishAction?.Invoke(vmObj as T));
         }
 
         public static void Unregister(ViewModelBase vm)
@@ -80,7 +80,11 @@ namespace XPlan
             }
         }
 
-        public static void Clear() => _map.Clear();
+        public static void Clear()
+        {
+            _map.Clear();
+            _waiters.Clear();
+        }
     }
 
     public class ObservableProperty<T>

@@ -21,12 +21,11 @@ namespace XPlan.UI
         private TViewModel _viewModel;                                                                          // viewmodel本體
         private readonly List<IDisposable> _disposables                         = new();                        // 解除訂閱集中管理
         private readonly Dictionary<string, ObservableBinding> _vmObservableMap = new(StringComparer.Ordinal);  // 新增：把 VM 內的 ObservableProperty 索引起來（baseName → 綁定資訊）
-        private readonly SpriteCache _spriteCache                               = new();                        // 給圖片綁定用的 Sprite 快取
-        private const int TimeToWaitViewModel                                   = 10;        
+        private readonly SpriteCache _spriteCache                               = new();                        // 給圖片綁定用的 Sprite 快取    
         
         private void Awake()
         {
-            VMLocator.GetOrWaitAsync<TViewModel>(TimeToWaitViewModel, (vm) => 
+            VMLocator.GetOrWaitAsync<TViewModel>((vm) => 
             {
                 _viewModel = vm;
 
