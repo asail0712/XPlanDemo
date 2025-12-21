@@ -46,8 +46,8 @@ namespace XPlan.BuildTools.Editors
         // -------------------------
         // Current*Config asset paths (auto create / overwrite)
         // -------------------------
-        private const string CurrentBuildConfigAssetPath = "Assets/Resources/XPlan/BuildTools/CurrentBuildConfig.asset";
-        private const string CurrentPlayConfigAssetPath = "Assets/Resources/XPlan/BuildTools/CurrentPlayConfig.asset";
+        private const string CurrentBuildConfigAssetPath = "Assets/BuildTools/CurrentBuildConfig.asset";
+        private const string CurrentPlayConfigAssetPath = "Assets/BuildTools/CurrentPlayConfig.asset";
 
         [MenuItem("XPlanTools/BuildTools/Build or Play", false, 9)]
         public static void Open()

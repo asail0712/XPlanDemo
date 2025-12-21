@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 namespace XPlan.BuildTools.Runtime
 {
@@ -26,9 +27,9 @@ namespace XPlan.BuildTools.Runtime
         }
 
         private static void ApplyCurrentPlayConfig()
-        {
-            var current = Resources.Load<CurrentPlayConfig>(
-                "XPlan/BuildTools/CurrentPlayConfig");
+        { 
+            const string CurrentPlayConfigAssetPath = "Assets/BuildTools/CurrentPlayConfig.asset";
+            CurrentPlayConfig current               = AssetDatabase.LoadAssetAtPath<CurrentPlayConfig>(CurrentPlayConfigAssetPath);
 
             if (!current || !current.so || !current.applierSO)
             {
