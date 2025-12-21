@@ -19,7 +19,7 @@ namespace XPlan
             Items.ForceNotify();    // 強制觸發 Items 的 OnValueChanged 事件
 
             // 同步更新其他屬性
-            IsListRootVisible.Value = Items.Value == null || Items.Value.Count == 0;
+            IsListRootVisible.Value = Items.Value != null && Items.Value.Count != 0;
         }
 
         protected void AddData(TItemViewModel newItem)
@@ -29,7 +29,7 @@ namespace XPlan
             Items.ForceNotify();    // 強制觸發 Items 的 OnValueChanged 事件
 
             // 同步更新其他屬性
-            IsListRootVisible.Value = Items.Value == null || Items.Value.Count == 0;
+            IsListRootVisible.Value = Items.Value != null && Items.Value.Count != 0;
         }
 
         protected void ClearData()
@@ -39,7 +39,7 @@ namespace XPlan
             Items.ForceNotify();    // 強制觸發 Items 的 OnValueChanged 事件
 
             // 同步更新其他屬性
-            IsListRootVisible.Value = Items.Value == null || Items.Value.Count == 0;
+            IsListRootVisible.Value = Items.Value != null && Items.Value.Count != 0;
         }
 
 
@@ -49,7 +49,7 @@ namespace XPlan
             Items.Value             = newItems; // 賦值會觸發 Items 的 OnValueChanged 事件
 
             // 同步更新其他屬性
-            IsListRootVisible.Value = newItems == null || newItems.Count == 0;
+            IsListRootVisible.Value = Items.Value != null && Items.Value.Count != 0;
         }
     }
 }
