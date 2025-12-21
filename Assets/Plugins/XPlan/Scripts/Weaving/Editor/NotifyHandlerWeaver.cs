@@ -2,9 +2,7 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Linq;
-
 using UnityEngine;
-
 using XPlan.Weaver.Abstractions;
 
 namespace XPlan.Editors.Weaver
@@ -19,7 +17,7 @@ namespace XPlan.Editors.Weaver
         {
             var declaringType = targetMethod.DeclaringType;
 
-            // ★★ 1) 不再從 Attribute 拿 Type，而是從方法參數自動推斷 ★★
+            // 方法必須僅有一個參數（訊息類型）
             if (!targetMethod.HasParameters || targetMethod.Parameters.Count != 1)
             {
                 throw new InvalidOperationException(
@@ -29,7 +27,7 @@ namespace XPlan.Editors.Weaver
             // 方法參數型別 = TMsg
             var msgTypeRef = module.ImportReference(targetMethod.Parameters[0].ParameterType);
 
-            // ★ 找 RegisterNotify<TMsg>(Action<TMsg>)
+            // 找 RegisterNotify<TMsg>(Action<TMsg>)
             var registerNotifyDef = CecilHelper.FindMethodInHierarchy(
                 declaringType,
                 m =>
@@ -47,118 +45,120 @@ namespace XPlan.Editors.Weaver
                 return;
             }
 
-            // ★ Step 1: 注入靜態布林欄位，用於追蹤是否已註冊 (實現冪等性)
+            // ★ Step 1: 注入「instance bool」欄位（每個 instance 自己記錄是否已註冊）
             // 欄位名稱應獨特，以避免多個 NotifyHandler 產生衝突
-            var flagFieldName       = $"<XPlan>k__NotifyRegistered_{targetMethod.Name}_{msgTypeRef.Name}";
+            var flagFieldName = $"<XPlan>k__NotifyRegistered_{targetMethod.Name}_{msgTypeRef.Name}";
 
-            // 檢查是否已存在，避免編織器重複執行時多次新增欄位
-            var registrationFlag    = declaringType.Fields.FirstOrDefault(f => f.Name == flagFieldName);
-
+            // 避免編織器重複執行時多次新增欄位
+            var registrationFlag = declaringType.Fields.FirstOrDefault(f => f.Name == flagFieldName);
             if (registrationFlag == null)
             {
                 registrationFlag = new FieldDefinition(
                     flagFieldName,
-                    // 必須是 Static 和 Private，用於跨實例共享註冊狀態
-                    FieldAttributes.Private | FieldAttributes.Static,
+                    FieldAttributes.Private,          // ✅ 不要 Static
                     module.TypeSystem.Boolean);
+
                 declaringType.Fields.Add(registrationFlag);
             }
 
             // ★ Construct Action<TMsg>
-            var actionOpenType  = module.ImportReference(typeof(Action<>)); // Action<T> 的開放泛型型別引用
-            var actionGeneric   = new GenericInstanceType(actionOpenType);    // Action<TMsg> 的泛型實例
+            var actionOpenType = module.ImportReference(typeof(Action<>));     // Action<T> 開放泛型
+            var actionGeneric = new GenericInstanceType(actionOpenType);       // Action<TMsg>
             actionGeneric.GenericArguments.Add(msgTypeRef);
 
             var actionCtorDef = actionOpenType.Resolve()
-                .Methods.First(m => m.IsConstructor && m.Parameters.Count == 2);
+                .Methods.First(m => m.IsConstructor && m.Parameters.Count == 2); // .ctor(object, IntPtr)
 
             var actionCtorRef = new MethodReference(".ctor", module.TypeSystem.Void, actionGeneric)
             {
-                HasThis             = true,
-                ExplicitThis        = false,
-                CallingConvention   = actionCtorDef.CallingConvention
+                HasThis = true,
+                ExplicitThis = false,
+                CallingConvention = actionCtorDef.CallingConvention
             };
 
             foreach (var p in actionCtorDef.Parameters)
                 actionCtorRef.Parameters.Add(new ParameterDefinition(p.ParameterType));
 
             // ★ Construct RegisterNotify<TMsg>
-            var registerNotifyRef       = module.ImportReference(registerNotifyDef);
-            var registerNotifyGeneric   = new GenericInstanceMethod(registerNotifyRef);
+            var registerNotifyRef = module.ImportReference(registerNotifyDef);
+            var registerNotifyGeneric = new GenericInstanceMethod(registerNotifyRef);
             registerNotifyGeneric.GenericArguments.Add(msgTypeRef);
 
             // ★ 找 / 建立 __LogicComponent_WeaverHook()
             var hookMethod = declaringType.Methods.FirstOrDefault(m =>
-                    !m.IsStatic &&
-                    m.Name == HookMethodName &&
-                    m.Parameters.Count == 0 &&
-                    m.ReturnType.FullName == module.TypeSystem.Void.FullName);
+                !m.IsStatic &&
+                m.Name == HookMethodName &&
+                m.Parameters.Count == 0 &&
+                m.ReturnType.FullName == module.TypeSystem.Void.FullName);
 
             if (hookMethod == null)
             {
-                // 建一個 private void __LogicComponent_WeaverHook() { }
                 hookMethod = new MethodDefinition(
                     HookMethodName,
                     MethodAttributes.Private | MethodAttributes.HideBySig,
                     module.TypeSystem.Void);
 
-                var body        = new MethodBody(hookMethod);
-                hookMethod.Body = body;
-
-                var ilInit      = body.GetILProcessor();
-                ilInit.Append(ilInit.Create(OpCodes.Ret));
-
+                hookMethod.Body = new MethodBody(hookMethod);
+                hookMethod.Body.GetILProcessor().Append(Instruction.Create(OpCodes.Ret));
                 declaringType.Methods.Add(hookMethod);
             }
 
-            // ★ 把註冊 IL 塞到 hook 的最後一個 ret 前
             if (!hookMethod.HasBody)
             {
                 hookMethod.Body = new MethodBody(hookMethod);
-                var ilTmp       = hookMethod.Body.GetILProcessor();
-                ilTmp.Append(ilTmp.Create(OpCodes.Ret));
+                hookMethod.Body.GetILProcessor().Append(Instruction.Create(OpCodes.Ret));
             }
 
-            var ilHook      = hookMethod.Body.GetILProcessor();
-            var retInstr    = hookMethod.Body.Instructions.LastOrDefault(i => i.OpCode == OpCodes.Ret);
-
+            // 找最後一個 ret，沒有就補一個
+            var ilHook = hookMethod.Body.GetILProcessor();
+            var retInstr = hookMethod.Body.Instructions.LastOrDefault(i => i.OpCode == OpCodes.Ret);
             if (retInstr == null)
             {
                 retInstr = ilHook.Create(OpCodes.Ret);
                 ilHook.Append(retInstr);
             }
 
+            // ★ 防止重複注入：如果 hook 內已經操作過這個 registrationFlag，就略過
+            bool alreadyInjected = hookMethod.Body.Instructions.Any(i =>
+                (i.OpCode == OpCodes.Ldfld || i.OpCode == OpCodes.Stfld) &&
+                i.Operand is FieldReference fr &&
+                fr.Name == registrationFlag.Name);
+
+            if (alreadyInjected)
+            {
+                Debug.Log($"[NotifyHandlerWeaver] Skip：{declaringType.FullName}.{HookMethodName} 已注入 {registrationFlag.Name}");
+                return;
+            }
+
             // end label 就用 retInstr
-            var endOfRegistrationBlock = retInstr;
+            var end = retInstr;
 
-            // IL: Ldsfld registrationFlag
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Ldsfld, registrationFlag));
+            // ---------------------------------------------------------
+            // 注入 IL（instance 欄位版本，堆疊必須正確）
+            //
+            // if (this.flag) goto end;
+            // this.RegisterNotify<TMsg>(new Action<TMsg>(this, &targetMethod));
+            // this.flag = true;
+            // ---------------------------------------------------------
 
-            // IL: Brtrue_S endOfRegistrationBlock
-            var jumpIfRegistered = ilHook.Create(OpCodes.Brtrue_S, endOfRegistrationBlock);
-            ilHook.InsertBefore(endOfRegistrationBlock, jumpIfRegistered);
+            // if (this.flag) goto end;
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Ldarg_0));
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Ldfld, registrationFlag));
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Brtrue_S, end));
 
-            // 註冊邏輯：
-            // 1. this (作為 RegisterNotify 的 this)
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Ldarg_0));
+            // this.RegisterNotify<TMsg>(new Action<TMsg>(this, &targetMethod));
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Ldarg_0));          // this for instance call
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Ldarg_0));          // this for delegate target
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Ldftn, targetMethod));
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Newobj, actionCtorRef));
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Call, registerNotifyGeneric));
 
-            // 2. this (作為 Action<TMsg> 的 target)
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Ldarg_0));
+            // this.flag = true;
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Ldarg_0));
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Ldc_I4_1));
+            ilHook.InsertBefore(end, ilHook.Create(OpCodes.Stfld, registrationFlag));
 
-            // 3. 函式指標 ldftn targetMethod
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Ldftn, targetMethod));
-
-            // 4. newobj Action<TMsg>(object, IntPtr)
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Newobj, actionCtorRef));
-
-            // 5. call RegisterNotify<TMsg>(Action<TMsg>)
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Call, registerNotifyGeneric));
-
-            // 6. 設定 flag = true
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Ldc_I4_1));
-            ilHook.InsertBefore(endOfRegistrationBlock, ilHook.Create(OpCodes.Stsfld, registrationFlag));
-
-            Debug.Log($"[NotifyHandlerWeaver] 注入成功：{declaringType.FullName}.{targetMethod.Name} -> {HookMethodName}，已加入冪等性檢查。");
+            Debug.Log($"[NotifyHandlerWeaver] 注入成功：{declaringType.FullName}.{targetMethod.Name} -> {HookMethodName}（instance 冪等）");
         }
     }
 }
