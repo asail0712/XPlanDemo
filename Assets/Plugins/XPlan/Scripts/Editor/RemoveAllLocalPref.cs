@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 using XPlan.Utility;
@@ -10,7 +10,7 @@ namespace XPlan.Editors
         [MenuItem("XPlanTools/Remove All LocalPrefs")]
         private static void RemoveLocalPref()
         {
-            LocalPref.ClearAll();
+            PlayerPrefs.DeleteAll();
         }
     }
 }
