@@ -27,7 +27,15 @@ namespace XPlan.Weaver.Runtime
             if (method.GetParameters().Length != 0)
                 return;
 
-            method.Invoke(target, null);
+            try
+            {
+                method.Invoke(target, null);
+            }
+            catch (TargetInvocationException tie)
+            {
+                UnityEngine.Debug.LogError($"[WeaverHookInvoker] Hook throw. type={type.FullName}, hook={hookName}\n{tie.InnerException}");
+                throw; // 你想要不中斷就拿掉 throw，但先抓到錯比較重要
+            }
         }
     }
 }

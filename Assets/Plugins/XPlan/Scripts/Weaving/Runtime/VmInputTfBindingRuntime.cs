@@ -5,21 +5,21 @@ using UnityEngine.UI;
 
 namespace XPlan.Weaver.Runtime
 {
-    public static class VmToggleBindingRuntime
+    public static class VmInputTfBindingRuntime
     {
         /// <summary>
         /// 1. 傳入 ViewBase 的衍生類別實例即可（型別用 object 即可）
         /// </summary>
-        public static void BindToggles(object viewInstance)
+        public static void BindInputTf(object viewInstance)
         {
             if (viewInstance == null)
                 return;
 
             var viewType = viewInstance.GetType();
 
-            // 2. 掃描 View 裡的 Toggle 欄位，記錄名稱 → Toggle 實例
-            var toggleMap = FindTogglesOnView(viewType, viewInstance);
-            if (toggleMap.Count == 0)
+            // 2. 掃描 View 裡的 InputField 欄位，記錄名稱 → InputField 實例
+            var tfMap = FindInputTfOnView(viewType, viewInstance);
+            if (tfMap.Count == 0)
                 return;
 
             // ★ 這裡改成「透過 ViewBase<TViewModel> 的泛型參數取 vmType」
@@ -27,83 +27,83 @@ namespace XPlan.Weaver.Runtime
             if (vmType == null)
                 return;
 
-            // 3. 檢查 VM 裡所有有 [ToggleBinding] 的方法
+            // 3. 檢查 VM 裡所有有 [InputTfBinding] 的方法
             var methods = vmType.GetMethods(
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
             foreach (var method in methods)
             {
                 // 沒有 attribute 就跳過
-                if (!method.IsDefined(typeof(ToggleBindingAttribute), inherit: true))
+                if (!method.IsDefined(typeof(InputTfBindingAttribute), inherit: true))
                     continue;
 
                 // 必須：無回傳 (void)
                 if (method.ReturnType != typeof(void))
                     continue;
 
-                // 參數要有一個 並且為bool型別
+                // 參數要有一個 並且為string型別
                 var parameters = method.GetParameters();
-                if (parameters.Length != 1 || parameters[0].ParameterType != typeof(bool))
+                if (parameters.Length != 1 || parameters[0].ParameterType != typeof(string))
                     continue;
 
                 // 名稱必須符合 On[ToggleName]Trigger
-                var toggleNameCore = ExtractToggleNameFromMethod(method.Name);
-                if (toggleNameCore == null)
+                var tfNameCore = ExtractTfNameFromMethod(method.Name);
+                if (tfNameCore == null)
                     continue;
 
-                // 4. 根據 toggleNameCore 去對應 View 上的 Toggle 欄位名稱
-                if (!TryFindToggleByName(toggleMap, toggleNameCore, out var tgl))
+                // 4. 根據 tfNameCore 去對應 View 上的 tf 欄位名稱
+                if (!TryFindTfByName(tfMap, tfNameCore, out var tf))
                     continue;
 
                 // 實際綁定 onValueChanged
                 // 注意：這裡用閉包包住 method & viewModel
                 var targetMethod = method;
 
-                tgl.onValueChanged.AddListener((b) =>
+                tf.onValueChanged.AddListener((s) =>
                 {
                     try
                     {
                         // ★ 點擊時才找一次 _viewModel，避免提前存取
                         var targetVm = GetViewModelInstance(viewType, viewInstance);
 
-                        targetMethod.Invoke(targetVm, new object[] { b });
+                        targetMethod.Invoke(targetVm, new object[] { s });
                     }
                     catch (Exception ex)
                     {
                         UnityEngine.Debug.LogError(
-                            $"[VmToggleBindingRuntime] 執行 {targetMethod.DeclaringType.Name}.{targetMethod.Name} 時發生例外：{ex}");
+                            $"[VmInputTfBindingRuntime] 執行 {targetMethod.DeclaringType.Name}.{targetMethod.Name} 時發生例外：{ex}");
                     }
                 });
             }
         }
 
-        public static void UnbindToggles(object viewInstance)
+        public static void UnbindInputTf(object viewInstance)
         {
             if (viewInstance == null)
                 return;
 
             var viewType    = viewInstance.GetType();
-            var toggleMap   = FindTogglesOnView(viewType, viewInstance);
-            if (toggleMap.Count == 0)
+            var tfMap       = FindInputTfOnView(viewType, viewInstance);
+            if (tfMap.Count == 0)
                 return;
 
             // 移除全部 Listener（Unity 最標準 safest 的作法）
-            foreach (var kv in toggleMap)
+            foreach (var kv in tfMap)
             {
-                var tgl = kv.Value;
-                if (tgl != null)
+                var tf = kv.Value;
+                if (tf != null)
                 {
-                    tgl.onValueChanged.RemoveAllListeners();
+                    tf.onValueChanged.RemoveAllListeners();
                 }
             }
         }
 
         /// <summary>
-        /// 往上爬型別階層，找所有 Button 欄位
+        /// 往上爬型別階層，找所有 InputField 欄位
         /// </summary>
-        private static Dictionary<string, Toggle> FindTogglesOnView(Type viewType, object viewInstance)
+        private static Dictionary<string, InputField> FindInputTfOnView(Type viewType, object viewInstance)
         {
-            var dict    = new Dictionary<string, Toggle>();
+            var dict    = new Dictionary<string, InputField>();
             var cur     = viewType;
 
             while (cur != null && cur != typeof(object))
@@ -113,14 +113,14 @@ namespace XPlan.Weaver.Runtime
 
                 foreach (var f in fields)
                 {
-                    if (typeof(Toggle).IsAssignableFrom(f.FieldType))
+                    if (typeof(InputField).IsAssignableFrom(f.FieldType))
                     {
-                        var tgl             = f.GetValue(viewInstance) as Toggle;
+                        var tf             = f.GetValue(viewInstance) as InputField;
                         var normalizeName   = NormalizeName(f.Name);
 
-                        if (tgl != null && !dict.ContainsKey(normalizeName))
+                        if (tf != null && !dict.ContainsKey(normalizeName))
                         {
-                            dict.Add(normalizeName, tgl);
+                            dict.Add(normalizeName, tf);
                         }
                     }
                 }
@@ -156,13 +156,13 @@ namespace XPlan.Weaver.Runtime
         }
 
         /// <summary>
-        /// 解析方法名稱是否符合 On[ToggleName]Trigger，
-        /// 有的話回傳 [ToggleName]（中間那段），否則回傳 null。
+        /// 解析方法名稱是否符合 On[TfName]Modify，
+        /// 有的話回傳 [TfName]（中間那段），否則回傳 null。
         /// </summary>
-        private static string ExtractToggleNameFromMethod(string methodName)
+        private static string ExtractTfNameFromMethod(string methodName)
         {
             const string prefix = "On";
-            const string suffix = "Trigger";
+            const string suffix = "Modify";
 
             if (!methodName.StartsWith(prefix, StringComparison.Ordinal))
                 return null;
@@ -184,24 +184,23 @@ namespace XPlan.Weaver.Runtime
             return core;
         }
 
-        private static bool TryFindToggleByName(
-            Dictionary<string, Toggle> map,
-            string tglNameCore,
-            out Toggle tgl)
+        private static bool TryFindTfByName(
+            Dictionary<string, InputField> map,
+            string tfNameCore,
+            out InputField tf)
         {
-            // 精準大小寫一致：DemoTrigger
-            if (map.TryGetValue(tglNameCore, out tgl))
+            // 精準大小寫一致：DemoChange
+            if (map.TryGetValue(tfNameCore, out tf))
                 return true;
+            
+            var camel = char.ToLowerInvariant(tfNameCore[0]) +
+                        tfNameCore.Substring(1);
 
-            // 首字小寫：demoTrigger / demoTriggerBtn
-            var camel = char.ToLowerInvariant(tglNameCore[0]) +
-                        tglNameCore.Substring(1);
-
-            if (map.TryGetValue(camel, out tgl))
+            if (map.TryGetValue(camel, out tf))
                 return true;
 
             // 都沒有命中就失敗
-            tgl = null;
+            tf = null;
             return false;
         }
 
@@ -240,10 +239,10 @@ namespace XPlan.Weaver.Runtime
 
         private static readonly string[] Suffixes =
         {
-            "Tgl",
-            "tgl",
-            "Toggle",
-            "toggle"
+            "Txt",
+            "txt",
+            "Text",
+            "text"
         };
 
         private static string NormalizeName(string raw)

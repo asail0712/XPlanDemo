@@ -82,15 +82,14 @@ namespace XPlan.UI.Components
 
     public class QualitySpriteProvider : MonoBehaviour
     {
-        [SerializeField] private List<QualityMapper> qualityMapper;
+        [SerializeField] private List<QualityMapper> qualityMapper = new List<QualityMapper>();
 
         private const string Quality = "Quality_";
 
         // Start is called before the first frame update
         private void Awake()
         {
-            qualityMapper       = new List<QualityMapper>();
-            Image[] imgComps    = gameObject.GetComponentsInChildren<Image>(true);
+            Image[] imgComps = gameObject.GetComponentsInChildren<Image>(true);
 
             foreach (Image img in imgComps)
             {

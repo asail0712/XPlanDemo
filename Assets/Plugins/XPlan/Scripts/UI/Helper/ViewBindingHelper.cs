@@ -712,7 +712,7 @@ namespace XPlan.UI
             s = StripSuffix(s, "Toggle", "Tgl");
             s = StripSuffix(s, "Slider", "Sld");
             s = StripSuffix(s, "Scroll");
-            s = StripSuffix(s, "InputField", "Input", "Field", "Txt", "Text");
+            s = StripSuffix(s, "InputField", "Field", "Txt", "Text");
             s = StripSuffix(s, "Image", "Img");
 
             return s;
