@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using Newtonsoft.Json;
+using System;
+using System.Threading.Tasks;
+using UnityEditor.PackageManager.Requests;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace XPlan.Net
@@ -12,14 +16,52 @@ namespace XPlan.Net
 			bodyRaw = null;
 		}
 
-		protected void AppendData(WWWForm form)
+        /***************************************
+         * Send
+         * ************************************/
+
+        public async Task<TResponse> SendAsync<TRequest, TResponse>(TRequest request)
+        {
+            AppendData(JsonConvert.SerializeObject(request));
+
+            return await SendAsync_Imp<TResponse>();
+        }
+
+        public async Task<TResponse> SendAsync<TResponse>(byte[] bytes)
+        {
+            AppendBinary(bytes);
+
+            return await SendAsync_Imp<TResponse>();
+        }
+
+        public async Task<TResponse> SendAsync<TResponse>(WWWForm form)
+        {
+            AppendData(form);
+
+            return await SendAsync_Imp<TResponse>();
+        }
+
+        /***************************************
+         * 其他
+         * ************************************/
+
+        protected void AppendData(WWWForm form)
 		{
             AddHeader("Content-Type", form.headers["Content-Type"]);
 
             bodyRaw = form.data;
 		}
+        
+        protected void AppendBinary(byte[] data, string contentType = "application/octet-stream")
+        {
+            if (data == null || data.Length == 0)
+                throw new ArgumentException("Binary data is null or empty.");
 
-		protected void AppendData(string text)
+            AddHeader("Content-Type", contentType);
+            bodyRaw = data;
+        }
+
+        protected void AppendData(string text)
         {
 			AddHeader("Content-Type", "application/json");
 

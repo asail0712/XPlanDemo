@@ -1,7 +1,9 @@
 ﻿//using NUnit.Framework;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -125,6 +127,20 @@ namespace XPlan.Net
         public void SetTimeout(int timeOut)
         {
             this.timeOut = timeOut;
+        }
+
+        protected Task<TResponse> SendAsync_Imp<TResponse>()
+        {
+            var tcs = new TaskCompletionSource<TResponse>();
+
+            SendWebRequest((apiResult) =>
+            {
+                TResponse response = JsonConvert.DeserializeObject<TResponse>(apiResult.Data.Text);
+
+                tcs.TrySetResult(response);
+            });
+
+            return tcs.Task;
         }
 
         public void SendWebRequest(Action<ApiResult<WebResponseData>> finishAction)
