@@ -161,6 +161,12 @@ namespace XPlan.Scenes
 			ChangeTo(currSceneStack[stackIdx]);
 
 			return true;
+        }
+
+        public bool ChangeTo<T>(T buildType, bool bActiveScene = true, Action finishAction = null) where T : Enum
+		{
+			int buildIdx = Convert.ToInt32(buildType);
+			return ChangeTo(buildIdx, bActiveScene, finishAction);
 		}
 
 		public bool ChangeTo(string sceneName, bool bActiveScene = true, Action finishAction = null)
