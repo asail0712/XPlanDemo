@@ -25,7 +25,23 @@ namespace XPlan.Observe
 		}
 	}
 
-	public class ReceiveOption
+    public class MessageWithRet : MessageBase
+    {
+        public Action finishAction;
+    }
+
+    public class MessageBase<TResult> : MessageBase
+    {
+		internal Action<TResult> finishAction;
+
+		public void InvokeResult(TResult result)
+		{
+			finishAction?.Invoke(result);
+
+        }
+    }
+
+    public class ReceiveOption
 	{
 		// 相依性
 		public List<Type> dependOnList;

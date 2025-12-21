@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using UnityEngine;
 
 using XPlan.DebugMode;
@@ -154,10 +155,72 @@ namespace XPlan
 			NotifyHelper.SendMsg<T>(true, args);
         }
 
+        public Task<TResult> SendMsg<TMsg, TResult>(params object[] args) where TMsg : MessageBase<TResult>
+        {
+            var tcs		= new TaskCompletionSource<TResult>();
+            Type type	= typeof(TMsg);
+
+            // 查找匹配的构造函数
+            ConstructorInfo ctor = type.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                CallingConventions.HasThis,
+                Array.ConvertAll(args, item => item.GetType()),
+                null
+            );
+
+            if (ctor == null)
+            {
+                throw new Exception($"No matching constructor found for {type.Name}");
+            }
+
+            // 生成msg並寄出
+            TMsg msg			= (TMsg)ctor.Invoke(args);
+			msg.finishAction	= (result) =>
+			{
+                tcs.TrySetResult(result);
+			};
+
+            msg.Send(true);
+
+            return tcs.Task;
+        }
+
+        public Task SendAsyncMsg<TMsg>(params object[] args) where TMsg : MessageWithRet
+        {
+            var tcs     = new TaskCompletionSource<bool>();
+            Type type   = typeof(TMsg);
+
+            // 查找匹配的构造函数
+            ConstructorInfo ctor = type.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                CallingConventions.HasThis,
+                Array.ConvertAll(args, item => item.GetType()),
+                null
+            );
+
+            if (ctor == null)
+            {
+                throw new Exception($"No matching constructor found for {type.Name}");
+            }
+
+            // 生成msg並寄出
+            TMsg msg            = (TMsg)ctor.Invoke(args);
+            msg.finishAction    = () =>
+            {
+                tcs.TrySetResult(true);
+            };
+
+            msg.Send(true);
+
+            return tcs.Task;
+        }
+
         /*************************
 		 * ServiceLocator相關
 		 * ***********************/
-		protected T GetService<T>() where T : class
+        protected T GetService<T>() where T : class
         {
             return ServiceLocator.GetService<T>();
         }
