@@ -138,6 +138,10 @@ namespace XPlan.Recycle
                 T comp              = go.GetComponent<T>();
                 go.transform.parent = poolRoot == null ? null : poolRoot.transform;
 
+                // 套上 recycle root
+                if (comp is PoolableComponent pc && poolRoot != null)
+                    pc.SetRecycleRoot(poolRoot.transform);
+
                 go.SetActive(false);                
                 poolableQueue.Enqueue(comp);
             }

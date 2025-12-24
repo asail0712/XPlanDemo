@@ -1,12 +1,12 @@
 ﻿// 檔案: ItemViewBase.cs
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using XPlan.Recycle;
 
 namespace XPlan.UI
 {
     // TItemViewModel 必須是 ItemViewModelBase 的子類
-    public class ItemViewBase<TItemViewModel> : MonoBehaviour
+    public class ItemViewBase<TItemViewModel> : PoolableComponent
         where TItemViewModel : ItemViewModelBase
     {
         protected TItemViewModel _viewModel;
@@ -20,9 +20,7 @@ namespace XPlan.UI
         public void SetViewModel(TItemViewModel vm)
         {
             // 清理舊的訂閱
-            foreach (var d in _disposables) d?.Dispose();
-            _disposables.Clear();
-            _spriteCache.Dispose(); // 清理舊的 Sprite Cache
+            CleanupBindings();
 
             _viewModel = vm;
 
@@ -48,15 +46,37 @@ namespace XPlan.UI
             // 留給子類別實作，在 ViewModel 綁定和 UI 初始化完成後執行客製化邏輯
         }
 
-        private void OnDestroy()
+        // ===============================
+        // Poolable lifecycle
+        // ===============================
+
+        public override void OnRecycle()
         {
-            // Item View 被銷毀時，確保所有訂閱和快取被釋放
+            base.OnRecycle();
+
+            // ✅ 關鍵：回收到池時，也要清理 VM 狀態
+            CleanupBindings();
+            _viewModel = null;
+        }
+
+        protected new void OnDestroy()
+        {
+            base.OnDestroy();
+            CleanupBindings();
+        }
+
+        // ===============================
+        // Internal
+        // ===============================
+
+        private void CleanupBindings()
+        {
             foreach (var d in _disposables)
-            {
                 d?.Dispose();
-            }
             _disposables.Clear();
+
             _spriteCache.Dispose();
+            _vmObservableMap.Clear();
         }
     }
 }

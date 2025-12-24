@@ -4,6 +4,9 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
+using XPlan.Recycle;
+using XPlan.Utility;
+
 namespace XPlan.UI
 {
     // TTableViewModel 必須是 TableViewModelBase 的子類
@@ -11,14 +14,21 @@ namespace XPlan.UI
     // TItemViewModel 是 Item View 所綁定的資料模型
     public class TableViewBase<TTableViewModel, TItemView, TItemViewModel> : ViewBase<TTableViewModel>, IViewModelGetter<TTableViewModel>
         where TTableViewModel : TableViewModelBase<TItemViewModel>
-        where TItemView : ItemViewBase<TItemViewModel>
+        where TItemView : ItemViewBase<TItemViewModel>, IPoolable, new()
         where TItemViewModel : ItemViewModelBase
     {
+        [Header("TableView")]
         // 列表特有的序列化欄位
         [SerializeField]
         protected GameObject _listRoot; // Unity UI Content
         [SerializeField]
         protected TItemView _itemViewPrefab;   // 列表單元 Prefab
+
+        [Header("Recycle Pool")]
+        [SerializeField] 
+        private int _prewarmCount = 20;
+        [SerializeField] 
+        private Transform _poolRoot;   // 指定一個 PoolRoot，避免 LayoutGroup 計算到回收物件
 
         // 列表 Items 的實體管理
         protected readonly Dictionary<TItemViewModel, TItemView> _activeItemViews   = new();
@@ -34,6 +44,9 @@ namespace XPlan.UI
             _viewModel = vm;
 
             if (vm == null) return;
+
+            // Pool 註冊（只做一次）
+            TryRegisterPoolOnce();
 
             // 手動訂閱root Visible設定
             var disp = vm.IsListRootVisible.Subscribe(isVisible =>
@@ -52,6 +65,26 @@ namespace XPlan.UI
 
             // for VM 設定完成
             OnTableViewReady();
+        }
+
+        private void TryRegisterPoolOnce()
+        {
+            if (_itemViewPrefab == null) return;
+
+            // 如果沒填 poolRoot，就自動建一個（可選）
+            if (_poolRoot == null)
+            {
+                var go = new GameObject($"{typeof(TItemView).Name}_PoolRoot");
+                go.transform.SetParent(transform, false);
+                _poolRoot = go.transform;
+            }
+
+            // ✅ 用 prefab.gameObject 註冊
+            RecyclePool<TItemView>.RegisterType(
+                _itemViewPrefab.gameObject,
+                _prewarmCount,
+                _poolRoot.gameObject
+            );
         }
 
         protected virtual void OnTableViewReady() { /* 子類實作 */ }
@@ -74,11 +107,12 @@ namespace XPlan.UI
         /// </summary>
         private void RenderItems(List<TItemViewModel> newItems)
         {
-            // 簡化實作：銷毀所有現有的 Item View
+            // 簡化實作：回收所有現有的 Item View
             foreach (var kv in _activeItemViews)
             {
-                Destroy(kv.Value.gameObject);
+                RecyclePool<TItemView>.Recycle(kv.Value);
             }
+
             _activeItemViews.Clear();
 
             if (newItems == null) return;
@@ -93,7 +127,9 @@ namespace XPlan.UI
                 }
 
                 // 實例化 Item View
-                var itemView = Instantiate(_itemViewPrefab, _listRoot.transform);
+                var itemView = RecyclePool<TItemView>.SpawnOne();
+                _listRoot.AddChild(itemView.gameObject);
+                //var itemView = Instantiate(_itemViewPrefab, _listRoot.transform);
 
                 // 將 ViewModel 注入 Item View 並進行內部綁定
                 itemView.SetViewModel(itemVM);
@@ -159,6 +195,9 @@ namespace XPlan.UI
                     // 4. 取得 ItemView 中的 Button 實例
                     Button button = fieldInfo.GetValue(itemView) as Button;
                     if (button == null) continue;
+
+                    // 4.5 池物件會重用，先清掉舊綁定，避免累加與舊 closure
+                    button.onClick.RemoveAllListeners();
 
                     // 5. 創建 Action 委派，將 ItemViewModel 作為參數傳遞
                     // 使用匿名函數 (Closure) 來捕獲 itemVM，並呼叫反射找到的方法
