@@ -171,7 +171,7 @@ namespace XPlan.UI
                 if (fieldInfo.FieldType == typeof(Button))
                 {
                     // 1. 根據欄位名稱，推斷 TableViewModel 中目標方法名稱
-                    string baseName     = ViewBindingHelper.DeriveBaseName(fieldInfo.Name);
+                    string baseName     = ViewBindingHelper.DeriveBaseName(fieldInfo);
                     string methodName   = $"On{baseName}Click";
 
                     // 2. 查找 TableViewModel 中的目標方法

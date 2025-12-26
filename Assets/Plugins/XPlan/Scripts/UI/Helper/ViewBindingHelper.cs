@@ -7,25 +7,6 @@ using UnityEngine.UI;
 
 namespace XPlan.UI
 {
-    // 標記此欄位可與ViewModel成員繫結（預設由欄位名推導）
-    // 名稱為 BindName
-    [AttributeUsage(AttributeTargets.Field)]
-    public sealed class BindNameAttribute : Attribute
-    {
-        public string Name { get; }
-        public BindNameAttribute(string name) => Name = name;
-    }
-
-    // 標記此欄位要參與「可見性綁定」(Visible) 的掃描。
-    // 可選 name 參數可覆寫預設的 DeriveBaseName(f.Name)。
-    // 名稱為 BindVisibleTarget
-    [AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
-    public sealed class BindVisibleTargetAttribute : Attribute
-    {
-        public string Name { get; }
-        public BindVisibleTargetAttribute(string name = null) => Name = name;
-    }
-
     /// <summary>
     /// ViewBase 專用的綁定 Helper：
     /// - VM Observable 索引
@@ -105,11 +86,8 @@ namespace XPlan.UI
                 if (!hasSerializedAttr)
                     continue;
 
-                string baseName =
-                    field.GetCustomAttribute<BindNameAttribute>()?.Name
-                    ?? DeriveBaseName(field.Name);
-
-                object obj = field.GetValue(view);
+                string baseName = DeriveBaseName(field);
+                object obj      = field.GetValue(view);
                 if (obj == null)
                 {
                     Debug.LogWarning($"[AutoRegisterComponents] 欄位 {field.Name} 為 null。");
@@ -274,7 +252,7 @@ namespace XPlan.UI
                     comp is Slider || comp is Text || comp is RawImage || comp is Image ||
                     comp is TextMeshProUGUI)
                 {
-                    var key = DeriveBaseName(f.Name);
+                    var key = DeriveBaseName(f);
                     map[key] = comp;
                 }
             }
@@ -644,9 +622,6 @@ namespace XPlan.UI
 
             foreach (var f in fields)
             {
-                var attr = f.GetCustomAttribute<BindVisibleTargetAttribute>();
-                if (attr == null) continue;
-
                 var obj = f.GetValue(view);
                 if (obj == null) continue;
 
@@ -659,9 +634,7 @@ namespace XPlan.UI
 
                 if (go == null) continue;
 
-                var key = string.IsNullOrEmpty(attr.Name)
-                        ? DeriveBaseName(f.Name)
-                        : attr.Name;
+                var key = DeriveBaseName(f);
 
                 map[key] = go;
             }
@@ -697,7 +670,19 @@ namespace XPlan.UI
         #endregion
 
         #region ==== 共用字串處理 / Sprite 快取 ====
+        public static string DeriveBaseName(FieldInfo field)
+        {
+            if (field == null)
+                return null;
 
+            // BindNameAttribute 優先
+            var bindName = field.GetCustomAttribute<BindNameAttribute>()?.Name;
+            if (!string.IsNullOrEmpty(bindName))
+                return bindName;
+
+            // fallback 用欄位名稱
+            return DeriveBaseName(field.Name);
+        }
         public static string DeriveBaseName(string fieldName)
         {
             string s = fieldName;
@@ -726,6 +711,52 @@ namespace XPlan.UI
                     return s.Substring(0, s.Length - suf.Length);
             }
             return s;
+        }
+
+        #endregion
+
+        #region ==== 其他工具 ====
+        /// <summary>
+        /// 從 View 的繼承鏈中找到 ViewBase&lt;TViewModel&gt;，並取出 TViewModel 型別。
+        /// </summary>
+        public static bool TryGetViewModelTypeFromView(Type viewType, out Type vmType)
+        {
+            vmType = null;
+            if (viewType == null) return false;
+
+            var cur = viewType;
+            while (cur != null && cur != typeof(object))
+            {
+                if (cur.IsGenericType)
+                {
+                    var def = cur.GetGenericTypeDefinition();
+
+                    // 用 FullName 避免組件引用問題
+                    if (def.FullName == "XPlan.UI.ViewBase`1")
+                    {
+                        var args = cur.GetGenericArguments();
+                        if (args != null && args.Length == 1)
+                        {
+                            vmType = args[0];
+                            return true;
+                        }
+                    }
+                }
+
+                cur = cur.BaseType;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 取得 ViewModel 上可能會用到的 instance methods（Public/NonPublic）。
+        /// </summary>
+        public static MethodInfo[] GetAllInstanceMethods(Type type)
+        {
+            if (type == null) return Array.Empty<MethodInfo>();
+
+            return type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         }
 
         #endregion

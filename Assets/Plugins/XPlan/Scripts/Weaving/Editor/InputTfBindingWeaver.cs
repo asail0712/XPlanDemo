@@ -15,7 +15,7 @@ namespace XPlan.Editors.Weaver
     /// 在 OnEnable 末尾插入 VmButtonBindingRuntime.BindButtons(this);
     /// 在 OnDisable 末尾插入 VmButtonBindingRuntime.UnbindButtons(this);
     /// </summary>
-    internal sealed class InputTfBindingWeaver : ITypeAspectWeaver
+    internal sealed class InputTfBindingWeaver //: ITypeAspectWeaver
     {
         public string AttributeFullName => "XPlan.ViewBindingAttribute";
 
@@ -30,11 +30,11 @@ namespace XPlan.Editors.Weaver
 
             // 取得 Runtime 的靜態方法參考
             var bindMethodInfo = typeof(VmInputTfBindingRuntime).GetMethod(
-                nameof(VmInputTfBindingRuntime.BindInputTf),
+                nameof(VmInputTfBindingRuntime.Bind),
                 new[] { typeof(object) });
 
             var unbindMethodInfo = typeof(VmInputTfBindingRuntime).GetMethod(
-                nameof(VmInputTfBindingRuntime.UnbindInputTf),
+                nameof(VmInputTfBindingRuntime.Unbind),
                 new[] { typeof(object) });
 
             if (bindMethodInfo == null || unbindMethodInfo == null)

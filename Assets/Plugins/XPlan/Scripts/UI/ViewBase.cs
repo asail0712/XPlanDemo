@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using XPlan.Weaver.Runtime;
 
 namespace XPlan.UI
 {    
@@ -54,6 +55,24 @@ namespace XPlan.UI
             });
         }
 
+        private void OnEnable()
+        {
+            if (!ViewBindingHelper.TryGetViewModelTypeFromView(this.GetType(), out Type vmType))
+                return;
+
+            MethodInfo[] nethods = ViewBindingHelper.GetAllInstanceMethods(vmType);
+
+            VmButtonBindingRuntime.Bind(this, nethods);
+            VmInputTfBindingRuntime.Bind(this, nethods);
+            VmToggleBindingRuntime.Bind(this, nethods);
+        }
+
+        private void OnDisable()
+        {
+            VmButtonBindingRuntime.Unbind(this);
+            VmInputTfBindingRuntime.Unbind(this);
+            VmToggleBindingRuntime.Unbind(this);
+        }
 
         private void OnDestroy()
         {

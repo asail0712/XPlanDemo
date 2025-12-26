@@ -10,7 +10,7 @@ namespace XPlan.Weaver.Runtime
         /// <summary>
         /// 1. 傳入 ViewBase 的衍生類別實例即可（型別用 object 即可）
         /// </summary>
-        public static void BindInputTf(object viewInstance)
+        public static void Bind(object viewInstance, MethodInfo[] methods)
         {
             if (viewInstance == null)
                 return;
@@ -21,15 +21,6 @@ namespace XPlan.Weaver.Runtime
             var tfMap = FindInputTfOnView(viewType, viewInstance);
             if (tfMap.Count == 0)
                 return;
-
-            // ★ 這裡改成「透過 ViewBase<TViewModel> 的泛型參數取 vmType」
-            var vmType = GetViewModelTypeFromView(viewType);
-            if (vmType == null)
-                return;
-
-            // 3. 檢查 VM 裡所有有 [InputTfBinding] 的方法
-            var methods = vmType.GetMethods(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
             foreach (var method in methods)
             {
@@ -77,7 +68,7 @@ namespace XPlan.Weaver.Runtime
             }
         }
 
-        public static void UnbindInputTf(object viewInstance)
+        public static void Unbind(object viewInstance)
         {
             if (viewInstance == null)
                 return;
