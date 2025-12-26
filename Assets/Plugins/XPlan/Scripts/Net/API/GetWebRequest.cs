@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PCSC.Iso7816;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,9 +27,9 @@ namespace XPlan.Net
          * Send
          * ************************************/
 
-        public async Task<bool> SendAsync()
+        public async Task<TResponse> SendAsync<TResponse>()
         {
-            return await SendAsync_Imp<bool>();
+            return await SendAsync_Imp<TResponse>();
         }
     }
 }

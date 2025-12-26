@@ -15,6 +15,8 @@ namespace XPlan.Editors.Weaver
     /// 在 OnEnable 末尾插入 VmButtonBindingRuntime.BindButtons(this);
     /// 在 OnDisable 末尾插入 VmButtonBindingRuntime.UnbindButtons(this);
     /// </summary>
+    
+    // *************** 棄用此Weaver 直接在ViewBase綁定 ***************
     internal sealed class ToggleBindingWeaver //: ITypeAspectWeaver
     {
         public string AttributeFullName => "XPlan.ViewBindingAttribute";
