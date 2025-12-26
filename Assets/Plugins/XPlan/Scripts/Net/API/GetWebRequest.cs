@@ -1,13 +1,4 @@
-﻿using Newtonsoft.Json;
-using PCSC.Iso7816;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Networking;
-
-using XPlan.Utility;
+﻿using System.Threading.Tasks;
 
 namespace XPlan.Net
 {
