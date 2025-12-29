@@ -10,9 +10,9 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.ResourceManagement;
-
 #endif //ADDRESSABLES_EXISTS
 
 using XPlan.Utility;
@@ -48,20 +48,22 @@ namespace XPlan.Addressable
         [Tooltip("是否指定Badge")]
         [SerializeField] public bool bUsedBadge     = false;
 
-        public Action<string, float> OnEachProgress;    // 資源名稱, 進度
-        public Action<string> OnEachDone;               // 資源名稱
+        public Action<float> OnEachProgress;    // 資源名稱, 進度
         public Action OnAllDone;
         public Action<string> OnError;
 
         private List<string> pendingKeys    = new List<string>();
         private bool bLoadingFinish         = false;
 
+#if ADDRESSABLES_EXISTS  
+        private IResourceLocator _loadedCatalogLocator = null;
+#endif // ADDRESSABLES_EXISTS  
         private void Awake()
         {
             DontDestroyOnLoad(this);
 #if ADDRESSABLES_EXISTS  
             // 將Catalog裡面的badge由latest更換成指定的badge
-            Addressables.ResourceManager.InternalIdTransformFunc = (location) =>
+            Addressables.InternalIdTransformFunc = (location) =>
             {            
                 var id = location.InternalId;
                 
@@ -110,8 +112,15 @@ namespace XPlan.Addressable
         private IEnumerator LoadCatalogByBadgeAndStart(Action<bool> finishAction)
         {
 #if ADDRESSABLES_EXISTS            
+            // 若之前載過，先移除舊的（只移除你自己加的）
+            if (_loadedCatalogLocator != null)
+            {
+                Addressables.RemoveResourceLocator(_loadedCatalogLocator);
+                _loadedCatalogLocator = null;
+            }
+
             string catalogUrl = GetCatalogUrl(ccdProjectId, ccdBucketId, ccdBadge);
-            Debug.Log($"📥 載入 CCD catalog（badge: {ccdBadge}）: {catalogUrl}");
+            Debug.Log($"載入 CCD catalog（badge: {ccdBadge}）: {catalogUrl}");
 
             var handle = Addressables.LoadContentCatalogAsync(catalogUrl, false);
             yield return handle;
@@ -127,6 +136,7 @@ namespace XPlan.Addressable
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
                 Debug.Log($"✅ Catalog 載入成功：{ccdBadge}");
+                _loadedCatalogLocator = handle.Result;
                 finishAction?.Invoke(true);
             }
             else
@@ -160,7 +170,6 @@ namespace XPlan.Addressable
             pendingKeys.Clear();
 
             OnEachProgress  = null;
-            OnEachDone      = null;
             OnAllDone       = null;
             OnError         = null;
         }
@@ -232,60 +241,54 @@ namespace XPlan.Addressable
                 pendingKeys.AddUnique(loc.PrimaryKey);
             }
 
-            // Step 2: 遍歷每一個資源，檢查是否需要下載
-            foreach (var key in pendingKeys)
+            // Step 2: 檢查是否需要下載
+            var sizeHandle = Addressables.GetDownloadSizeAsync(pendingKeys);
+            yield return sizeHandle;
+
+            if (sizeHandle.Status != AsyncOperationStatus.Succeeded)
             {
-                var sizeHandle = Addressables.GetDownloadSizeAsync(key);
-                yield return sizeHandle;
-
-                if (sizeHandle.Status != AsyncOperationStatus.Succeeded)
-                {
-                    OnError?.Invoke($"📦 無法取得 {key} 的大小");
-
-                    Addressables.Release(sizeHandle);
-                    continue;
-                }
-
-                if (sizeHandle.Result == 0)
-                {
-                    Debug.Log($"✅ {key} 已經快取");
-                    //yield return LoadAsset(key);
-                    Addressables.Release(sizeHandle);
-
-                    OnEachDone?.Invoke(key);
-                    continue;
-                }
-
-                // Step 3: 下載
-                var downloadHandle = Addressables.DownloadDependenciesAsync(key);
-                while (!downloadHandle.IsDone)
-                {
-                    OnEachProgress?.Invoke(key, downloadHandle.PercentComplete);
-                    yield return null;
-                }
-
-                if (downloadHandle.Status == AsyncOperationStatus.Succeeded)
-                {
-                    Debug.Log($"✅ {key} 下載完成");
-                    Addressables.Release(downloadHandle);
-
-                    OnEachDone?.Invoke(key);
-                    //yield return LoadAsset(key);
-                }
-                else
-                {
-                    Addressables.Release(downloadHandle);
-
-                    OnError?.Invoke($"❌ {key} 下載失敗");
-                }
+                OnError?.Invoke($"無法取得 下載大小");
 
                 Addressables.Release(sizeHandle);
+                yield break;
+            }
+
+            if (sizeHandle.Result <= 0)
+            {
+                Debug.Log($"已經快取");
+                //yield return LoadAsset(key);
+                Addressables.Release(sizeHandle);
+
+                yield break;
+            }
+
+            // Step 3: 下載
+            var downloadHandle = Addressables.DownloadDependenciesAsync(pendingKeys, Addressables.MergeMode.Union);
+            while (!downloadHandle.IsDone)
+            {
+                OnEachProgress?.Invoke(downloadHandle.PercentComplete);
+                yield return null;
+            }
+
+            if (downloadHandle.Status == AsyncOperationStatus.Succeeded)
+            {
+                Debug.Log($"下載完成");
+                Addressables.Release(downloadHandle);
+            }
+            else
+            {
+                Addressables.Release(downloadHandle);
+                OnError?.Invoke($"❌下載失敗");
+
+                yield break;
             }
 
             bLoadingFinish = true;
-
             OnAllDone?.Invoke();
+
+            Addressables.Release(sizeHandle);
             Addressables.Release(locHandle);
+
 #endif //ADDRESSABLES_EXISTS
             yield return null;
         }
