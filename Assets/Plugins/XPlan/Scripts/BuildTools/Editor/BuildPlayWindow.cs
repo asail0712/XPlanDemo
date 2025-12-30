@@ -18,8 +18,8 @@ namespace XPlan.BuildTools.Editors
         private Vector2 playScroll;
 
         // Work copy（暫存副本，編輯不會影響資產）
-        private BuildConfigSO buildWork;
-        private PlayConfigSO playWork;
+        private BuildConfig buildWork;
+        private PlayConfig playWork;
 
         private SerializedObject buildSO;
         private SerializedObject playSO;
@@ -38,16 +38,10 @@ namespace XPlan.BuildTools.Editors
             public double LastRefreshTime = -9999;
         }
 
-        private readonly DropdownCache<BuildConfigSO> buildCache = new();
-        private readonly DropdownCache<PlayConfigSO> playCache = new();
+        private readonly DropdownCache<BuildConfig> buildCache = new();
+        private readonly DropdownCache<PlayConfig> playCache = new();
 
         private const double RefreshIntervalSeconds = 1.0; // 避免 OnGUI 每幀掃資產卡頓
-
-        // -------------------------
-        // Current*Config asset paths (auto create / overwrite)
-        // -------------------------
-        private const string CurrentBuildConfigAssetPath = "Assets/BuildTools/CurrentBuildConfig.asset";
-        private const string CurrentPlayConfigAssetPath = "Assets/BuildTools/CurrentPlayConfig.asset";
 
         [MenuItem("XPlanTools/BuildTools/Build or Play", false, 9)]
         public static void Open()
@@ -128,16 +122,9 @@ namespace XPlan.BuildTools.Editors
 
             buildSO.UpdateIfRequiredOrScript();
 
-            EditorGUI.BeginChangeCheck();
-            buildScroll = EditorGUILayout.BeginScrollView(buildScroll);
-            DrawAllProperties(buildSO);
-            EditorGUILayout.EndScrollView();
-            if (EditorGUI.EndChangeCheck()) buildDirty = true;
-
-            // 只套用到 WorkCopy（不會動到資產）
-            buildSO.ApplyModifiedProperties();
-
             EditorGUILayout.Space(8);
+
+            buildDirty = true;
 
             // 4) 套用 / 還原
             using (new EditorGUILayout.HorizontalScope())
@@ -162,20 +149,60 @@ namespace XPlan.BuildTools.Editors
 
             EditorGUILayout.Space(6);
 
-            // 5) 真正 Build / Build&Run
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Build", GUILayout.Height(28)))
+                if (GUILayout.Button("Apply Config（執行套用邏輯）", GUILayout.Height(28)))
                 {
-                    // TODO：真正 Build 流程接這裡（用 settings.buildConfig 這顆資產）
-                    Debug.Log($"[XPlan] Build with config asset: {settings.buildConfig.name}");
+                    if (buildDirty)
+                    {
+                        ApplyWorkToAsset(buildWork, settings.buildConfig);
+                        buildDirty = false;
+                    }
+
+                    Debug.Log($"[XPlan] Apply build config logic with asset: {settings.buildConfig.name}");
                 }
 
-                if (GUILayout.Button("Build & Run", GUILayout.Height(28)))
+                if (GUILayout.Button("Apply And Build", GUILayout.Height(28)))
                 {
-                    // TODO：Build + Run
-                    Debug.Log($"[XPlan] Build&Run with config asset: {settings.buildConfig.name}");
+                    // 1) 若有未套用的 WorkCopy，先寫回
+                    if (buildDirty)
+                    {
+                        ApplyWorkToAsset(buildWork, settings.buildConfig);
+                        buildDirty = false;
+                    }
+
+                    // 2) 真正執行 Build
+                    ExecuteBuild(settings.buildConfig);
                 }
+            }
+
+            EditorGUILayout.Space(6);
+
+            EditorGUI.BeginChangeCheck();
+            buildScroll = EditorGUILayout.BeginScrollView(buildScroll);
+            DrawAllProperties(buildSO);
+            EditorGUILayout.EndScrollView();
+            EditorGUI.EndChangeCheck();
+
+            // 只套用到 WorkCopy（不會動到資產）
+            buildSO.ApplyModifiedProperties();
+        }
+
+        private void ExecuteBuild(BuildConfig config)
+        {
+            Debug.Log($"[XPlan] Start Build with config: {config.name}");
+
+            // 讓 Config 自己決定 Build 參數
+            var options = config.CreateBuildPlayerOptions();
+            var report  = BuildPipeline.BuildPlayer(options);
+
+            if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+            {
+                Debug.Log($"[XPlan] Build Success: {report.summary.outputPath}");
+            }
+            else
+            {
+                Debug.LogError($"[XPlan] Build Failed: {report.summary.result}");
             }
         }
 
@@ -185,7 +212,7 @@ namespace XPlan.BuildTools.Editors
         private void DrawPlayTab(ToolSettings settings)
         {
             // 1) 下拉式選單選擇 PlayConfig
-            RefreshDropdown(playCache, settings.playConfig, "t:PlayConfigSO");
+            RefreshDropdown(playCache, settings.playConfig, "t:PlayConfig");
 
             EditorGUI.BeginChangeCheck();
             playCache.Index = EditorGUILayout.Popup("Play Config", playCache.Index, playCache.Labels);
@@ -250,19 +277,40 @@ namespace XPlan.BuildTools.Editors
             {
                 if (GUILayout.Button("Apply Config（執行套用邏輯）", GUILayout.Height(28)))
                 {
+                    // 1) 先寫回 PlayConfig 資產
                     if (playDirty)
                     {
                         ApplyWorkToAsset(playWork, settings.playConfig);
                         playDirty = false;
                     }
 
+                    // 2) 生成 runtime json（只跟 play 有關）
+                    GenerateRuntimeJson(settings.playConfig);
+
                     Debug.Log($"[XPlan] Apply play config logic with asset: {settings.playConfig.name}");
                 }
 
                 if (GUILayout.Button(EditorApplication.isPlaying ? "Stop" : "Apply And Play", GUILayout.Height(28)))
                 {
-                    ApplyWorkToAsset(playWork, settings.playConfig);
-                    EditorApplication.isPlaying = !EditorApplication.isPlaying;
+                    if (!EditorApplication.isPlaying)
+                    {
+                        // 1) 先寫回 PlayConfig 資產
+                        if (playDirty)
+                        {
+                            ApplyWorkToAsset(playWork, settings.playConfig);
+                            playDirty = false;
+                        }
+
+                        // 2) 生成 runtime json（只跟 play 有關）
+                        GenerateRuntimeJson(settings.playConfig);
+
+                        // 3) 進入 Play
+                        EditorApplication.isPlaying = true;
+                    }
+                    else
+                    {
+                        EditorApplication.isPlaying = false;
+                    }
                 }
             }
 
@@ -276,6 +324,21 @@ namespace XPlan.BuildTools.Editors
 
             // 只套用到 WorkCopy（不會動到資產）
             playSO.ApplyModifiedProperties();
+        }
+
+        private static void GenerateRuntimeJson(PlayConfig config)
+        {
+            if (!config) return;
+
+            var json = config.ExportRuntimeJson();
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                Debug.LogWarning("[XPlan] PlayConfig ExportRuntimeJson returned empty.");
+                return;
+            }
+
+            // 寫到 StreamingAssets
+            RuntimeConfigFile.WriteJson(json);
         }
 
         // -------------------------
@@ -382,7 +445,7 @@ namespace XPlan.BuildTools.Editors
         // -------------------------
         // WorkCopy helpers
         // -------------------------
-        private void EnsureBuildWorkCopy(BuildConfigSO asset)
+        private void EnsureBuildWorkCopy(BuildConfig asset)
         {
             if (!asset) return;
 
@@ -398,7 +461,7 @@ namespace XPlan.BuildTools.Editors
                 buildSO = new SerializedObject(buildWork);
         }
 
-        private void EnsurePlayWorkCopy(PlayConfigSO asset)
+        private void EnsurePlayWorkCopy(PlayConfig asset)
         {
             if (!asset) return;
 
@@ -414,7 +477,7 @@ namespace XPlan.BuildTools.Editors
                 playSO = new SerializedObject(playWork);
         }
 
-        private void ResetBuildWorkCopy(BuildConfigSO asset)
+        private void ResetBuildWorkCopy(BuildConfig asset)
         {
             DestroyWorkCopy(buildWork);
             buildWork = CreateWorkCopy(asset);
@@ -422,7 +485,7 @@ namespace XPlan.BuildTools.Editors
             buildDirty = false;
         }
 
-        private void ResetPlayWorkCopy(PlayConfigSO asset)
+        private void ResetPlayWorkCopy(PlayConfig asset)
         {
             DestroyWorkCopy(playWork);
             playWork = CreateWorkCopy(asset);
@@ -456,77 +519,6 @@ namespace XPlan.BuildTools.Editors
             EditorUtility.CopySerialized(work, asset);
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
-
-            // 2) 自動更新 Current*Config（沒有就建，有就覆蓋）
-            if (asset is BuildConfigSO b) SetCurrentBuildConfig(b);
-            else if (asset is PlayConfigSO p) SetCurrentPlayConfig(p);
-        }
-
-        private static void SetCurrentBuildConfig(BuildConfigSO config)
-        {
-            if (!config) return;
-
-            var current = EnsureOrCreateSingletonAsset<CurrentBuildConfig>(CurrentBuildConfigAssetPath);
-            current.so = config;
-            current.applierSO = config.applier;
-
-            EditorUtility.SetDirty(current);
-            AssetDatabase.SaveAssets();
-        }
-
-        private static void SetCurrentPlayConfig(PlayConfigSO config)
-        {
-            if (!config) return;
-
-            var current = EnsureOrCreateSingletonAsset<CurrentPlayConfig>(CurrentPlayConfigAssetPath);
-            current.so = config;
-            current.applierSO = config.applier;
-
-            EditorUtility.SetDirty(current);
-            AssetDatabase.SaveAssets();
-        }
-
-        private static T EnsureOrCreateSingletonAsset<T>(string assetPath) where T : ScriptableObject
-        {
-            // 先嘗試從指定路徑載入（確保用固定那顆）
-            var existed = AssetDatabase.LoadAssetAtPath<T>(assetPath);
-            if (existed) return existed;
-
-            // 若路徑沒檔案，再找專案內是否已經有人建過（有就沿用第一顆）
-            var guids = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
-            if (guids != null && guids.Length > 0)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                var found = AssetDatabase.LoadAssetAtPath<T>(path);
-                if (found) return found;
-            }
-
-            // 都沒有：建立資料夾 + 建 asset
-            EnsureFolderForAssetPath(assetPath);
-
-            var created = ScriptableObject.CreateInstance<T>();
-            AssetDatabase.CreateAsset(created, assetPath);
-            AssetDatabase.SaveAssets();
-            return created;
-        }
-
-        private static void EnsureFolderForAssetPath(string assetPath)
-        {
-            // assetPath: Assets/Resources/XPlan/BuildTools/xxx.asset
-            var dir = System.IO.Path.GetDirectoryName(assetPath)?.Replace("\\", "/");
-            if (string.IsNullOrEmpty(dir)) return;
-
-            var parts = dir.Split('/');
-            if (parts.Length == 0) return;
-
-            string cur = parts[0]; // "Assets"
-            for (int i = 1; i < parts.Length; i++)
-            {
-                var next = $"{cur}/{parts[i]}";
-                if (!AssetDatabase.IsValidFolder(next))
-                    AssetDatabase.CreateFolder(cur, parts[i]);
-                cur = next;
-            }
         }
 
         // -------------------------
