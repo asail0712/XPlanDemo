@@ -136,7 +136,7 @@ namespace XPlan.Recycle
             {
                 GameObject go       = GameObject.Instantiate(prefab);
                 T comp              = go.GetComponent<T>();
-                go.transform.parent = poolRoot == null ? null : poolRoot.transform;
+                go.transform.SetParent(poolRoot == null ? null : poolRoot.transform);
 
                 // 套上 recycle root
                 if (comp is PoolableComponent pc && poolRoot != null)
