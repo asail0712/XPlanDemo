@@ -13,6 +13,11 @@ namespace XPlan
             WeaverHookInvoker.Invoke(this, "__LogicComponent_WeaverHook");
         }
 
+        private void OnDestroy()
+        {
+            NotifySystem.Instance.UnregisterNotify(this);
+        }
+
         /*************************
         * Notify相關
         * ***********************/
