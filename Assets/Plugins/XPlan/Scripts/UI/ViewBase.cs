@@ -19,71 +19,93 @@ namespace XPlan.UI
     [ViewBinding]
     public class ViewBase<TViewModel> : MonoBehaviour, IUIView where TViewModel : ViewModelBase
     {
-        private TViewModel _viewModel;                                                                          // viewmodel本體
+        private TViewModel _viewModel;// viewmodel本體
+        private IDisposable _waitToken;
+
         private readonly List<IDisposable> _disposables                         = new();                        // 解除訂閱集中管理
         private readonly Dictionary<string, ObservableBinding> _vmObservableMap = new(StringComparer.Ordinal);  // 新增：把 VM 內的 ObservableProperty 索引起來（baseName → 綁定資訊）
         private readonly SpriteCache _spriteCache                               = new();                        // 給圖片綁定用的 Sprite 快取    
         
-        private void Awake()
+        protected void Awake()
         {
-            VMLocator.GetOrWaitAsync<TViewModel>((vm) => 
-            {
-                _viewModel = vm;
-
-                // 先建立 VM 的 Observable 索引（UI→VM 要用）
-                ViewBindingHelper.IndexVmObservables(_viewModel, _vmObservableMap);
-
-                // 自動註冊 UI 控制的事件（UI→VM）（InputField / Toggle / Slider）
-                ViewBindingHelper.AutoRegisterComponents(this, _vmObservableMap);
-
-                // 自動綁訂閱（VM→UI）（Observable → 方法綁定 (OnXXXXChange)）
-                ViewBindingHelper.AutoBindObservableHandlers(this, _vmObservableMap, _disposables);
-
-                // 自動綁訂閱（VM→UI） （文字、Toggle、Slider、Image、RawImage ...）
-                ViewBindingHelper.AutoBindObservables(this, _viewModel, _disposables, _spriteCache);
-
-                // ★ 新增：VM→UI（Visible）
-                ViewBindingHelper.AutoBindVisibility(this, _vmObservableMap, _disposables);   
-
-                // 衍生類別為內部特定元件時 給予 ViewModel資訊
-                if(this is IViewModelGetter<TViewModel>)
-                {
-                    IViewModelGetter<TViewModel> view = this as IViewModelGetter<TViewModel>;
-
-                    view.OnViewModelReady(_viewModel);
-                }
-            });
+            VMLocator.VMUnregistered += OnVMUnregistered;
+            WaitAndBind();
+        }
+        private void WaitAndBind()
+        {
+            _waitToken?.Dispose();
+            _waitToken = VMLocator.GetOrWait<TViewModel>(BindVM);
         }
 
-        private void OnEnable()
+        private void BindVM(TViewModel vm)
+        {
+            // 同一顆就別重綁
+            if (_viewModel != null && ReferenceEquals(_viewModel, vm))
+                return;
+
+            UnbindAll();
+
+            _viewModel = vm;
+
+            ViewBindingHelper.IndexVmObservables(_viewModel, _vmObservableMap);
+            ViewBindingHelper.AutoRegisterComponents(this, _vmObservableMap);
+            ViewBindingHelper.AutoBindObservableHandlers(this, _vmObservableMap, _disposables);
+            ViewBindingHelper.AutoBindObservables(this, _viewModel, _disposables, _spriteCache);
+            ViewBindingHelper.AutoBindVisibility(this, _vmObservableMap, _disposables);
+
+            if (this is IViewModelGetter<TViewModel> getter)
+                getter.OnViewModelReady(_viewModel);
+        }
+        private void OnVMUnregistered(Type t, ViewModelBase deadVm)
+        {
+            // 只有「死掉的是我綁的那顆」才重等
+            if (_viewModel != null && ReferenceEquals(_viewModel, deadVm))
+            {
+                UnbindAll();
+                WaitAndBind();
+            }
+        }
+        private void UnbindAll()
+        {
+            // 解除 VM→UI 訂閱
+            foreach (var d in _disposables) 
+                d?.Dispose();
+            _disposables.Clear();
+
+            // 清 UI→VM 的索引
+            _vmObservableMap.Clear();
+
+            // VM 參考清掉（避免握到舊 VM）
+            _viewModel = null;
+        }
+        protected void OnEnable()
         {
             if (!ViewBindingHelper.TryGetViewModelTypeFromView(this.GetType(), out Type vmType))
                 return;
 
-            MethodInfo[] nethods = ViewBindingHelper.GetAllInstanceMethods(vmType);
+            MethodInfo[] methods = ViewBindingHelper.GetAllInstanceMethods(vmType);
 
-            VmButtonBindingRuntime.Bind(this, nethods);
-            VmInputTfBindingRuntime.Bind(this, nethods);
-            VmToggleBindingRuntime.Bind(this, nethods);
+            VmButtonBindingRuntime.Bind(this, methods);
+            VmInputTfBindingRuntime.Bind(this, methods);
+            VmToggleBindingRuntime.Bind(this, methods);
         }
 
-        private void OnDisable()
+        protected void OnDisable()
         {
             VmButtonBindingRuntime.Unbind(this);
             VmInputTfBindingRuntime.Unbind(this);
             VmToggleBindingRuntime.Unbind(this);
         }
 
-        private void OnDestroy()
+        protected void OnDestroy()
         {
-            foreach (var d in _disposables)
-            {
-                d?.Dispose();
-            }
+            VMLocator.VMUnregistered -= OnVMUnregistered;
 
-            _disposables.Clear();
+            _waitToken?.Dispose();
+            _waitToken = null;
 
-            // 清除 sprite 快取
+            UnbindAll();
+
             _spriteCache.Dispose();
         }
 
