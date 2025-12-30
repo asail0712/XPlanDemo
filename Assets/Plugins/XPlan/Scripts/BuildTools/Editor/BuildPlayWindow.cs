@@ -10,6 +10,16 @@ namespace XPlan.BuildTools.Editors
 {
     public class BuildPlayWindow : EditorWindow
     {
+        private static readonly string[] kApplyFields =
+        {
+            "displayName",
+            "developmentBuild",
+            "scriptDebugging",
+            "connectProfiler",
+            "deepProfiling",
+            "productName", // ★把你要保留/可編輯的加進來
+        };
+
         private enum Tab { Build, Play }
 
         [SerializeField] private Tab tab;
@@ -88,7 +98,7 @@ namespace XPlan.BuildTools.Editors
         private void DrawBuildTab(ToolSettings settings)
         {
             // 1) 下拉式選單選擇 BuildConfig
-            RefreshDropdown(buildCache, settings.buildConfig, "t:BuildConfigSO");
+            RefreshDropdown(buildCache, settings.buildConfig, "t:BuildConfig");
 
             EditorGUI.BeginChangeCheck();
             buildCache.Index = EditorGUILayout.Popup("Build Config", buildCache.Index, buildCache.Labels);
@@ -195,6 +205,8 @@ namespace XPlan.BuildTools.Editors
             // 讓 Config 自己決定 Build 參數
             var options = config.CreateBuildPlayerOptions();
             var report  = BuildPipeline.BuildPlayer(options);
+
+            config.RestoreAfterBuild();
 
             if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
             {
@@ -515,8 +527,19 @@ namespace XPlan.BuildTools.Editors
         {
             if (!work || !asset) return;
 
-            // 1) 把 WorkCopy 序列化欄位整包拷回資產（含子類新增欄位）
-            EditorUtility.CopySerialized(work, asset);
+            var src = new SerializedObject(work);
+            var dst = new SerializedObject(asset);
+
+            foreach (var path in kApplyFields)
+            {
+                var spSrc = src.FindProperty(path);
+                var spDst = dst.FindProperty(path);
+                if (spSrc == null || spDst == null) continue;
+
+                spDst.serializedObject.CopyFromSerializedProperty(spSrc);
+            }
+
+            dst.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
         }
