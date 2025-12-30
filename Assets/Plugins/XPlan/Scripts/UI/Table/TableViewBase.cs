@@ -142,8 +142,10 @@ namespace XPlan.UI
             }
         }
 
-        private void OnDestroy()
+        private new void OnDestroy()
         {
+            base.OnDestroy();
+
             // 複製 ViewBase 的資源釋放
             foreach (var d in _disposables) d?.Dispose();
             _disposables.Clear();
@@ -154,6 +156,8 @@ namespace XPlan.UI
                 if (kv.Value != null) Destroy(kv.Value.gameObject);
             }
             _activeItemViews.Clear();
+
+            RecyclePool<TItemView>.UnregisterType();
         }
 
         /// <summary>
