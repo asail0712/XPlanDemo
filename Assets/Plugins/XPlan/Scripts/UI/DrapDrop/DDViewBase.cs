@@ -79,8 +79,8 @@ namespace XPlan.UI
                 DragPhase.Drag => "_onDrag",
                 DragPhase.End => "_onEndDrag",
                 DragPhase.Drop => "_onDrop",
-                DragPhase.ItemEnter => "_onItemEnter",
-                DragPhase.ItemExit => "_onItemExit",
+                DragPhase.DragEnter => "_onDragEnter",
+                DragPhase.DragExit => "_onDragExit",
                 _ => null
             };
 

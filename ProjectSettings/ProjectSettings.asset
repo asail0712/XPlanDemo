@@ -896,7 +896,7 @@ PlayerSettings:
   webWasm2023: 0
   scriptingDefineSymbols:
     Android: AR_FOUNDATION;ADDRESSABLES_EXISTS
-    Standalone: PCSC;ZXING;AR_FOUNDATION
+    Standalone: PCSC;ZXING;AR_FOUNDATION;ADDRESSABLES_EXISTS
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

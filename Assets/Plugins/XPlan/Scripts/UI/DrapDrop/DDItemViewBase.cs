@@ -13,8 +13,8 @@ namespace XPlan.UI
         private Action<TItemViewModel, PointerEventData> _onEndDrag;
         private Action<TItemViewModel, PointerEventData> _onDrop;
 
-        private Action<TItemViewModel, PointerEventData> _onItemEnter;
-        private Action<TItemViewModel, PointerEventData> _onItemExit;
+        private Action<TItemViewModel, PointerEventData> _onDragEnter;
+        private Action<TItemViewModel, PointerEventData> _onDragExit;
 
         // ===============================
         // Event Trigger
@@ -41,12 +41,12 @@ namespace XPlan.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            _onItemEnter?.Invoke(_viewModel, eventData);
+            _onDragEnter?.Invoke(_viewModel, eventData);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            _onItemExit?.Invoke(_viewModel, eventData);
+            _onDragExit?.Invoke(_viewModel, eventData);
         }
     }
 }

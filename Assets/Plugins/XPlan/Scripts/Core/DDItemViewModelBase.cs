@@ -5,6 +5,7 @@ namespace XPlan
 {
     public abstract class DDItemViewModelBase : ItemViewModelBase
     {
+        public abstract bool CanDrag();
         public abstract IGhostPayload CreateGhostPayload();
     }
 
