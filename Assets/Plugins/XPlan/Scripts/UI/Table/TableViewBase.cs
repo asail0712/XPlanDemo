@@ -62,9 +62,6 @@ namespace XPlan.UI
 
             // TableView 專屬的 Item 集合綁定
             BindItemCollection(vm.Items);
-
-            // for VM 設定完成
-            OnTableViewReady();
         }
 
         private void TryRegisterPoolOnce()
@@ -87,7 +84,7 @@ namespace XPlan.UI
             );
         }
 
-        protected virtual void OnTableViewReady() { /* 子類實作 */ }
+        protected virtual void OnTableViewReady(TTableViewModel vm) { /* 子類實作 */ }
 
         /// <summary>
         /// 訂閱 Item 集合的變動並處理 UI 渲染。
@@ -140,6 +137,9 @@ namespace XPlan.UI
                 // 加入List
                 _activeItemViews.Add(itemVM, itemView);
             }
+
+            // for VM 設定完成
+            OnTableViewReady(_viewModel);
         }
 
         private new void OnDestroy()

@@ -11,7 +11,7 @@ namespace XPlan.UI
     {
         protected TItemViewModel _viewModel;
         private readonly Dictionary<string, ObservableBinding> _vmObservableMap = new(StringComparer.Ordinal);  // 新增：把 VM 內的 ObservableProperty 索引起來（baseName → 綁定資訊）
-        private readonly List<IDisposable> _disposables                         = new();                        // Item View 內部的訂閱列表
+        protected readonly List<IDisposable> _disposables                       = new();                        // Item View 內部的訂閱列表
         private readonly SpriteCache _spriteCache                               = new();                        // 每個 Item View 使用自己的 SpriteCache 以供 Image 綁定
 
         /// <summary>
