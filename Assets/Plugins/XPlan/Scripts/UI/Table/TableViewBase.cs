@@ -104,41 +104,62 @@ namespace XPlan.UI
         /// </summary>
         private void RenderItems(List<TItemViewModel> newItems)
         {
-            // 簡化實作：回收所有現有的 Item View
+            if (_itemViewPrefab == null || _listRoot == null)
+            {
+                Debug.LogError("[TableViewBase] Prefab 或 Content Container 尚未設置！");
+                return;
+            }
+
+            newItems ??= new List<TItemViewModel>();
+
+            // 用 HashSet 快速判斷哪些要移除
+            var newSet = new HashSet<TItemViewModel>(newItems);
+
+            // 1) 只回收「不在新清單」的舊 view（其他全部留在場景）
+            var toRemove = new List<TItemViewModel>();
             foreach (var kv in _activeItemViews)
             {
-                RecyclePool<TItemView>.Recycle(kv.Value);
+                if (!newSet.Contains(kv.Key))
+                    toRemove.Add(kv.Key);
             }
 
-            _activeItemViews.Clear();
-
-            if (newItems == null) return;
-
-            // 實例化新的 Item View
-            foreach (var itemVM in newItems)
+            foreach (var key in toRemove)
             {
-                if (_itemViewPrefab == null || _listRoot == null)
+                var view = _activeItemViews[key];
+                if (view != null)
+                    RecyclePool<TItemView>.Recycle(view);
+
+                _activeItemViews.Remove(key);
+            }
+
+            // 2) 依序確保每個 item 都有 view；有就沿用，沒有才 Spawn
+            for (int i = 0; i < newItems.Count; i++)
+            {
+                var itemVM = newItems[i];
+
+                if (!_activeItemViews.TryGetValue(itemVM, out var itemView) || itemView == null)
                 {
-                    Debug.LogError("[TableViewBase] Prefab 或 Content Container 尚未設置！");
-                    break;
+                    itemView = RecyclePool<TItemView>.SpawnOne();
+                    _listRoot.AddChild(itemView.gameObject);
+
+                    itemView.SetViewModel(itemVM);
+
+                    // 只在「新建」時做事件綁定，避免每次刷新 RemoveAllListeners 造成抖動
+                    AutoBindItemViewEvents(itemView, itemVM);
+
+                    _activeItemViews[itemVM] = itemView;
+                }
+                else
+                {
+                    // 留在場景：只要確保 parent 正確
+                    if (itemView.transform.parent != _listRoot.transform)
+                        _listRoot.AddChild(itemView.gameObject);
                 }
 
-                // 實例化 Item View
-                var itemView = RecyclePool<TItemView>.SpawnOne();
-                _listRoot.AddChild(itemView.gameObject);
-                //var itemView = Instantiate(_itemViewPrefab, _listRoot.transform);
-
-                // 將 ViewModel 注入 Item View 並進行內部綁定
-                itemView.SetViewModel(itemVM);
-
-                // 在這裡呼叫反射自動綁定Buttin與Click
-                AutoBindItemViewEvents(itemView, itemVM);
-
-                // 加入List
-                _activeItemViews.Add(itemVM, itemView);
+                // 3) 排序變了就調 sibling，不移除不重建
+                itemView.transform.SetSiblingIndex(i);
             }
 
-            // for VM 設定完成
             OnTableViewReady(_viewModel);
         }
 

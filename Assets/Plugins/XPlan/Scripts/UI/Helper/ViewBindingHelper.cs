@@ -139,7 +139,9 @@ namespace XPlan.UI
                         });
                     }
                 }
-                // Button 的 MVVM 點擊綁定改用 IL Weaving 做，這裡就不處理了
+                // Button 的 MVVM 點擊綁定VM方法改在Enable / Disable 做，這裡就不處理了
+                // InputField 的 MVVM 點擊綁定VM方法改在Enable / Disable 做，這裡就不處理了
+                // Toggle 的 MVVM 點擊綁定改在VM方法Enable / Disable 做，這裡就不處理了
             }
         }
 
