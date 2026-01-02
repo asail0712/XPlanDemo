@@ -1,0 +1,15 @@
+KEY_NoAccount, E-mail must not be empty.
+KEY_NoPW, Password must not be empty.
+KEY_NotEmail, E-mail format is invalid.
+KEY_PwTooShort, Password is too short, at least 6 characters are required.
+KEY_OtherError, For other errors, please contact customer support.
+KEY_AccountOrPWDeny, This account does not exist.
+KEY_PlzInputIdentity, Please enter your account and password
+KEY_PlzInputEmail, Please enter your e-mail
+KEY_PlzInputPW, Please enter your password
+KEY_Login, Login
+KEY_ForgetPW, Forget your password?
+KEY_RegNew, Register a new account
+KEY_Privacy, Privacy Policy
+KEY_T&C, Terms of Service
+KEY_LoginWithOther, Continue through
