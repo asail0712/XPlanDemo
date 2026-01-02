@@ -1,5 +1,7 @@
-﻿using Mono.Cecil;
+﻿#if WEAVING_ENABLE
+using Mono.Cecil;
 using Mono.Cecil.Cil;
+#endif // WEAVING_ENABLE
 using System;
 using System.Linq;
 
@@ -7,6 +9,7 @@ namespace XPlan.Weaver.Abstractions
 {
     public static class CecilHelper
     {
+#if WEAVING_ENABLE
         /// <summary>
         /// 把 targetMethod 的 body / 參數 / 泛型 / locals / EH
         /// 通通複製到一個新的方法，並回傳這個「原始邏輯方法」。
@@ -245,5 +248,6 @@ namespace XPlan.Weaver.Abstractions
 
             return false;
         }
+#endif // WEAVING_ENABLE
     }
 }

@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,9 @@ using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 
+#if WEAVING_ENABLE
 using Mono.Cecil;
+#endif // WEAVING_ENABLE
 
 using XPlan.Weaver.Abstractions;
 
@@ -17,6 +18,7 @@ namespace XPlan.Editors.Weaver
     [InitializeOnLoad]
     public static class CecilWeaver
     {
+#if WEAVING_ENABLE
         private static int _weaving;
 
         // 想被 Weave 的 DLL 名稱列表（檔名字串）
@@ -390,6 +392,6 @@ namespace XPlan.Editors.Weaver
             // 整個繼承鏈都沒找到
             return (null, null);
         }
+#endif // WEAVING_ENABLE
     }
 }
-#endif

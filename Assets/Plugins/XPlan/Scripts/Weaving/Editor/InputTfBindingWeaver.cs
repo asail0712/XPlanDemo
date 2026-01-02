@@ -1,6 +1,7 @@
-﻿#if UNITY_EDITOR
+﻿#if WEAVING_ENABLE
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+#endif // WEAVING_ENABLE
 using System;
 using System.Linq;
 using UnityEngine;
@@ -21,6 +22,8 @@ namespace XPlan.Editors.Weaver
     {
         public string AttributeFullName => "XPlan.ViewBindingAttribute";
 
+
+#if WEAVING_ENABLE
         public void Apply(ModuleDefinition module, TypeDefinition targetType, CustomAttribute attr)
         {
             if (targetType == null)
@@ -110,6 +113,6 @@ namespace XPlan.Editors.Weaver
             ilProcessor.InsertBefore(ret, ilProcessor.Create(OpCodes.Ldarg_0));
             ilProcessor.InsertBefore(ret, ilProcessor.Create(OpCodes.Call, staticMethod));
         }
+#endif // WEAVING_ENABLE
     }
 }
-#endif

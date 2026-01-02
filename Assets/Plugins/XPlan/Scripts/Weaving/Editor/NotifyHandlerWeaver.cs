@@ -1,5 +1,7 @@
-﻿using Mono.Cecil;
+﻿#if WEAVING_ENABLE
+using Mono.Cecil;
 using Mono.Cecil.Cil;
+#endif // WEAVING_ENABLE
 using System;
 using System.Linq;
 using UnityEngine;
@@ -12,7 +14,7 @@ namespace XPlan.Editors.Weaver
         public string AttributeFullName => "XPlan.NotifyHandlerAttribute";
 
         private const string HookMethodName = "__LogicComponent_WeaverHook";
-
+#if WEAVING_ENABLE
         public void Apply(ModuleDefinition module, MethodDefinition targetMethod, CustomAttribute attr)
         {
             var declaringType = targetMethod.DeclaringType;
@@ -160,5 +162,6 @@ namespace XPlan.Editors.Weaver
 
             Debug.Log($"[NotifyHandlerWeaver] 注入成功：{declaringType.FullName}.{targetMethod.Name} -> {HookMethodName}（instance 冪等）");
         }
+#endif // WEAVING_ENABLE
     }
 }

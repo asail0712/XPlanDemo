@@ -1,5 +1,7 @@
-﻿using Mono.Cecil;
+﻿#if WEAVING_ENABLE
+using Mono.Cecil;
 using Mono.Cecil.Cil;
+#endif // WEAVING_ENABLE
 using System;
 using System.Linq;
 
@@ -20,6 +22,8 @@ namespace XPlan.Editors.Weaver
         // 欄位上的 Attribute
         public string AttributeFullName => "XPlan.I18NViewAttribute";
 
+
+#if WEAVING_ENABLE
         public void Apply(ModuleDefinition module, FieldDefinition targetField, CustomAttribute attr)
         {
             var declaringType = targetField.DeclaringType;
@@ -133,5 +137,6 @@ namespace XPlan.Editors.Weaver
                 $"[I18NViewWeaver] 織入完成：{declaringType.FullName}.{start.Name} → " +
                 $"{(isTextLike ? "RegisterText" : "RegisterImage")} for {targetField.Name} (key={key})");
         }
+#endif // WEAVING_ENABLE
     }
 }

@@ -24,8 +24,10 @@ namespace XPlan.Editors.Weaver
         [MenuItem("XPlanTools/Weaver/Run Weaver Now", false, 0)]
         private static void RunWeaverNow()
         {
+#if WEAVING_ENABLE
             // 直接呼叫公開 AP
             CecilWeaver.RunNow();
+#endif // WEAVING_ENABLE
 
             Debug.Log("[CecilWeaver] 手動觸發 IL Weaving…");
 

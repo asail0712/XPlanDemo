@@ -895,7 +895,7 @@ PlayerSettings:
   webGLCloseOnQuit: 0
   webWasm2023: 0
   scriptingDefineSymbols:
-    Android: AR_FOUNDATION;ADDRESSABLES_EXISTS
+    Android: AR_FOUNDATION;ADDRESSABLES_EXISTS;WEAVING_ENABLE
     Standalone: PCSC;ZXING;AR_FOUNDATION;ADDRESSABLES_EXISTS
   additionalCompilerArguments: {}
   platformArchitecture: {}

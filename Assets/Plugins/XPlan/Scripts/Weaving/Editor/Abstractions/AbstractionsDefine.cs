@@ -1,5 +1,6 @@
-﻿using Mono.Cecil;
-using UnityEngine;
+﻿#if WEAVING_ENABLE
+using Mono.Cecil;
+#endif //WEAVING_ENABLE
 
 namespace XPlan.Weaver.Abstractions
 {
@@ -10,21 +11,26 @@ namespace XPlan.Weaver.Abstractions
     public interface IMethodAspectWeaver
     {
         string AttributeFullName { get; }
-
+#if WEAVING_ENABLE
         void Apply(ModuleDefinition module, MethodDefinition targetMethod, CustomAttribute attr);
+#endif // WEAVING_ENABLE
     }
 
     // 類型會掃所有類型
     public interface ITypeAspectWeaver
     {
         string AttributeFullName { get; }
+#if WEAVING_ENABLE
         void Apply(ModuleDefinition module, TypeDefinition targetType, CustomAttribute attr);
+#endif // WEAVING_ENABLE
     }
 
     // Field只會掃有Attribute的Field
     public interface IFieldAspectWeaver
     {
         string AttributeFullName { get; }
+#if WEAVING_ENABLE
         void Apply(ModuleDefinition module, FieldDefinition targetField, CustomAttribute attr);
+#endif // WEAVING_ENABLE
     }
 }

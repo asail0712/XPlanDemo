@@ -1,5 +1,7 @@
-﻿using Mono.Cecil;
+﻿#if WEAVING_ENABLE
+using Mono.Cecil;
 using Mono.Cecil.Cil;
+#endif // WEAVING_ENABLE
 using System;
 using System.Linq;
 
@@ -17,6 +19,7 @@ namespace XPlan.Editors.Weaver
     {
         public string AttributeFullName => "XPlan.LogAspectAttribute";
 
+#if WEAVING_ENABLE
         public void Apply(ModuleDefinition module, MethodDefinition targetMethod, CustomAttribute attr)
         {
             if (!targetMethod.HasBody)
@@ -137,5 +140,6 @@ namespace XPlan.Editors.Weaver
 
             Debug.Log($"[LogAspectWeaver] LogAspect 注入完成：{displayName}");
         }
+#endif // WEAVING_ENABLE
     }
 }
