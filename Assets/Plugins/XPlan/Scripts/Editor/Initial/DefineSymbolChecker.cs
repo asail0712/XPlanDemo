@@ -14,38 +14,59 @@ namespace XPlan.Editors.Initial
     {
         const string addressableSymbol  = "ADDRESSABLES_EXISTS";
         const string arFoundationSymbol = "AR_FOUNDATION";
+        const string editorPrefKey      = "XPlan.DefineSymbolChecker.Enabled";
+
+        static bool Enabled
+        {
+            get => EditorPrefs.GetBool(editorPrefKey, false);
+            set => EditorPrefs.SetBool(editorPrefKey, value);
+        }
 
         static DefineSymbolChecker()
         {
-            IEnumerable<Type> typeList          = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes());
+            if (!Enabled)
+                return;
 
-            bool bArFoundationInstalled         = typeList.Any(type => type.Namespace == "UnityEngine.XR.ARFoundation");
-            bool bAddressableAssetsInstalled    = typeList.Any(type => type.Namespace == "UnityEngine.AddressableAssets");
-
-            if (bArFoundationInstalled)
-            {
-                AddDefineSymbols(arFoundationSymbol);
-            }
-
-            if (bAddressableAssetsInstalled)
-            {
-                AddDefineSymbols(addressableSymbol);
-            }
+            RunCheck();
         }
 
-        static private void AddDefineSymbols(string symbol)
+        static void RunCheck()
         {
-            string symbols = PlayerSettings.GetScriptingDefineSymbols(GetBuildTarget());
+            IEnumerable<Type> typeList = AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a =>
+                {
+                    try { return a.GetTypes(); }
+                    catch { return Type.EmptyTypes; }
+                });
 
-            if(!symbols.Contains(symbol))
+            bool bArFoundationInstalled =
+                typeList.Any(t => t.Namespace == "UnityEngine.XR.ARFoundation");
+
+            bool bAddressableAssetsInstalled =
+                typeList.Any(t => t.Namespace == "UnityEngine.AddressableAssets");
+
+            if (bArFoundationInstalled)
+                AddDefineSymbols(arFoundationSymbol);
+
+            if (bAddressableAssetsInstalled)
+                AddDefineSymbols(addressableSymbol);
+        }
+
+        static void AddDefineSymbols(string symbol)
+        {
+            var target = GetBuildTarget();
+            string defs = PlayerSettings.GetScriptingDefineSymbols(target);
+
+            if (!defs.Split(';').Contains(symbol))
             {
-                symbols += ";" + symbol;
-                PlayerSettings.SetScriptingDefineSymbols(GetBuildTarget(), symbols);
+                defs = string.IsNullOrEmpty(defs) ? symbol : $"{defs};{symbol}";
+                PlayerSettings.SetScriptingDefineSymbols(target, defs);
                 Debug.Log($"✅ 已自動加入 symbol: {symbol}");
             }
         }
 
-        static private NamedBuildTarget GetBuildTarget()
+        static NamedBuildTarget GetBuildTarget()
         {
 #if UNITY_ANDROID
             return NamedBuildTarget.Android;
@@ -54,6 +75,33 @@ namespace XPlan.Editors.Initial
 #else
             return NamedBuildTarget.Standalone;
 #endif
+        }
+
+        // =========================
+        // Menu
+        // =========================
+
+        [MenuItem("XPlanTools/Symbol Checker Enabled", false, 9)]
+        private static void Toggle()
+        {
+            Enabled = !Enabled;
+
+            if (Enabled)
+            {
+                Debug.Log("🟢 DefineSymbolChecker 已啟用");
+                RunCheck();
+            }
+            else
+            {
+                Debug.Log("🔴 DefineSymbolChecker 已停用");
+            }
+        }
+
+        [MenuItem("XPlanTools/Symbol Checker Enabled", true)]
+        private static bool ToggleValidate()
+        {
+            Menu.SetChecked("XPlanTools/Symbol Checker Enabled", Enabled);
+            return true;
         }
     }
 }

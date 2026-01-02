@@ -17,7 +17,22 @@ namespace XPlan.Editors.Weaver
         private static void Toggle()
         {
             Enabled = !Enabled;
-            Debug.Log($"[CecilWeaver] Enabled = {Enabled}");
+
+            if (Enabled)
+            {
+                Debug.Log("🟢 Auto Cecil Weaver 已啟用");
+            }
+            else
+            {
+                Debug.Log("🔴 Auto Cecil Weaver 已停用");
+            }
+        }
+
+        [MenuItem("XPlanTools/Weaver/Auto Weave Enabled", true)]
+        private static bool ToggleValidate()
+        {
+            Menu.SetChecked("XPlanTools/Weaver/Auto Weave Enabled", Enabled);
+            return true;
         }
 
         // ★ 新增：手動觸發 Weave
