@@ -163,17 +163,17 @@ namespace XPlan.Scenes
 			return true;
         }
 
-        public bool ChangeTo<T>(T buildType, bool bActiveScene = true, Action finishAction = null) where T : Enum
+        public bool ChangeTo<T>(T sceneType, bool bActiveScene = true, Action finishAction = null) where T : Enum
 		{
-			int buildIdx = Convert.ToInt32(buildType);
-			return ChangeTo(buildIdx, bActiveScene, finishAction);
+			int sceneIdx = Convert.ToInt32(sceneType);
+			return ChangeTo(sceneIdx, bActiveScene, finishAction);
 		}
 
 		public bool ChangeTo(string sceneName, bool bActiveScene = true, Action finishAction = null)
 		{
-			int buildIndex = GetBuildIndexByName(sceneName);
+			int sceneIdx = GetBuildIndexByName(sceneName);
 
-			return ChangeTo(buildIndex, bActiveScene, finishAction);
+			return ChangeTo(sceneIdx, bActiveScene, finishAction);
 		}
 
 		private void AddSceneStack(int sceneIdx)
@@ -269,6 +269,13 @@ namespace XPlan.Scenes
 			}
 
 			return true;
+		}
+
+		public bool IsLastScene(string sceneName)
+		{
+            int idx = GetBuildIndexByName(sceneName);
+
+            return currSceneStack.Count != 0 && currSceneStack.Last() == idx;
 		}
 
 		/************************************

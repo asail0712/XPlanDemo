@@ -192,7 +192,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7811484026488952808, guid: 865ef9c0a2dd5b348946e3a7fa0bd578, type: 3}
       propertyPath: inputInfoList.Array.data[1].actionStr
-      value: UnloadScene
+      value: NothingToDo
       objectReference: {fileID: 0}
     - target: {fileID: 7811484026488952808, guid: 865ef9c0a2dd5b348946e3a7fa0bd578, type: 3}
       propertyPath: inputInfoList.Array.data[1].inputType

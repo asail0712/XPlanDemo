@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -33,7 +33,12 @@ namespace XPlan.Demo.InputMode
             Debug.Log("It is " + sceneName);
 
             NotifySystem.Instance.RegisterNotify<XInputActionMsg>(this, (msgReceiver) =>
-            {
+            {                
+                if(!SceneController.Instance.IsLastScene(sceneName))
+                {
+                    return;
+                }
+
                 XInputActionMsg msg = msgReceiver.GetMessage<XInputActionMsg>();
 
                 switch(msg.inputAction)
