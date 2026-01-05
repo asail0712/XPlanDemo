@@ -130,7 +130,7 @@ namespace XPlan
             if (_ctx == null) return;
             if (e.pointerId != _ctx.PointerId) { CancelDrag("Pointer mismatch on Drop"); return; }
 
-            _ctx.DragHoverItem  = itemVM;
+            _ctx.DragHoverItem = itemVM;
 
             OnDragEnter(_ctx);
         }
@@ -140,6 +140,7 @@ namespace XPlan
         {
             if (_ctx == null) return;
             if (e.pointerId != _ctx.PointerId) { CancelDrag("Pointer mismatch on Drop"); return; }
+            if (_ctx.DragHoverItem == null) return;
 
             OnDragExit(_ctx);
 
