@@ -44,6 +44,10 @@ namespace XPlan.UI
         private readonly Dictionary<string, ObservableBinding> _vmObservableMap = new(StringComparer.Ordinal);  // 新增：把 VM 內的 ObservableProperty 索引起來（baseName → 綁定資訊）
         private readonly SpriteCache _spriteCache                               = new();                        // 給圖片綁定用的 Sprite 快取    
         
+        private ButtonBindingHandle _buttonBinding;
+        private InputTfBindingHandle _inputTfBinding;
+        private ToggleBindingHandle _toggleBindingHandle;
+
         protected void Awake()
         {
             VMLocator.VMUnregistered += OnVMUnregistered;
@@ -103,16 +107,16 @@ namespace XPlan.UI
 
             MethodInfo[] methods = ViewBindingHelper.GetAllInstanceMethods(vmType);
 
-            VmButtonBindingRuntime.Bind(this, methods);
-            VmInputTfBindingRuntime.Bind(this, methods);
-            VmToggleBindingRuntime.Bind(this, methods);
+            _buttonBinding          = VmButtonBindingRuntime.Bind(this, methods);
+            _inputTfBinding         = VmInputTfBindingRuntime.Bind(this, methods);
+            _toggleBindingHandle    = VmToggleBindingRuntime.Bind(this, methods);
         }
 
         protected void OnDisable()
         {
-            VmButtonBindingRuntime.Unbind(this);
-            VmInputTfBindingRuntime.Unbind(this);
-            VmToggleBindingRuntime.Unbind(this);
+            VmButtonBindingRuntime.Unbind(_buttonBinding);
+            VmInputTfBindingRuntime.Unbind(_inputTfBinding);
+            VmToggleBindingRuntime.Unbind(_toggleBindingHandle);
         }
 
         protected void OnDestroy()

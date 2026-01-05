@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -19,26 +19,42 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace XPlan.Weaver.Runtime
 {
+    /// <summary>
+    /// 儲存這次 Bind 加上的所有 Listener，讓 View 自己掌控生命週期。
+    /// </summary>
+    [Serializable]
+    public sealed class ButtonBindingHandle
+    {
+        // 用 button instance id 當 key，確保同顆按鈕不會重複疊 listener
+        internal readonly Dictionary<int, (Button button, UnityAction action)> map = new();
+        public int Count => map.Count;
+        public void Clear() => map.Clear();
+    }
+
     public static class VmButtonBindingRuntime
     {
         /// <summary>
         /// 1. 傳入 ViewBase 的衍生類別實例即可（型別用 object 即可）
         /// </summary>
-        public static void Bind(object viewInstance, MethodInfo[] methods)
+        public static ButtonBindingHandle Bind(object viewInstance, MethodInfo[] methods)
         {
-            if (viewInstance == null)
-                return;
+            var handle = new ButtonBindingHandle();
 
-            var viewType = viewInstance.GetType();
+            if (viewInstance == null || methods == null || methods.Length == 0)
+                return handle;
+
+            var viewType    = viewInstance.GetType();
 
             // 2. 掃描 View 裡的 Button 欄位，記錄名稱 → Button 實例
-            var buttonMap = FindButtonsOnView(viewType, viewInstance);
+            var buttonMap   = FindButtonsOnView(viewType, viewInstance);
             if (buttonMap.Count == 0)
-                return;
+                return handle;
 
             foreach (var method in methods)
             {
@@ -66,43 +82,57 @@ namespace XPlan.Weaver.Runtime
                 // 注意：這裡用閉包包住 method & viewModel
                 var targetMethod = method;
 
-                button.onClick.AddListener(() =>
+                // 防同一次 Bind 對同顆 button 疊加（如果 methods 裡不小心重複）
+                int btnId = button.GetInstanceID();
+                if (handle.map.TryGetValue(btnId, out var old))
+                {
+                    // 先移掉舊的再換新的（避免同顆 button 疊兩個我們自己的 listener）
+                    if (old.button != null && old.action != null)
+                        old.button.onClick.RemoveListener(old.action);
+
+                    handle.map.Remove(btnId);
+                }
+
+                UnityAction action = () =>
                 {
                     try
                     {
-                        // ★ 點擊時才找一次 _viewModel，避免提前存取
                         var targetVm = GetViewModelInstance(viewType, viewInstance);
+                        if (targetVm == null)
+                            return;
 
                         targetMethod.Invoke(targetVm, null);
                     }
                     catch (Exception ex)
                     {
-                        UnityEngine.Debug.LogError(
-                            $"[VmButtonBindingRuntime] 執行 {targetMethod.DeclaringType.Name}.{targetMethod.Name} 時發生例外：{ex}");
+                        Debug.LogError(
+                            $"[VmButtonBindingRuntime] 執行 {targetMethod.DeclaringType?.Name}.{targetMethod.Name} 時發生例外：{ex}");
                     }
-                });
+                };
+
+                // 記錄並加上 listener
+                handle.map[btnId] = (button, action);
+                button.onClick.AddListener(action);
             }
+
+            return handle;
         }
 
-        public static void Unbind(object viewInstance)
+        public static void Unbind(ButtonBindingHandle handle)
         {
-            if (viewInstance == null)
+            if (handle == null || handle.map.Count == 0)
                 return;
 
-            var viewType    = viewInstance.GetType();
-            var buttonMap   = FindButtonsOnView(viewType, viewInstance);
-            if (buttonMap.Count == 0)
-                return;
-
-            // 移除全部 Listener（Unity 最標準 safest 的作法）
-            foreach (var kv in buttonMap)
+            foreach (var kv in handle.map)
             {
-                var btn = kv.Value;
-                if (btn != null)
-                {
-                    btn.onClick.RemoveAllListeners();
-                }
+                var (button, action) = kv.Value;
+                if (button == null || action == null)
+                    continue;
+
+                button.onClick.RemoveListener(action);
             }
+
+            handle.Clear();
         }
 
         /// <summary>
@@ -213,33 +243,6 @@ namespace XPlan.Weaver.Runtime
             // 都沒有命中就失敗
             button = null;
             return false;
-        }
-
-        /// <summary>
-        /// 從 View 的繼承鏈中找到 ViewBase&lt;TViewModel&gt;，並取出 TViewModel 型別。
-        /// </summary>
-        private static Type GetViewModelTypeFromView(Type viewType)
-        {
-            var cur = viewType;
-            while (cur != null && cur != typeof(object))
-            {
-                if (cur.IsGenericType)
-                {
-                    var def = cur.GetGenericTypeDefinition();
-
-                    // 用 FullName 避免組件引用問題
-                    if (def.FullName == "XPlan.UI.ViewBase`1")
-                    {
-                        var args = cur.GetGenericArguments();
-                        if (args != null && args.Length == 1)
-                            return args[0];
-                    }
-                }
-
-                cur = cur.BaseType;
-            }
-
-            return null;
         }
 
         private static readonly string[] Prefixes =
