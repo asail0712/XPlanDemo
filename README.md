@@ -30,7 +30,7 @@ https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY6
 ---
 
 # 2. 版本資訊
-- **Version 3.6.8**
+- **Version 3.7.8**
 
 ---
 
