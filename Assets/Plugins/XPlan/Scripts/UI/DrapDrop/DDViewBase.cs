@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -22,6 +22,8 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+using XPlan.Utility;
+
 namespace XPlan.UI
 {
     public class DDViewBase<TDDViewModel, TDDItemView, TDDItemViewModel> : TableViewBase<TDDViewModel, TDDItemView, TDDItemViewModel>
@@ -39,7 +41,17 @@ namespace XPlan.UI
             foreach(TDDItemView itemView in viewList)
             {
                 AutoBindDragEvents(vm, itemView);
-            }            
+            }
+
+            IGhostIconController iconController = gameObject.GetInterface<IGhostIconController>();
+
+            if(iconController != null)
+            {
+                LogSystem.Record($"[DDViewBase] GhostIconController detected and injected into {vm.GetType().Name}", LogType.Log);
+
+                // 非必須
+                vm.SetGhostController(iconController);
+            }
         }
 
         private void AutoBindDragEvents(TDDViewModel vm, TDDItemView itemView)
