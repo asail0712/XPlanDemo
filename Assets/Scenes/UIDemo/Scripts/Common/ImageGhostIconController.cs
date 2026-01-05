@@ -57,7 +57,7 @@ namespace Demo.Inventory
             if (moveRoutine != null)
                 StopCoroutine(moveRoutine);
 
-            moveRoutine = StartCoroutine(LerpMove(screenPos));
+            moveRoutine = StartCoroutine(LerpMove(screenPos, lerpSpeed));
         }
 
         public void Show(Vector2 screenPos)
@@ -69,9 +69,15 @@ namespace Demo.Inventory
 
         public async Task SnapBackTo(Vector2 startScreenPos)
         {
-            Move(startScreenPos);
+            if (!ghostIcon.activeSelf)
+                return;
 
-            await Task.Delay(100);
+            if (moveRoutine != null)
+                StopCoroutine(moveRoutine);
+
+            moveRoutine = StartCoroutine(LerpMove(startScreenPos, 7f));
+            // 偷懶寫法
+            await Task.Delay(200);
         }
 
         public void Bind(IGhostPayload ghostPayload)
@@ -97,7 +103,7 @@ namespace Demo.Inventory
         // ===============================
         // Coroutine
         // ===============================
-        private IEnumerator LerpMove(Vector2 targetScreenPos)
+        private IEnumerator LerpMove(Vector2 targetScreenPos, float lerpSpeed)
         {
             // 直接用 screen space（Overlay Canvas 最穩）
             Vector3 targetWorldPos = targetScreenPos;

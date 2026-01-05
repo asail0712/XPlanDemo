@@ -60,11 +60,17 @@ namespace Demo.Inventory
         }
         protected override void OnDragEnter(DragContext<InventoryItemViewModel> ctx)
         {
+            if (ctx.DragHoverItem == null)
+                return;
+
             if (!ctx.DragHoverItem.IsEmpty() && ctx.DragHoverItem != ctx.SourceItem)
                 ctx.DragHoverItem.SetType(InventoryItemType.WarningDrag);
         }
         protected override void OnDragExit(DragContext<InventoryItemViewModel> ctx)
         {
+            if (ctx.DragHoverItem == null)
+                return;
+
             if (!ctx.DragHoverItem.IsEmpty())
                 ctx.DragHoverItem.SetType(InventoryItemType.CannotDrag);
         }
