@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -426,10 +426,14 @@ namespace XPlan.UI
         {
             OnRefreshLanguage(currLang);
         }
-
-        protected virtual void OnRefreshLanguage(int currLang)
+		public GameObject GetUIGameObject()
         {
-
+            return this.gameObject;
+        }
+        public void SetVisibility(bool b)
+        {
+            if (this.gameObject.activeSelf != b)
+                this.gameObject.SetActive(b);
         }
 
         /***************************************
@@ -439,6 +443,14 @@ namespace XPlan.UI
 		{
 			ViewVisibilityHelper.ToggleUI(ui, bEnabled);			
 		}
-	}
+
+        /****************************************
+		 * internal virtual methods
+		 * **************************************/
+        protected virtual void OnRefreshLanguage(int currLang)
+        {
+
+        }
+    }
 }
 

@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -16,12 +16,15 @@
 // Unauthorized copying, modification, or distribution of this file,
 // via any medium, is strictly prohibited without prior permission.
 // ==============================================================================
+using UnityEngine;
+
 namespace XPlan.UI
 {
     public interface IUIView
     {
         int SortIdx { get; set; }
-
         void RefreshLanguage(int currLang);
+        GameObject GetUIGameObject();
+        void SetVisibility(bool b);
     }
 }

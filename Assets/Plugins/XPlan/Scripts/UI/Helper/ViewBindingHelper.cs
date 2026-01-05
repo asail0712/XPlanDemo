@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -596,11 +596,11 @@ namespace XPlan.UI
         #region ==== Visible 綁定 ====
 
         public static void AutoBindVisibility(
-            MonoBehaviour view,
+            IUIView view,
             Dictionary<string, ObservableBinding> vmObservableMap,
             List<IDisposable> disposables)
         {
-            var uiMap = BuildSerializedUiMapForVisibility(view);
+            var uiMap = BuildSerializedUiMapForVisibility(view as MonoBehaviour);
 
             // 1) 單一元件的 {BaseName}Visible
             foreach (var kv in uiMap)
@@ -626,8 +626,7 @@ namespace XPlan.UI
             if (vmObservableMap.TryGetValue(rootVisibleKey, out var rootBind) &&
                 rootBind.ValueType == typeof(bool))
             {
-                var rootGO  = view.gameObject;
-                var disp    = Subscribe<bool>(rootBind.OpInstance, v => ViewVisibilityHelper.ToggleUI(rootGO, v));
+                var disp    = Subscribe<bool>(rootBind.OpInstance, v => ViewVisibilityHelper.ToggleUI(view, v));
                 disposables.Add(disp);
                 rootBind.ForceNotify?.Invoke(rootBind.OpInstance, null);
             }
