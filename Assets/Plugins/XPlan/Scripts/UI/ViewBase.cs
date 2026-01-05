@@ -38,7 +38,6 @@ namespace XPlan.UI
     public class ViewBase<TViewModel> : MonoBehaviour, IUIView where TViewModel : ViewModelBase
     {
         private TViewModel _viewModel;// viewmodel本體
-        private IDisposable _waitToken;
 
         private readonly List<IDisposable> _disposables                         = new();                        // 解除訂閱集中管理
         private readonly Dictionary<string, ObservableBinding> _vmObservableMap = new(StringComparer.Ordinal);  // 新增：把 VM 內的 ObservableProperty 索引起來（baseName → 綁定資訊）
@@ -49,14 +48,9 @@ namespace XPlan.UI
         private ToggleBindingHandle _toggleBindingHandle;
 
         protected void Awake()
-        {
+        {           
+            VMLocator.GetOrWait<TViewModel>(GetUIGameObject(), BindVM);
             VMLocator.VMUnregistered += OnVMUnregistered;
-            WaitAndBind();
-        }
-        private void WaitAndBind()
-        {
-            _waitToken?.Dispose();
-            _waitToken = VMLocator.GetOrWait<TViewModel>(BindVM);
         }
 
         private void BindVM(TViewModel vm)
@@ -84,9 +78,9 @@ namespace XPlan.UI
             if (_viewModel != null && ReferenceEquals(_viewModel, deadVm))
             {
                 UnbindAll();
-                WaitAndBind();
             }
         }
+
         private void UnbindAll()
         {
             // 解除 VM→UI 訂閱
@@ -100,6 +94,7 @@ namespace XPlan.UI
             // VM 參考清掉（避免握到舊 VM）
             _viewModel = null;
         }
+
         protected void OnEnable()
         {
             if (!ViewBindingHelper.TryGetViewModelTypeFromView(this.GetType(), out Type vmType))
@@ -121,10 +116,8 @@ namespace XPlan.UI
 
         protected void OnDestroy()
         {
+            VMLocator.CancelWait<TViewModel>(GetUIGameObject());
             VMLocator.VMUnregistered -= OnVMUnregistered;
-
-            _waitToken?.Dispose();
-            _waitToken = null;
 
             UnbindAll();
 
