@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -60,9 +60,10 @@ namespace XPlan.Editors.Weaver
 #if WEAVING_ENABLE
             // 直接呼叫公開 AP
             CecilWeaver.RunNow();
-#endif // WEAVING_ENABLE
-
             Debug.Log("[CecilWeaver] 手動觸發 IL Weaving…");
+#else
+            Debug.LogWarning("[CecilWeaver] 無法執行 Weaving，請先確認 WEAVING_ENABLE 符號已啟用！");
+#endif // WEAVING_ENABLE
 
             // 重新觸發編譯 → 重新 run weaving
             //AssetDatabase.SaveAssets();
