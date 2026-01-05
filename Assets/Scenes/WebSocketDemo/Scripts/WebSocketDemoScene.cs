@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.Net;
+using XPlan.Utility;
 using static UnityEngine.Video.VideoPlayer;
 
 namespace XPlan.Demo.Websocket
@@ -21,8 +22,12 @@ namespace XPlan.Demo.Websocket
         private WebSocket webSocket;
         private Queue<string> msgQueue = new Queue<string>();
 
-        // Start is called before the first frame update
-        void Start()
+        private void Awake()
+        {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 2160, 1440);
+        }
+
+        private void Start()
 		{
             webSocket = new WebSocket(Url.ToString(), new ConnectionRecovery(this));
             webSocket.Connect();            

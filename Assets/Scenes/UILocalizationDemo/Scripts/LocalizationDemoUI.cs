@@ -18,6 +18,10 @@ namespace XPlan.Demo.Localization
         [I18NView("DemoStr3")]
         [SerializeField] Text demoTxt3;
 
+        private void Awake()
+        {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 2160, 1440);
+        }
 
         protected override void OnRefreshLanguage(int currLang)
         {

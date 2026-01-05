@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using XPlan.Utility;
 
 namespace XPlan.Demo.Architecture
 { 
@@ -9,7 +10,8 @@ namespace XPlan.Demo.Architecture
 		protected override void OnPreInitial()
 		{
 			Application.targetFrameRate = 60;
-		}
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 1920, 1080);
+        }
 
 		protected override void OnInitialLogic()
 		{

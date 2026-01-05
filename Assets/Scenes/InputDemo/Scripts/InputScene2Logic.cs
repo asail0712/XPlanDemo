@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,48 +6,33 @@ using UnityEngine.SceneManagement;
 
 using XPlan.InputMode;
 using XPlan.Observe;
+using XPlan.Utility;
 
 namespace XPlan.Demo.InputMode
 { 
-    public class InputScene2Logic : MonoBehaviour, INotifyReceiver
+    public class InputScene2Logic : NotifyMonoBehaviour
     {
-		public Func<string> GetLazyZoneID
-        { 
-            get; set; 
+        private new void Awake()
+        {
+            base.Awake();
+
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 1920, 1080);
         }
 
-		// Start is called before the first frame update
-		void Start()
+        [NotifyHandler]
+        public void OnXInputActionMsg(XInputActionMsg msg)
         {
-            Debug.Log("It is Input Scene2");
-
-            NotifySystem.Instance.RegisterNotify<XInputActionMsg>(this, (msgReceiver) =>
+            switch (msg.inputAction)
             {
-                XInputActionMsg msg = msgReceiver.GetMessage<XInputActionMsg>();
-
-                switch(msg.inputAction)
-				{
-                    case "LoadScene":
-                        Debug.Log("Scene2 Load Scene3");
-                        SceneManager.LoadScene("InputScene3");
-                        break;
-                    case "UnloadScene":
-                        Debug.Log("Unload Scene2");
-                        SceneManager.LoadScene("InputScene1");
-                        break;
-                }
-            });
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-        
-        }
-
-        void OnDestroy()
-        {
-            NotifySystem.Instance.UnregisterNotify(this);
+                case "LoadScene":
+                    Debug.Log("Scene2 Load Scene3");
+                    SceneManager.LoadScene("InputScene3");
+                    break;
+                case "UnloadScene":
+                    Debug.Log("Unload Scene2");
+                    SceneManager.LoadScene("InputScene1");
+                    break;
+            }
         }
     }
 }

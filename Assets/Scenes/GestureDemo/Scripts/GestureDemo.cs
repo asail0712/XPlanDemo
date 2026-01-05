@@ -1,8 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.DebugMode;
 using XPlan.Gesture;
+using XPlan.Utility;
 
 namespace XPlan.Demo.Gesture
 {
@@ -21,8 +22,10 @@ namespace XPlan.Demo.Gesture
 
         private bool bSwitchToMove = false;
 
-		private void Awake()
-		{
+        private void Awake()
+        {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 800, 600);
+        
             switchBtn.onClick.AddListener(() =>
             {
                 dragToRotate.enabled    = !dragToRotate.enabled;

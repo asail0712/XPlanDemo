@@ -2,6 +2,7 @@
 
 using XPlan;
 using XPlan.UI;
+using XPlan.Utility;
 
 namespace Demo
 {
@@ -9,6 +10,11 @@ namespace Demo
     public class PlayMeowSystem : SystemBase
     {
         // 系統初始化時會自動呼叫，用來註冊需要的 Presenter（邏輯層）
+        protected override void OnPreInitial()
+        {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 1440, 2960);
+        }
+
         protected override void OnInitialLogic()
         {
             RegisterLogic(new LoginPresenter());

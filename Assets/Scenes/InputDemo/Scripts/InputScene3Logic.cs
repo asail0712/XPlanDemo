@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,47 +6,32 @@ using UnityEngine.SceneManagement;
 
 using XPlan.InputMode;
 using XPlan.Observe;
+using XPlan.Utility;
 
 namespace XPlan.Demo.InputMode
 { 
-    public class InputScene3Logic : MonoBehaviour, INotifyReceiver
+    public class InputScene3Logic : NotifyMonoBehaviour
     {
-		public Func<string> GetLazyZoneID
-        { 
-            get; set; 
+        private new void Awake()
+        {
+            base.Awake();
+
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 1920, 1080);
         }
 
-		// Start is called before the first frame update
-		void Start()
+        [NotifyHandler]
+        public void OnXInputActionMsg(XInputActionMsg msg)
         {
-            Debug.Log("It is Input Scene3");
-
-            NotifySystem.Instance.RegisterNotify<XInputActionMsg>(this, (msgReceiver) =>
+            switch (msg.inputAction)
             {
-                XInputActionMsg msg = msgReceiver.GetMessage<XInputActionMsg>();
-
-                switch(msg.inputAction)
-				{
-                    case "LoadScene":
-                        Debug.Log("Cant Load Other Scene");                      
-                        break;
-                    case "UnloadScene":
-                        Debug.Log("Unload Scene3");
-                        SceneManager.LoadScene("InputScene2");
-                        break;
-                }
-            });
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-        
-        }
-
-        void OnDestroy()
-        {
-            NotifySystem.Instance.UnregisterNotify(this);
+                case "LoadScene":
+                    Debug.Log("Cant Load Other Scene");
+                    break;
+                case "UnloadScene":
+                    Debug.Log("Unload Scene3");
+                    SceneManager.LoadScene("InputScene2");
+                    break;
+            }
         }
     }
 }

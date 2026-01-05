@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -25,7 +25,7 @@ namespace XPlan
 {
     public class NotifyMonoBehaviour : MonoBehaviour, INotifyReceiver
     {
-        private void Awake()
+        protected void Awake()
         {
             // 建構完成後，嘗試呼叫 IL Weaving 產生的 Hook
             WeaverHookInvoker.Invoke(this, "__LogicComponent_WeaverHook");

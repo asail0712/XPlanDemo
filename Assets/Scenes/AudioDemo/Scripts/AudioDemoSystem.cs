@@ -1,9 +1,10 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.Audio;
+using XPlan.Utility;
 
 namespace XPlan.Demo.Audio
 { 
@@ -11,6 +12,11 @@ namespace XPlan.Demo.Audio
     {
         private List<string> infoList;
         [SerializeField]private Text textInfo;
+
+        private void Awake()
+        {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 2160, 1440);
+        }
 
         void Start()
         {

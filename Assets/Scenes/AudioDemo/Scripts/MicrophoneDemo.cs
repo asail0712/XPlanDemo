@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.Audio;
+using XPlan.Utility;
 
 namespace XPlan.Demo.Audio
 { 
@@ -22,6 +23,8 @@ namespace XPlan.Demo.Audio
 
         private void Awake()
         {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 2160, 1440);
+        
             TARGET_SR = AudioSettings.outputSampleRate; // 也可改成 48000 或你要的固定值
         }
 

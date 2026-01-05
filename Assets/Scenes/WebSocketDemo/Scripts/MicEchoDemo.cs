@@ -3,10 +3,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 using XPlan.Audio;
 using XPlan.Net;
+using XPlan.Utility;
 
 using Object = System.Object;
 
@@ -44,7 +44,9 @@ namespace XPlan.Demo.Websocket
 
         private void Awake()
         {
-            // 建立播放用 AudioSource
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 2160, 1440);
+
+        // 建立播放用 AudioSource
             output                      = gameObject.GetComponent<AudioSource>();
             if (output == null) output  = gameObject.AddComponent<AudioSource>();
             output.playOnAwake          = true;

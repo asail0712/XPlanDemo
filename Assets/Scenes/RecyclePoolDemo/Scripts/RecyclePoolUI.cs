@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.Recycle;
+using XPlan.Utility;
 
 namespace XPlan.Demo.Recycle
 {
@@ -12,14 +13,14 @@ namespace XPlan.Demo.Recycle
 		[SerializeField] BallEmitter emitter;
 		[SerializeField] Text displayTxt;
 
-		// Start is called before the first frame update
-		void Start()
-		{
+        // Start is called before the first frame update
+        private void Awake()
+        {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 1920, 1080);
+        }
 
-		}
-
-		// Update is called once per frame
-		void Update()
+        // Update is called once per frame
+        void Update()
 		{
 			string str = "Press 'A' to Spawn a Ball \nPress 'D' to Destroy a Ball";
 			str += $"\nNum Of Ball In Pool is {RecyclePool<Ball>.GetTotalNum()}";

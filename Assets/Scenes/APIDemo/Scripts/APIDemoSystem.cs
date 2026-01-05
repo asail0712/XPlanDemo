@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using XPlan.Net;
+using XPlan.Utility;
 
 namespace XPlan.Demo.APIDemo
 {
@@ -79,7 +80,11 @@ namespace XPlan.Demo.APIDemo
         [SerializeField] private WebRequestMode webRequestMode;
         [SerializeField] private Text showStrTxt;
 
-        // Start is called before the first frame update
+        private void Awake()
+        {
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 2160, 1440);
+        }
+
         void Start()
         {
             WebRequestConfig.Mode = webRequestMode;

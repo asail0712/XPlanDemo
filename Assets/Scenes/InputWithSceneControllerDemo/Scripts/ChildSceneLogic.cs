@@ -2,66 +2,47 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-using XPlan.Scenes;
 using XPlan.InputMode;
 using XPlan.Observe;
+using XPlan.Scenes;
+using XPlan.Utility;
 
 namespace XPlan.Demo.InputMode
 { 
-    public class ChildSceneLogic : MonoBehaviour, INotifyReceiver
+    public class ChildSceneLogic : NotifyMonoBehaviour
     {
         [SerializeField] string sectorID    = "";
         [SerializeField] string sceneName   = "";
         [SerializeField] string nextScene   = "";
 
-        public Func<string> GetLazyZoneID
-        {
-            get
-            {
-                return () => sectorID;
-            }
-            set
-            {
-                GetLazyZoneID = value;
-            }
-        }
 
         // Start is called before the first frame update
-        void Start()
+        private new void Awake()
         {
+            base.Awake();
+
             Debug.Log("It is " + sceneName);
 
-            NotifySystem.Instance.RegisterNotify<XInputActionMsg>(this, (msgReceiver) =>
-            {                
-                if(!SceneController.Instance.IsLastScene(sceneName))
-                {
-                    return;
-                }
-
-                XInputActionMsg msg = msgReceiver.GetMessage<XInputActionMsg>();
-
-                switch(msg.inputAction)
-				{
-                    case "LoadScene":
-                        SceneController.Instance.ChangeTo(nextScene);                     
-                        break;
-                    case "UnloadScene":                        
-                        SceneController.Instance.BackFrom();
-                        break;
-                }
-            });
+            GameViewSizeForce.EnsureAndUseFixed("XPlan.Demo", 1920, 1080);
         }
 
-        // Update is called once per frame
-        void Update()
+        [NotifyHandler]
+        public void OnXInputActionMsg(XInputActionMsg msg)
         {
-        
-        }
+            if (!SceneController.Instance.IsLastScene(sceneName))
+            {
+                return;
+            }
 
-        void OnDestroy()
-        {
-            NotifySystem.Instance.UnregisterNotify(this);
+            switch (msg.inputAction)
+			{
+                case "LoadScene":
+                    SceneController.Instance.ChangeTo(nextScene);                     
+                    break;
+                case "UnloadScene":                        
+                    SceneController.Instance.BackFrom();
+                    break;
+            }
         }
     }
 }
