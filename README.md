@@ -30,14 +30,14 @@ https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY6
 ---
 
 # 2. 版本資訊
-- **Version 3.7.8**
+- **Version 3.8.8**
 
 ---
 
 # 3. 安裝指南
 
 ## 系統要求
-- Unity **6000.0.58f2** 或更高版本
+- Unity **6000.0.64f1** 或更高版本
 
 ## 安裝方式
 - 將 `XPlan/` 資料夾放入 `Assets/Plugins/`  
@@ -112,6 +112,10 @@ https://docs.google.com/presentation/d/19OwJzuN3nLxXHewKaFCApZNY4GO7cCcZtz5_IMY6
 
 ### Recycle Pool  
 `Assets/Scenes/RecyclePoolDemo/RecyclePoolDemoScene.unity`
+
+### UI Demo
+`Assets/Scenes/UIDemo/`
+- 包含MVVM與MVP架構的UI使用範例
 
 ### UI Localization  
 `Assets/Scenes/UILocalizationDemo/LocalizationScene.unity`
