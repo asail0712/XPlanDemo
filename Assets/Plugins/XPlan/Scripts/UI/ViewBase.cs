@@ -49,8 +49,7 @@ namespace XPlan.UI
 
         protected void Awake()
         {           
-            VMLocator.GetOrWait<TViewModel>(GetUIGameObject(), BindVM);
-            VMLocator.VMUnregistered += OnVMUnregistered;
+            VMLocator.GetOrWait<TViewModel>(GetUIGameObject(), BindVM, OnVMUnregistered);
         }
 
         private void BindVM(TViewModel vm)
@@ -72,7 +71,7 @@ namespace XPlan.UI
             if (this is IViewModelGetter<TViewModel> getter)
                 getter.OnViewModelReady(_viewModel);
         }
-        private void OnVMUnregistered(Type t, ViewModelBase deadVm)
+        private void OnVMUnregistered(ViewModelBase deadVm)
         {
             // 只有「死掉的是我綁的那顆」才重等
             if (_viewModel != null && ReferenceEquals(_viewModel, deadVm))
@@ -86,6 +85,7 @@ namespace XPlan.UI
             // 解除 VM→UI 訂閱
             foreach (var d in _disposables) 
                 d?.Dispose();
+
             _disposables.Clear();
 
             // 清 UI→VM 的索引
@@ -117,7 +117,6 @@ namespace XPlan.UI
         protected void OnDestroy()
         {
             VMLocator.CancelWait<TViewModel>(GetUIGameObject());
-            VMLocator.VMUnregistered -= OnVMUnregistered;
 
             UnbindAll();
 

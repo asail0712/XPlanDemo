@@ -32,7 +32,7 @@ namespace XPlan
         private static readonly Dictionary<Type, List<(GameObject, Action<ViewModelBase>)>> _waiters = new();
 
         // ★ 新增：VM 被解除註冊事件
-        public static event Action<Type, ViewModelBase> VMUnregistered;
+        private static Dictionary<(Type, GameObject), Action<ViewModelBase>> vmUnregistered = new();
 
         public static void Register(ViewModelBase vm)
         {
@@ -51,17 +51,36 @@ namespace XPlan
         public static void Unregister(ViewModelBase vm)
         {
             var t = vm.GetType();
-            if (_map.TryGetValue(t, out var obj) && ReferenceEquals(obj, vm))
+            if (!(_map.TryGetValue(t, out var obj) && ReferenceEquals(obj, vm)))
+                return;
+
+            _map.Remove(t);
+
+            // 通知 + 清理死掉的 go
+            var deadKeys = new List<(Type, GameObject)>();
+
+            foreach (var kv in vmUnregistered)
             {
-                _map.Remove(t);
-                VMUnregistered?.Invoke(t, vm); // ★ 通知還活著的 View 回到 Wait
+                var key = kv.Key; // (Type, GameObject)
+                if (key.Item1 != t) continue;
+
+                if (key.Item2 == null)
+                {
+                    deadKeys.Add(key);
+                    continue;
+                }
+
+                kv.Value?.Invoke(vm);
             }
+
+            foreach (var k in deadKeys)
+                vmUnregistered.Remove(k);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static void GetOrWait<T>(GameObject go, Action<T> finishAction) where T : ViewModelBase
+        public static void GetOrWait<T>(GameObject go, Action<T> finishAction, Action<ViewModelBase> vmUnRegAction) where T : ViewModelBase
         {   
             // 先註冊
             var t = typeof(T);
@@ -82,6 +101,8 @@ namespace XPlan
             {
                 finishAction?.Invoke(vm);
             }
+
+            vmUnregistered[(t, go)] = vmUnRegAction;
         }
 
         public static void CancelWait<T>(GameObject go) where T : ViewModelBase
@@ -95,6 +116,8 @@ namespace XPlan
                     _waiters.Remove(t);
                 }
             }
+
+            vmUnregistered.Remove((t, go));
         }
 
         private static bool TryGet<T>(out T vm) where T : ViewModelBase
@@ -114,12 +137,6 @@ namespace XPlan
             private Action _dispose;
             public Disposer(Action dispose) => _dispose = dispose;
             public void Dispose() { _dispose?.Invoke(); _dispose = null; }
-        }
-
-        private sealed class EmptyDisposable : IDisposable
-        {
-            public static readonly EmptyDisposable Instance = new();
-            public void Dispose() { }
         }
     }
 }
