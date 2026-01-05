@@ -19,7 +19,12 @@ namespace Demo.Inventory
 
         protected override void OnDragBegin(DragContext<InventoryItemViewModel> ctx)
         {
-            // for override
+            List<InventoryItemViewModel> vmList = GetAll();
+
+            foreach(InventoryItemViewModel vm in vmList)
+            {
+                vm.SetType(vm.IsEmpty() ? InventoryItemType.Nothing : InventoryItemType.CannotDrag);
+            }
         }
         protected override void OnDragUpdate(DragContext<InventoryItemViewModel> ctx)
         {
@@ -27,7 +32,12 @@ namespace Demo.Inventory
         }
         protected override void OnDragEnd(DragContext<InventoryItemViewModel> ctx)
         {
-            // for override
+            List<InventoryItemViewModel> vmList = GetAll();
+
+            foreach (InventoryItemViewModel vm in vmList)
+            {
+                vm.SetType(InventoryItemType.Nothing);
+            }
         }
         protected override DragOutcome OnDragDrop(DragContext<InventoryItemViewModel> ctx)
         {
@@ -50,11 +60,13 @@ namespace Demo.Inventory
         }
         protected override void OnDragEnter(DragContext<InventoryItemViewModel> ctx)
         {
-            // for override
+            if (!ctx.DragHoverItem.IsEmpty() && ctx.DragHoverItem != ctx.SourceItem)
+                ctx.DragHoverItem.SetType(InventoryItemType.WarningDrag);
         }
         protected override void OnDragExit(DragContext<InventoryItemViewModel> ctx)
         {
-            // for override
+            if (!ctx.DragHoverItem.IsEmpty())
+                ctx.DragHoverItem.SetType(InventoryItemType.CannotDrag);
         }
 
         protected override void OnSnapBack(DragContext<InventoryItemViewModel> ctx)

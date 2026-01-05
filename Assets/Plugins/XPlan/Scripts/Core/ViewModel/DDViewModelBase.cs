@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -114,10 +114,14 @@ namespace XPlan
             if (e.pointerId != _ctx.PointerId) { CancelDrag("Pointer mismatch on Drop"); return; }
 
             // drag
-            _ctx.Phase      = DragPhase.Drop;
-            _ctx.DropTarget = itemVM;
+            _ctx.Phase          = DragPhase.Drop;
+            _ctx.DropTarget     = itemVM;
+            DragOutcome outcome = OnDragDrop(_ctx);
 
-            EndDragAndCleanup(OnDragDrop(_ctx));
+            // 強制觸發 end 避免有時候OnEndDrag 無法觸發到
+            _ctx.Phase          = DragPhase.End;
+            OnDragEnd(_ctx);
+            EndDragAndCleanup(outcome);
         }
 
         [DragBinding(DragPhase.DragEnter)]
@@ -128,7 +132,6 @@ namespace XPlan
 
             _ctx.DragHoverItem  = itemVM;
 
-
             OnDragEnter(_ctx);
         }
 
@@ -138,9 +141,9 @@ namespace XPlan
             if (_ctx == null) return;
             if (e.pointerId != _ctx.PointerId) { CancelDrag("Pointer mismatch on Drop"); return; }
 
-            _ctx.DragHoverItem = null;
-
             OnDragExit(_ctx);
+
+            _ctx.DragHoverItem = null;
         }
 
         private void CancelDrag(string reason)

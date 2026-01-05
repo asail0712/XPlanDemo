@@ -31,5 +31,22 @@ namespace Demo.Inventory
                 iconImg.sprite = iconList[idx].icon;
             }
         }
+
+        [ObBinding]
+        public void OnItemTypeChange(InventoryItemType type)
+        {
+            switch(type)
+            {
+                case InventoryItemType.Nothing:
+                    iconImg.color = Color.white;
+                    break;
+                case InventoryItemType.CannotDrag:
+                    iconImg.color = Color.gray;
+                    break;
+                case InventoryItemType.WarningDrag:
+                    iconImg.color = Color.red;
+                    break;
+            }
+        }
     }
 }

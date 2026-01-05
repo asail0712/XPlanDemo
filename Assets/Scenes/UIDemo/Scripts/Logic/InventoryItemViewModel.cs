@@ -2,9 +2,22 @@
 
 namespace Demo.Inventory
 {
+    public enum InventoryItemType
+    {
+        Nothing,
+        CannotDrag,
+        WarningDrag,
+    }
+
     public class InventoryItemViewModel : DDItemViewModelBase
     {
         public ObservableProperty<InventoryItemData> ItemData = new ObservableProperty<InventoryItemData>();
+        public ObservableProperty<InventoryItemType> ItemType = new ObservableProperty<InventoryItemType>(InventoryItemType.Nothing);
+
+        public void SetType(InventoryItemType type)
+        {
+            ItemType.Value = type;
+        }
 
         public override bool CanDrag()
         {
