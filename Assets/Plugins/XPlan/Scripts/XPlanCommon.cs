@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -24,6 +24,6 @@ namespace XPlan
 {
     public static class XPlanCommon
     {
-        public const string Version = "3.7.8";
+        public const string Version = "3.8.8";
     }
 }
