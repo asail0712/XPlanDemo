@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -20,9 +20,9 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 #endif // WEAVING_ENABLE
+
 using System;
 using System.Linq;
-
 using UnityEngine;
 
 using XPlan.Weaver.Abstractions;
