@@ -25,7 +25,9 @@ using System;
 using System.Linq;
 using UnityEngine;
 
+using XPlan.Activity;
 using XPlan.Weaver.Abstractions;
+using XPlan.Weaver.Runtime;
 
 /*************************************************
 * Tracker 的實作
@@ -50,7 +52,9 @@ namespace XPlan.Editors.Weaver
             string feature  = ExtractFeatureName(targetMethod, attr);
 
             // 取得要呼叫的 ActivityTrace.Touch(string)
-            var touchRef    = ResolveTouchMethodRef(module);
+            var touchMethodInfo = typeof(ActivityTrace).GetMethod(nameof(ActivityTrace.Touch), new[] { typeof(string) });
+            var touchRef        = module.ImportReference(touchMethodInfo);
+            
             if (touchRef == null)
             {
                 Debug.LogWarning($"[TrackerWeaver] Cannot resolve {kTraceTypeFullName}::{kTraceMethodName}(string). Skip weaving.");
@@ -91,30 +95,6 @@ namespace XPlan.Editors.Weaver
                 feature = $"{method.DeclaringType.FullName}.{method.Name}";
 
             return feature;
-        }
-
-        private static MethodReference ResolveTouchMethodRef(ModuleDefinition module)
-        {
-            // 找 type
-            var traceType = module.Types.FirstOrDefault(t => t.FullName == kTraceTypeFullName);
-            if (traceType == null)
-            {
-                // 有時候 type 在別的 assembly：用 TypeReference 方式 Import（前提是 assembly 已被引用）
-                // 這裡保守處理：從 AssemblyRefs 嘗試解析
-                var asm = module.AssemblyResolver?.Resolve(module.Assembly.Name);
-                // asm 可能為 null；不強求，直接回傳 null 讓外面 warning
-                return null;
-            }
-
-            var touch = traceType.Methods.FirstOrDefault(m =>
-                m.Name == kTraceMethodName &&
-                m.IsStatic &&
-                m.Parameters.Count == 1 &&
-                m.Parameters[0].ParameterType.MetadataType == MetadataType.String &&
-                m.ReturnType.MetadataType == MetadataType.Void
-            );
-
-            return touch != null ? module.ImportReference(touch) : null;
         }
 
         private static bool TryWeaveMethodEntry(MethodDefinition method, string feature, MethodReference touchRef)

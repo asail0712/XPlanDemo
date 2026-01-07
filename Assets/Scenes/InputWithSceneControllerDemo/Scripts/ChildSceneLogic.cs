@@ -11,10 +11,8 @@ namespace XPlan.Demo.InputMode
 { 
     public class ChildSceneLogic : NotifyMonoBehaviour
     {
-        [SerializeField] string sectorID    = "";
         [SerializeField] string sceneName   = "";
         [SerializeField] string nextScene   = "";
-
 
         // Start is called before the first frame update
         private new void Awake()
