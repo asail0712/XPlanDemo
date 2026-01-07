@@ -26,5 +26,6 @@ namespace XPlan
     {
         public string Feature { get; }
         public TrackerAttribute(string feature) => Feature = feature;
+        public TrackerAttribute() => Feature = string.Empty;
     }
 }
