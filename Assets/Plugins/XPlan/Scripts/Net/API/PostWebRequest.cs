@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -55,6 +55,11 @@ namespace XPlan.Net
         {
             AppendData(form);
 
+            return await SendAsync_Imp<TResponse>();
+        }
+
+        public async Task<TResponse> SendAsync<TResponse>()
+        {
             return await SendAsync_Imp<TResponse>();
         }
 
