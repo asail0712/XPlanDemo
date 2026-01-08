@@ -21,11 +21,17 @@ using System;
 
 namespace XPlan.Activity
 {
+    public interface IActivityTracker<TInfo> : IActivityTracker
+    {
+        event Action<TInfo> OnFeatureTouched;
+    }
+
+
+    // XPlan 只關心 IActivityTracker 不關心 delegate傳遞的資料型態
     public interface IActivityTracker
     {
-        event Action<string, DateTime> OnFeatureTouched;
         void Touch(string feature);
         void Tick();
-        void Flush(bool bForce);
+        void Flush(bool bForce = false);
     }
 }

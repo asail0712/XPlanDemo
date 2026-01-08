@@ -30,9 +30,9 @@ namespace XPlan.Activity
         public bool NeedFlush { get; set; }
     }
 
-    public class ActivityTracker : IActivityTracker
+    public class ActivityTracker : IActivityTracker<List<TrackerInfo>>
     {
-        public event Action<string, DateTime> OnFeatureTouched;
+        public event Action<List<TrackerInfo>> OnFeatureTouched;
 
         private readonly List<TrackerInfo> trackerInfos;
         private readonly float flushDelaySeconds = 60;
@@ -51,7 +51,7 @@ namespace XPlan.Activity
 
             if (info != null)
             {
-                info.LateTouched = DateTime.Now;
+                info.LateTouched = DateTime.UtcNow;
                 info.NeedFlush   = true;
             }
             else
@@ -59,7 +59,7 @@ namespace XPlan.Activity
                 trackerInfos.Add(new TrackerInfo()
                 {
                     FeatureName = feature,
-                    LateTouched = DateTime.Now,
+                    LateTouched = DateTime.UtcNow,
                     NeedFlush   = true
                 });
             }
@@ -72,21 +72,16 @@ namespace XPlan.Activity
             if((now - lastFlushTime).TotalSeconds >= flushDelaySeconds)
             {
                 lastFlushTime = now;
+
                 Flush();
             }
         }
 
         public void Flush(bool bForce = false)
         {
-            foreach (var item in trackerInfos)
-            {
-                if(!item.NeedFlush && !bForce)
-                    continue;
+            List<TrackerInfo> trackerList = trackerInfos.Where(t => t.NeedFlush || bForce).ToList();
 
-                OnFeatureTouched?.Invoke(item.FeatureName, item.LateTouched);
-
-                item.NeedFlush = false;
-            }
+            OnFeatureTouched?.Invoke(trackerList);
         }
     }
 }
