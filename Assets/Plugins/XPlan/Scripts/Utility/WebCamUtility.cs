@@ -16,6 +16,7 @@
 // Unauthorized copying, modification, or distribution of this file,
 // via any medium, is strictly prohibited without prior permission.
 // ==============================================================================
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -107,11 +108,11 @@ namespace XPlan.Utility
 			camImg.texture = webCamTex;
 			camImg.enabled = true;
 
-            // 先調整Img大小
-            FitImageSizeToCamSize(camImg, webCamTex, bHighControllWidth);
+			// 先調整Img大小
+			FitImageSizeToCamSize(camImg, webCamTex, bHighControllWidth);
 
-            // 翻轉處理
-            RotationImg(camImg, webCamTex);
+			// 翻轉處理
+			RotationImg(camImg, webCamTex);
 
 			yield return WaitCameraDeviceInitial(webCamTex);
 		}
@@ -240,7 +241,7 @@ namespace XPlan.Utility
 
 			LogSystem.Record($"找到 {deviceList.Length} 個鏡頭");
 
-			// 原本的Camera
+			// 沒有合適的camera
 			if (deviceList.Length <= 0)
 			{
 				return null;
@@ -250,35 +251,35 @@ namespace XPlan.Utility
 
 			if (bPriorityFrontFacing)
 			{
-                LogSystem.Record($"優先使用前鏡頭");
-            }
+				LogSystem.Record($"優先使用前鏡頭");
+			}
 
 			for (int i = 0; i < deviceList.Length; ++i)
 			{
-                // 優先考慮自拍鏡頭
-                if (!(bPriorityFrontFacing ^ deviceList[i].isFrontFacing))
+				// 優先考慮自拍鏡頭
+				if (!(bPriorityFrontFacing ^ deviceList[i].isFrontFacing))
 				{
 					camIdx = i;
 					break;
 				}
 			}
 
-            //for (int i = deviceList.Length - 1; i >= 0; --i)
-            //{
-            //	LogSystem.Record($"第 {i + 1} 個鏡頭名稱為 {deviceList[i].name},是否為前鏡頭: {deviceList[i].isFrontFacing}");
-            //}
+			//for (int i = deviceList.Length - 1; i >= 0; --i)
+			//{
+			//	LogSystem.Record($"第 {i + 1} 個鏡頭名稱為 {deviceList[i].name},是否為前鏡頭: {deviceList[i].isFrontFacing}");
+			//}
 
-            LogSystem.Record($"使用第 {camIdx + 1} 個鏡頭");
+			LogSystem.Record($"使用第 {camIdx + 1} 個鏡頭");
 
-            // ?? webCamController
-            WebCamTexture webCamTex				= new WebCamTexture(deviceList[camIdx].name);
+			// 生成 webCamController
+			WebCamTexture webCamTex				= new WebCamTexture(deviceList[camIdx].name);
 			GameObject controllerGO				= new GameObject("WebCamController");
 			WebCamController webCamController	= controllerGO.AddComponent<WebCamController>();
 			Scene targetScene					= sceneName != "" ? GetTargetScene(sceneName) : SceneManager.GetSceneAt(0);
 
-			// 撠隞嗆蝘餃撠??cene
+			// 將物件搬移到對應的Scene
 			SceneManager.MoveGameObjectToScene(controllerGO, targetScene);
-			// ???ontroller
+			// 初始化Controller
 			webCamController.InitialController(webCamTex);
 
 			return webCamController;
