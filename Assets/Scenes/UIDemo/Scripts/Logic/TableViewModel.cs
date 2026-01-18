@@ -15,7 +15,7 @@ namespace Demo
         {
             for(int i = 0; i < DefaultNum; ++i)
             {
-                new AddItemDescMsg().Send();
+                AddItemDesc(new AddItemDescMsg());
             }
         }
 
