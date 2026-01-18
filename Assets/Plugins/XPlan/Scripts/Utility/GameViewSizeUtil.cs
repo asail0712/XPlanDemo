@@ -219,26 +219,6 @@ namespace XPlan.Utility
 
             return p.GetValue(null);
         }
-
-        // -------------------------
-        // Debug：印出 GameView 的成員
-        // -------------------------
-        [MenuItem("XPlan/Debug/Dump GameView Members")]
-        static void DumpGameViewMembers()
-        {
-            var gvType = typeof(Editor).Assembly.GetType("UnityEditor.GameView");
-            Debug.Log($"---- {gvType.FullName} PROPS ----");
-            foreach (var p in gvType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                if (p.Name.IndexOf("Group", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    p.Name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0)
-                    Debug.Log($"P: {p.Name} : {p.PropertyType}");
-
-            Debug.Log($"---- {gvType.FullName} FIELDS ----");
-            foreach (var f in gvType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                if (f.Name.IndexOf("Group", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    f.Name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0)
-                    Debug.Log($"F: {f.Name} : {f.FieldType}");
-        }
     }
 }
 #endif
