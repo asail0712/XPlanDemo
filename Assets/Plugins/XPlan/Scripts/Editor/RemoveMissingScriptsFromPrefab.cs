@@ -27,7 +27,7 @@ namespace XPlan.Editors
 {
     public class RemoveMissingScriptsFromPrefab : MonoBehaviour
     {
-        [MenuItem("XPlanTools/Remove Missing Scripts From Prefab")]
+        [MenuItem("XPlanTools/Resource/Remove Missing Scripts From Prefab")]
         private static void RemoveMissingScriptsFromSelectedPrefab()
         {
             // 獲取當前選中的 GameObject

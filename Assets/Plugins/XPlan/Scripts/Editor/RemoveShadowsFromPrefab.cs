@@ -29,7 +29,7 @@ namespace XPlan.Editors
     public class RemoveShadowsFromPrefab : MonoBehaviour
     {
         // 在 Unity 編輯器中創建一個菜單項
-        [MenuItem("XPlanTools/Remove Shadows from Selected Prefab")]
+        [MenuItem("XPlanTools/Resource/Remove Shadows from Selected Prefab")]
         static void RemoveShadowsFromSelectedPrefab()
         {
             // 獲取當前選中的 GameObject

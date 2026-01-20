@@ -25,7 +25,7 @@ namespace XPlan.Editors
 {
     public class RemoveMissingScriptsFromScene : MonoBehaviour
     {
-        [MenuItem("XPlanTools/Remove Missing Scripts From Scene")]
+        [MenuItem("XPlanTools/Resource/Remove Missing Scripts From Scene")]
         private static void RemoveMissingScriptsFromAllSceneObjects()
         {
             // 取得當前活動場景的所有根物件
