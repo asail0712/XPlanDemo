@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -31,6 +31,8 @@ namespace XPlan.Recycle
         static private int totalNum             = 0;
         static private GameObject prefabInstance;
 
+        static private int currIdx              = 0;
+
         /**************************************************
          * 生成流程
          * ************************************************/
@@ -52,6 +54,7 @@ namespace XPlan.Recycle
                     else
                     {
                         GameObject go   = GameObject.Instantiate(prefabInstance);
+                        go.name         = go.name + "_" + (currIdx++).ToString();
                         poolable        = go.GetComponent<T>();
 
                         ++totalNum;
@@ -153,6 +156,7 @@ namespace XPlan.Recycle
             for (int i = 0; i < num; ++i)
             {
                 GameObject go       = GameObject.Instantiate(prefab);
+                go.name             = go.name + "_" + (currIdx++).ToString();
                 T comp              = go.GetComponent<T>();
                 go.transform.SetParent(poolRoot == null ? null : poolRoot.transform);
 
