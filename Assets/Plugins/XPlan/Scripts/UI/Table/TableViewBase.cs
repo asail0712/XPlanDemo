@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -17,6 +17,7 @@
 // via any medium, is strictly prohibited without prior permission.
 // ==============================================================================
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -27,6 +28,13 @@ using XPlan.Utility;
 
 namespace XPlan.UI
 {
+    public enum ScrollRefreshMode
+    {
+        KeepPosition,   // 維持原位（保留 normalizedPosition）
+        ToTop,          // 往上到底
+        ToBottom        // 往下到底
+    }
+
     // TTableViewModel 必須是 TableViewModelBase 的子類
     // ItemViewType 是實際的 Item View 類別，它必須繼承 ItemViewBase
     // TItemViewModel 是 Item View 所綁定的資料模型
@@ -37,16 +45,16 @@ namespace XPlan.UI
     {
         [Header("TableView")]
         // 列表特有的序列化欄位
-        [SerializeField]
-        protected GameObject _listRoot; // Unity UI Content
-        [SerializeField]
-        protected TItemView _itemViewPrefab;   // 列表單元 Prefab
+        [SerializeField] protected GameObject _listRoot; // Unity UI Content
+        [SerializeField] protected TItemView _itemViewPrefab;   // 列表單元 Prefab
+
+        [SerializeField] private ScrollRect _scrollRect;        // 主 ScrollRect
+        [SerializeField] private RectTransform _contentRect;    // 通常就是 _listRoot 的 RectTransform
+        [SerializeField] private ScrollRefreshMode _refreshMode = ScrollRefreshMode.KeepPosition;
 
         [Header("Recycle Pool")]
-        [SerializeField] 
-        private int _prewarmCount = 20;
-        [SerializeField] 
-        private Transform _poolRoot;   // 指定一個 PoolRoot，避免 LayoutGroup 計算到回收物件
+        [SerializeField] private int _prewarmCount = 20;
+        [SerializeField] private Transform _poolRoot;   // 指定一個 PoolRoot，避免 LayoutGroup 計算到回收物件
 
         // 列表 Items 的實體管理
         protected readonly Dictionary<TItemViewModel, TItemView> _activeItemViews   = new();
@@ -56,6 +64,9 @@ namespace XPlan.UI
 
         // Table View Model
         private TTableViewModel _viewModel;
+
+        // 同一個frame 只能刷新一次
+        private bool _scrollRefreshScheduled;
 
         public void OnViewModelReady(TTableViewModel vm)
         {
@@ -266,6 +277,75 @@ namespace XPlan.UI
 
                     LogSystem.Record($"[TableView] 成功綁定: {fieldInfo.Name} -> {methodName}");
                 }
+            }
+
+            // Item -> TableView 的 ScrollRefresh 機制
+            if (itemView is IScrollRefreshRequester requester)
+            {
+                // 先解除（池重用避免疊加）
+                requester.RequestScrollRefresh -= OnItemRequestScrollRefresh;
+                requester.RequestScrollRefresh += OnItemRequestScrollRefresh;
+            }
+
+            // 新Item增加 也要刷新
+            OnItemRequestScrollRefresh();
+        }
+
+        /*================================
+         * 刷新Scroll
+         * ==============================*/
+        private void OnItemRequestScrollRefresh()
+        {
+            RequestScrollRefresh();
+        }
+
+        private void RequestScrollRefresh()
+        {
+            if (_scrollRefreshScheduled) return;
+            _scrollRefreshScheduled = true;
+            StartCoroutine(CoRefreshScrollNextFrame());
+        }
+
+        private IEnumerator CoRefreshScrollNextFrame()
+        {
+            // 等到這幀 UI 變動都完成
+            yield return null;
+
+            _scrollRefreshScheduled = false;
+            RefreshScrollLayout();
+        }
+
+        private void RefreshScrollLayout()
+        {
+            if (_contentRect == null && _listRoot != null)
+                _contentRect = _listRoot.GetComponent<RectTransform>();
+
+            if (_contentRect == null) return;
+
+            // 先記住原位置（只在 KeepPosition 需要）
+            float oldPos = 0f;
+            if (_scrollRect != null && _refreshMode == ScrollRefreshMode.KeepPosition)
+                oldPos = _scrollRect.verticalNormalizedPosition;
+
+            // 讓 scrollbar 跟 content 尺寸同步
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRect);
+            Canvas.ForceUpdateCanvases();
+
+            if (_scrollRect == null) return;
+
+            switch (_refreshMode)
+            {
+                case ScrollRefreshMode.KeepPosition:
+                    _scrollRect.verticalNormalizedPosition = oldPos;
+                    break;
+
+                case ScrollRefreshMode.ToTop:
+                    _scrollRect.verticalNormalizedPosition = 1f;   // Unity：頂部是 1
+                    break;
+
+                case ScrollRefreshMode.ToBottom:
+                    _scrollRect.verticalNormalizedPosition = 0f;   // 底部是 0
+                    break;
             }
         }
     }

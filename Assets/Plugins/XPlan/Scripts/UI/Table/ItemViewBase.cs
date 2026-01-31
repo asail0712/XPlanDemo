@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -23,14 +23,21 @@ using XPlan.Recycle;
 
 namespace XPlan.UI
 {
+    internal interface IScrollRefreshRequester
+    {
+        event Action RequestScrollRefresh;
+    }
+
     // TItemViewModel 必須是 ItemViewModelBase 的子類
-    public class ItemViewBase<TItemViewModel> : PoolableComponent
+    public class ItemViewBase<TItemViewModel> : PoolableComponent, IScrollRefreshRequester
         where TItemViewModel : ItemViewModelBase
     {
         protected TItemViewModel _viewModel;
         private readonly Dictionary<string, ObservableBinding> _vmObservableMap = new(StringComparer.Ordinal);  // 新增：把 VM 內的 ObservableProperty 索引起來（baseName → 綁定資訊）
         protected readonly List<IDisposable> _disposables                       = new();                        // Item View 內部的訂閱列表
         private readonly SpriteCache _spriteCache                               = new();                        // 每個 Item View 使用自己的 SpriteCache 以供 Image 綁定
+
+        public event Action RequestScrollRefresh;
 
         /// <summary>
         /// 由 TableView 呼叫，設定此單元的 ViewModel 並執行自動綁定。
@@ -62,6 +69,11 @@ namespace XPlan.UI
         protected virtual void OnDataBound()
         {
             // 留給子類別實作，在 ViewModel 綁定和 UI 初始化完成後執行客製化邏輯
+        }
+
+        protected void MarkDirty()
+        {
+            RequestScrollRefresh?.Invoke();
         }
 
         // ===============================
