@@ -31,7 +31,7 @@ namespace XPlan.Activity
     {
         public static void InstallIfNeeded()
         {
-            // 1️⃣ 掃描所有帶有 TrackerAttribute 的方法
+            // 掃描所有帶有 TrackerAttribute 的方法
             List<MethodInfo> trackedMethods = ScanTrackedMethods();
 
             if (trackedMethods.Count == 0)
@@ -47,7 +47,7 @@ namespace XPlan.Activity
                 if (Activity.Current != null)
                     Activity.Current.Tick();
 
-                yield return new WaitForSeconds(3f);
+                yield return new WaitForSeconds(10f);
             }
         }
 

@@ -47,6 +47,7 @@ namespace XPlan.Activity
 
         public void Touch(string feature)
         {
+            bool bFirstTouch = trackerInfos.Count == 0;
             TrackerInfo info = trackerInfos.FirstOrDefault(t => t.FeatureName == feature);
 
             if (info != null)
@@ -62,6 +63,12 @@ namespace XPlan.Activity
                     LateTouched = DateTime.UtcNow,
                     NeedFlush   = true
                 });
+            }
+
+            // 第一次touch 強制送出
+            if(bFirstTouch)
+            {
+                Flush();
             }
         }
 
