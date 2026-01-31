@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -16,7 +16,10 @@
 // Unauthorized copying, modification, or distribution of this file,
 // via any medium, is strictly prohibited without prior permission.
 // ==============================================================================
+using System;
+using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -49,6 +52,11 @@ namespace XPlan.BuildTools.Editors
         [Tooltip("Deep Profiling（非常慢，除非必要不建議開）")]
         public bool deepProfiling = false;
 
+        [Header("Output Naming")]
+        public bool appendDisplayNameAndDateToOutput = true;
+
+        public string outputDateFormat = "yyyyMMdd_HHmm";
+
         private string _prevProductName;
 
         // ===============================
@@ -56,10 +64,11 @@ namespace XPlan.BuildTools.Editors
         // ===============================
         public BuildPlayerOptions CreateBuildPlayerOptions()
         {
+            var rawPath = GetBuildPath();
             var options = new BuildPlayerOptions
             {
                 scenes              = GetScenes(),
-                locationPathName    = GetBuildPath(),
+                locationPathName    = appendDisplayNameAndDateToOutput ? BuildPathWithSuffix(rawPath) : rawPath,
                 target              = GetBuildTarget(),
                 targetGroup         = GetBuildTargetGroup(),
                 options             = GetBuildOptions()
@@ -124,6 +133,61 @@ namespace XPlan.BuildTools.Editors
         /// </summary>
         protected virtual void OnBeforeBuild(BuildPlayerOptions options)
         {
+        }
+
+        // ===============================
+        // ★輸出路徑後處理：加 DisplayName + 日期
+        // ===============================
+        private string BuildPathWithSuffix(string originalPath)
+        {
+            if (string.IsNullOrWhiteSpace(originalPath))
+                return originalPath;
+
+            // 避免\與/的容錯處理
+            var path            = originalPath.Replace("\\", "/");
+            bool looksLikeFile  = Path.HasExtension(path);
+
+            string dir, fileName, ext;
+
+            if (looksLikeFile)
+            {
+                dir         = Path.GetDirectoryName(path);
+                fileName    = Path.GetFileNameWithoutExtension(path);
+                ext         = Path.GetExtension(path);
+            }
+            else
+            {
+                // 用 productName 或 DisplayName 當檔名
+                dir         = path;
+                fileName    = !string.IsNullOrEmpty(productName) ? productName : DisplayName;
+                ext         = ""; // 讓子類自己決定是否要給副檔名
+            }
+
+            var safeDisplay = SanitizeFileName(DisplayName);
+            var stamp       = DateTime.Now.ToString(string.IsNullOrEmpty(outputDateFormat) ? "yyyyMMdd_HHmm" : outputDateFormat);
+
+            // {原檔名}_{DisplayName}_{日期}{ext}
+            // 變成 ElderAI_Stage_20260118_1530.apk
+            var newFile = $"{fileName}_{safeDisplay}_{stamp}{ext}";
+            return string.IsNullOrEmpty(dir) ? newFile : Path.Combine(dir, newFile);
+        }
+
+        private static string SanitizeFileName(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "Unnamed";
+
+            var invalid = Path.GetInvalidFileNameChars();
+            var sb      = new StringBuilder(s.Length);
+
+            foreach (var ch in s)
+            {
+                if (invalid.Contains(ch)) sb.Append('_');
+                else sb.Append(ch);
+            }
+
+            // 避免檔名尾端是空白或點
+            var r = sb.ToString().Trim().TrimEnd('.');
+            return string.IsNullOrEmpty(r) ? "Unnamed" : r;
         }
     }
 }
