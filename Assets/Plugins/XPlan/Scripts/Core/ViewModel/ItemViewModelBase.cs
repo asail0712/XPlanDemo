@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -22,9 +22,6 @@ namespace XPlan
     // 繼承 ViewModelBase 以便使用 ObservableProperty 的自動通知機制。
     public class ItemViewModelBase : ViewModelBase
     {
-        // 可以新增一些通用的 Item 屬性，例如：
-        // public ObservableProperty<bool> IsSelected { get; } = new();
-
         // **重要：ItemViewModelBase 不應呼叫 VMLocator.Register(this)**
         public ItemViewModelBase()
             : base(false)

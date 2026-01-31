@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -16,8 +16,6 @@
 // Unauthorized copying, modification, or distribution of this file,
 // via any medium, is strictly prohibited without prior permission.
 // ==============================================================================
-using UnityEditor.PackageManager.Requests;
-using UnityEngine;
 
 namespace XPlan
 {
