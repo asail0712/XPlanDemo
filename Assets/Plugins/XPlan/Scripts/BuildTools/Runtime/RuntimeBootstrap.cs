@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -67,6 +67,7 @@ namespace XPlan.BuildTools.Runtime
 
             using (var req = UnityWebRequest.Get(path))
             {
+                req.timeout = 1; // 秒
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
