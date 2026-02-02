@@ -31,10 +31,8 @@ namespace XPlan.Activity
     {
         public static void InstallIfNeeded()
         {
-            // 掃描所有帶有 TrackerAttribute 的方法
-            List<MethodInfo> trackedMethods = ScanTrackedMethods();
-
-            if (trackedMethods.Count == 0)
+            // 掃描是否帶有 TrackerAttribute 的方法            
+            if (!HasAnyTrackedMethodInGame())
                 return;
 
             MonoBehaviourHelper.StartCoroutine(TickTracker());
@@ -51,52 +49,47 @@ namespace XPlan.Activity
             }
         }
 
-        private static List<MethodInfo> ScanTrackedMethods()
+        private static bool HasAnyTrackedMethodInGame()
         {
-            var result              = new List<MethodInfo>();
-            Assembly[] assemblies   = AppDomain.CurrentDomain.GetAssemblies();
-
-            foreach (var asm in assemblies)
+            Assembly gameAsm;
+            try
             {
-                // 避免掃 Unity / System 的組件（效能 + 安全）
-                if (asm.FullName.StartsWith("System") ||
-                    asm.FullName.StartsWith("Unity") ||
-                    asm.FullName.StartsWith("mscorlib"))
-                    continue;
+                gameAsm = Assembly.Load("Assembly-CSharp");
+            }
+            catch
+            {
+                return false;
+            }
 
-                Type[] types;
-                try
+            Type[] types;
+            try
+            {
+                types = gameAsm.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                types = e.Types.Where(t => t != null).ToArray();
+            }
+
+            foreach (var type in types)
+            {
+                var methods = type.GetMethods(
+                    BindingFlags.Instance |
+                    BindingFlags.Static |
+                    BindingFlags.Public |
+                    BindingFlags.NonPublic |
+                    BindingFlags.DeclaredOnly
+                );
+
+                foreach (var method in methods)
                 {
-                    types = asm.GetTypes();
-                }
-                catch (ReflectionTypeLoadException e)
-                {
-                    types = e.Types.Where(t => t != null).ToArray();
-                }
-
-                foreach (var type in types)
-                {
-                    MethodInfo[] methods = type.GetMethods(
-                        BindingFlags.Instance |
-                        BindingFlags.Static |
-                        BindingFlags.Public |
-                        BindingFlags.NonPublic
-                    );
-
-                    foreach (var method in methods)
-                    {
-                        if (method.IsAbstract)
-                            continue;
-
-                        if (method.GetCustomAttribute<TrackerAttribute>(inherit: true) != null)
-                        {
-                            result.Add(method);
-                        }
-                    }
+                    if (method.IsAbstract) continue;
+                    if (method.IsDefined(typeof(TrackerAttribute), inherit: false))
+                        return true; // 找到就停
                 }
             }
 
-            return result;
+            return false;
         }
     }
 }
