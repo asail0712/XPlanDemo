@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -30,7 +30,7 @@ namespace XPlan.UI
 	public enum DialogResult
 	{
 		Confirm = 0,
-		Cancal,
+		Cancel,
 	}
 
 	public static class DialogMessage
@@ -110,7 +110,7 @@ namespace XPlan.UI
 
 			RegisterButton("", cancelBtn, () =>
 			{
-				clickAction?.Invoke(DialogResult.Cancal);
+				clickAction?.Invoke(DialogResult.Cancel);
 				ToggleUI(gameObject, false);
 			});
 
