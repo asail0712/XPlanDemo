@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -59,6 +59,18 @@ namespace XPlan.Editors.Weaver
             _fieldAspects   = FindAllInstances<IFieldAspectWeaver>();
 
             CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompiled;
+        }
+
+        [InitializeOnLoadMethod]
+        private static void AutoRunOnLoad()
+        {
+            EditorApplication.delayCall += () =>
+            {
+                if (!CecilWeaverSettings.Enabled)
+                    return;
+
+                RunNow();
+            };
         }
 
         public static void RunNow()
