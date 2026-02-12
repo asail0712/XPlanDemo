@@ -26,7 +26,9 @@ namespace XPlan.Activity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         private static void Init()
         {
+#if ACTIVITY_TRACKING
             ActivityTrackingInstaller.InstallIfNeeded();
+#endif //ACTIVITY_TRACKING
         }
     }
 }
