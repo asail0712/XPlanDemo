@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -56,7 +56,7 @@ namespace XPlan.UI
         {
             if (string.IsNullOrEmpty(url))
             {
-                LogSystem.Record("避免使用空字串下載圖片", LogType.Warning);
+                //LogSystem.Record("避免使用空字串下載圖片", LogType.Warning);
 
                 return;
             }
