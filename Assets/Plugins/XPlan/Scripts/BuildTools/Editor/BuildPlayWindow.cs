@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // XPlan Framework
 //
 // Copyright (c) 2026 Asail
@@ -19,6 +19,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using XPlan.BuildTools.Runtime;
@@ -54,6 +55,7 @@ namespace XPlan.BuildTools.Editors
 
         private bool buildDirty;
         private bool playDirty;
+        private string lastBuildOutputPath;
 
         // -------------------------
         // Dropdown cache (Build/Play)
@@ -204,6 +206,19 @@ namespace XPlan.BuildTools.Editors
                 }
             }
 
+            EditorGUILayout.Space(4);
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(!CanRevealBuildOutput(settings.buildConfig)))
+                {
+                    if (GUILayout.Button("開啟輸出位置", GUILayout.Height(28)))
+                    {
+                        RevealBuildOutput(settings.buildConfig);
+                    }
+                }
+            }
+
             EditorGUILayout.Space(6);
 
             EditorGUI.BeginChangeCheck();
@@ -225,6 +240,8 @@ namespace XPlan.BuildTools.Editors
             var report  = BuildPipeline.BuildPlayer(options);
 
             config.RestoreAfterBuild();
+
+            lastBuildOutputPath = report.summary.outputPath;
 
             if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
             {
@@ -577,6 +594,55 @@ namespace XPlan.BuildTools.Editors
                 enterChildren = false;
                 if (it.propertyPath == "m_Script") continue;
                 EditorGUILayout.PropertyField(it, includeChildren: true);
+            }
+        }
+
+        // -------------------------
+        // Build helpers
+        // -------------------------
+        private bool CanRevealBuildOutput(BuildConfig config)
+        {
+            var path = GetBuildOutputPath(config);
+            return !string.IsNullOrWhiteSpace(path) && (File.Exists(path) || Directory.Exists(path));
+        }
+
+        private string GetBuildOutputPath(BuildConfig config)
+        {
+            // 優先使用最後一次 build 真實輸出結果
+            if (!string.IsNullOrWhiteSpace(lastBuildOutputPath))
+                return lastBuildOutputPath;
+
+            // 若還沒 build 過，就從 config 預測輸出位置
+            if (!config) return null;
+
+            try
+            {
+                var options = config.CreateBuildPlayerOptions();
+                return options.locationPathName;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private void RevealBuildOutput(BuildConfig config)
+        {
+            var path = GetBuildOutputPath(config);
+
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                Debug.LogWarning("[XPlan] 找不到 Build 輸出路徑。");
+                return;
+            }
+
+            if (File.Exists(path) || Directory.Exists(path))
+            {
+                EditorUtility.RevealInFinder(path);
+            }
+            else
+            {
+                Debug.LogWarning($"[XPlan] 輸出位置不存在：{path}");
             }
         }
     }
