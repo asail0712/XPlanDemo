@@ -86,18 +86,29 @@ namespace XPlan.Editors.Weaver
             var actionGeneric = new GenericInstanceType(actionOpenType);       // Action<TMsg>
             actionGeneric.GenericArguments.Add(msgTypeRef);
 
-            var actionCtorDef = actionOpenType.Resolve()
-                .Methods.First(m => m.IsConstructor && m.Parameters.Count == 2); // .ctor(object, IntPtr)
+            //var actionCtorDef = actionOpenType.Resolve()
+            //    .Methods.First(m => m.IsConstructor && m.Parameters.Count == 2); // .ctor(object, IntPtr)
 
+            //var actionCtorRef = new MethodReference(".ctor", module.TypeSystem.Void, actionGeneric)
+            //{
+            //    HasThis = true,
+            //    ExplicitThis = false,
+            //    CallingConvention = actionCtorDef.CallingConvention
+            //};
+
+            //foreach (var p in actionCtorDef.Parameters)
+            //    actionCtorRef.Parameters.Add(new ParameterDefinition(p.ParameterType));
+
+            // 直接手工建立 delegate ctor reference，避免 Resolve framework type
             var actionCtorRef = new MethodReference(".ctor", module.TypeSystem.Void, actionGeneric)
             {
-                HasThis = true,
-                ExplicitThis = false,
-                CallingConvention = actionCtorDef.CallingConvention
+                HasThis             = true,
+                ExplicitThis        = false,
+                CallingConvention   = MethodCallingConvention.Default
             };
 
-            foreach (var p in actionCtorDef.Parameters)
-                actionCtorRef.Parameters.Add(new ParameterDefinition(p.ParameterType));
+            actionCtorRef.Parameters.Add(new ParameterDefinition(module.TypeSystem.Object));
+            actionCtorRef.Parameters.Add(new ParameterDefinition(module.TypeSystem.IntPtr));
 
             // ★ Construct RegisterNotify<TMsg>
             var registerNotifyRef = module.ImportReference(registerNotifyDef);
