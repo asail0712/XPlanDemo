@@ -1,24 +1,5 @@
-﻿// ==============================================================================
-// XPlan Framework
-//
-// Copyright (c) 2026 Asail
-// All rights reserved.
-//
-// Author  : Asail0712
-// Project : XPlan
-// Description:
-//     A modular framework for Unity projects, focusing on MVVM architecture,
-//     runtime tooling, event-driven design, and extensibility.
-//
-// Contact : asail0712@gmail.com
-// GitHub  : https://github.com/asail0712/XPlanDemo
-//
-// Unauthorized copying, modification, or distribution of this file,
-// via any medium, is strictly prohibited without prior permission.
-// ==============================================================================
-using UnityEngine;
+﻿using UnityEngine;
 using System;
-using System.Collections;
 
 namespace XPlan
 {
@@ -27,29 +8,30 @@ namespace XPlan
         public static event Action<bool> OnForegroundChanged; // true=前景, false=背景
 
         [Header("Lifecycle Settings")]
-        [SerializeField] private float backgroundDelaySeconds   = 12f;      // 延遲幾秒才真正視為背景
+        [SerializeField] private float backgroundDelaySeconds   = 12f;      // 超過幾秒才視為真正進背景
         [SerializeField] private bool allowRunInBackground      = false;    // 是否允許背景仍視為前景
 
         private bool _isForeground = true;
-        private Coroutine _backgroundDelayRoutine;
+
+        // 記錄是否已進入疑似背景狀態
+        private bool _pendingBackground;
+
+        // 記錄進背景時間（UTC 避免時區問題）
+        private DateTime _backgroundEnterUtc;
 
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
-            // 這個只會讓 Editor/桌面環境背景也能跑；手機上不保證網路不被停
             Application.runInBackground = allowRunInBackground;
         }
 
         private void OnApplicationPause(bool pause)
         {
-            // pause == true 代表進背景（或被打斷）
             HandleStateChange(!pause, "OnApplicationPause");
         }
 
         private void OnApplicationFocus(bool focus)
         {
-            // focus == false 可能是跳出、彈窗、切換 app；有時不等於真正背景
-            // 但配合 Pause 一起用通常最穩
             HandleStateChange(focus, "OnApplicationFocus");
         }
 
@@ -57,56 +39,66 @@ namespace XPlan
         {
             if (isForeground)
             {
-                // 回前景 → 取消延遲背景處理
-                CancelBackgroundDelay();
-
-                if (!_isForeground)
-                {
-                    _isForeground = true;
-                    Debug.Log($"[Lifecycle] Foreground=true (from {from})");
-                    OnForegroundChanged?.Invoke(true);
-                }
+                HandleReturnToForeground(from);
             }
             else
             {
-                // 進背景
-                if (allowRunInBackground)
+                HandleEnterBackground(from);
+            }
+        }
+
+        private void HandleEnterBackground(string from)
+        {
+            if (allowRunInBackground)
+            {
+                Debug.Log($"[Lifecycle] Background detected but ignored (allowRunInBackground=true, from {from})");
+                return;
+            }
+
+            // 已經在等待背景中，避免重複記錄
+            if (_pendingBackground || !_isForeground)
+                return;
+
+            _pendingBackground  = true;
+            _backgroundEnterUtc = DateTime.UtcNow;
+
+            Debug.Log($"[Lifecycle] Background pending... start time = {_backgroundEnterUtc:O} (from {from})");
+        }
+
+        private void HandleReturnToForeground(string from)
+        {
+            // 等回到前景後，才透過時間去判斷自己是否有切到背景過
+            if (_pendingBackground)
+            {
+                _pendingBackground          = false;                
+                double backgroundSeconds    = (DateTime.UtcNow - _backgroundEnterUtc).TotalSeconds;
+                
+                Debug.Log($"[Lifecycle] Returned to foreground after {backgroundSeconds:F2}s (from {from})");
+
+                // 只有超過門檻，才視為真的進過背景
+                if (backgroundSeconds >= backgroundDelaySeconds)
                 {
-                    Debug.Log($"[Lifecycle] Background detected but ignored (allowRunInBackground=true)");
-                    return;
+                    if (_isForeground)
+                    {
+                        _isForeground = false;
+                        Debug.Log($"[Lifecycle] Foreground=false (background lasted {backgroundSeconds:F2}s)");
+                        OnForegroundChanged?.Invoke(false);
+                    }
+
+                    _isForeground = true;
+                    Debug.Log("[Lifecycle] Foreground=true");
+                    OnForegroundChanged?.Invoke(true);
                 }
 
-                // 已經在背景或正在等待，不重複啟動
-                if (!_isForeground || _backgroundDelayRoutine != null)
-                    return;
-
-                _backgroundDelayRoutine = StartCoroutine(DelayedBackground(from));
+                return;
             }
-        }
 
-        private IEnumerator DelayedBackground(string from)
-        {
-            Debug.Log($"[Lifecycle] Background detected, delaying {backgroundDelaySeconds}s...");
-
-            yield return new WaitForSecondsRealtime(backgroundDelaySeconds);
-
-            _backgroundDelayRoutine = null;
-
-            if (_isForeground)
+            // 補償情況：如果目前狀態真的不是前景，強制切回前景
+            if (!_isForeground)
             {
-                _isForeground = false;
-                Debug.Log($"[Lifecycle] Foreground=false (from {from})");
-                OnForegroundChanged?.Invoke(false);
-            }
-        }
-
-        private void CancelBackgroundDelay()
-        {
-            if (_backgroundDelayRoutine != null)
-            {
-                StopCoroutine(_backgroundDelayRoutine);
-                _backgroundDelayRoutine = null;
-                Debug.Log("[Lifecycle] Background delay cancelled");
+                _isForeground = true;
+                Debug.Log($"[Lifecycle] Foreground=true (recovered from {from})");
+                OnForegroundChanged?.Invoke(true);
             }
         }
     }
